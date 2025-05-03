@@ -221,6 +221,8 @@ abstract class AbstractExecutor {
 
     /**
      * Get array with table column list
+     * @param tableName table name
+     * @return  Strings... with columns names
      */
     protected String[] getTableColumns(String tableName) {
 

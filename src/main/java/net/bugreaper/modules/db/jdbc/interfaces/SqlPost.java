@@ -198,4 +198,20 @@ public interface SqlPost {
      */
     void updateTable(String tableName,
                      String conditions);
+
+    /**
+     * Rename table(add suffix "_X_")
+     * <p><b>Note:</b> After test rollback with {@link #rollbackTable}.
+     *
+     * @param tableName  schema_name.table_name
+     */
+    void renameTable(String tableName);
+
+    /**
+     * Rollback table(remove suffix "_X_") after {@link #renameTable}
+     *
+     * @param tableName  schema_name.table_name
+     */
+    void rollbackTable(String tableName);
+
 }

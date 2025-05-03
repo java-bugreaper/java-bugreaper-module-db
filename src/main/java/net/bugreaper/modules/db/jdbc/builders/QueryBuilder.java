@@ -29,7 +29,13 @@ import static net.bugreaper.modules.db.allurereporter.AllureReporter.attachTable
 public class QueryBuilder extends QueryConditionsBuilder {
 
 
-
+    /**
+     * Creates a new {@code QueryBuilder} instance for the specified database type.
+     * <p>
+     * The provided {@code dbType} is passed to the parent class for initialization.
+     *
+     * @param dbType the database type identifier (e.g., "mariadb", "custom-db");
+     */
     public QueryBuilder(String dbType) {
         super(dbType);
         Log.LOGGER.debug("Database type: {}", dbType);

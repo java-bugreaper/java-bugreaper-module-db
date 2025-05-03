@@ -22,6 +22,15 @@ public class MariaDb extends JdbcExecutor<MariaDb> {
             WHERE TABLE_SCHEMA='%s'
                 AND TABLE_NAME='%s'""";
 
+    /**
+     * Creates a new MariaDb database helper instance with the specified connection parameters.
+     *
+     * @param dbUrl    the JDBC connection URL for the MariaDb database
+     * @param username the username used to authenticate with the database
+     * @param passwd   the password used to authenticate with the database
+     *
+     * @throws IllegalArgumentException if any of the required parameters are null or empty
+     */
     public MariaDb(String dbUrl, String username, String passwd) {
         super(dbUrl,
                 username,
@@ -31,9 +40,14 @@ public class MariaDb extends JdbcExecutor<MariaDb> {
     }
 
     /**
-     * Run {@link #MariaDb()} from config in one instance
+     * Returns the singleton instance of {@link MariaDb}.
+     * <p>
+     * This implementation is thread-safe using method-level synchronization.
+     * However, it may have performance overhead due to synchronization on every call.
+     *
+     * @return the singleton instance of {@link MariaDb}
      */
-    public static MariaDb getInstance() {
+    public static synchronized MariaDb getInstance() {
         if (instance == null) {
             instance = new MariaDb();
         }

@@ -23,6 +23,15 @@ public class PostgreSQL extends JdbcExecutor<PostgreSQL> {
             WHERE TABLE_SCHEMA='%s'
                 AND TABLE_NAME='%s'""";
 
+    /**
+     * Creates a new PostgreSQL database helper instance with the specified connection parameters.
+     *
+     * @param dbUrl    the JDBC connection URL for the PostgreSQL database
+     * @param username the username used to authenticate with the database
+     * @param passwd   the password used to authenticate with the database
+     *
+     * @throws IllegalArgumentException if any of the required parameters are null or empty
+     */
     public PostgreSQL(String dbUrl, String username, String passwd) {
         super(dbUrl,
                 username,
@@ -32,9 +41,14 @@ public class PostgreSQL extends JdbcExecutor<PostgreSQL> {
     }
 
     /**
-     * Run {@link #PostgreSQL()} from config in one instance
+     * Returns the singleton instance of {@link PostgreSQL}.
+     * <p>
+     * This implementation is thread-safe using method-level synchronization.
+     * However, it may have performance overhead due to synchronization on every call.
+     *
+     * @return the singleton instance of {@link PostgreSQL}
      */
-    public static PostgreSQL getInstance() {
+    public static synchronized PostgreSQL getInstance() {
         if (instance == null) {
             instance = new PostgreSQL();
         }
@@ -43,7 +57,7 @@ public class PostgreSQL extends JdbcExecutor<PostgreSQL> {
     }
 
     /**
-     * Constructs OracleDb client configuration.
+     * Constructs PostgreSQL client configuration.
      *
      * <p>Loads configuration values from a YAML file.</p>
      * more info {@link JdbcExecutor#JdbcExecutor(String dbType, String getColumnsQuery)}
@@ -52,6 +66,11 @@ public class PostgreSQL extends JdbcExecutor<PostgreSQL> {
         super(DbTypes.POSTGRE_SQL.value(), GET_COLUMNS);
     }
 
+    /**
+     * Truncate(clean) table and all connected by foreign keys tables
+     *
+     * @param tableName schema_name.table_name
+     */
     @Step("Truncate table {tableName} CASCADE")
     public void truncateTableCascade(String tableName) {
         jdbc.sqlExecute("TRUNCATE TABLE " + tableName + " CASCADE");
