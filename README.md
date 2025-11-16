@@ -1,10 +1,11 @@
 # BUGREAPER: module-db
 
-for interact with Databases
+for interaction with Databases
 
 ## [apiDOC](https://bug-reaper.gitlab.io/java-bugreaper-module-db/)
+## [Wiki](https://gitlab.com/bug-reaper/java-bugreaper-module-db/-/wikis/home)
 
-### [EXAMPLES.md](EXAMPLES.md)
+### [EXAMPLES.md](https://gitlab.com/bug-reaper/java-bugreaper-module-db/-/wikis/Examples)
 
 ### Requirements:
 
@@ -14,9 +15,14 @@ for interact with Databases
 ### IMPORTANT add jdbc for your database type(not included in helper):
 
     testImplementation 'org.mariadb.jdbc:mariadb-java-client:2.7.12'
+
     testImplementation "com.mysql:mysql-connector-j:8.2.0"
+    implementation "mysql:mysql-connector-java:8.0.33"
+
     testImplementation 'org.postgresql:postgresql:42.7.1'
+
     testImplementation 'com.oracle.database.jdbc:ojdbc11:23.2.0.0'
+
     testImplementation 'com.microsoft.sqlserver:mssql-jdbc:12.4.2.jre11'
 
 ### Logging:
