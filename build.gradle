@@ -27,7 +27,7 @@ repositories {
 }
 
 dependencies {
-    api 'io.gitlab.ambu550:bugreaper-core:0.0.8-rc'
+    api 'io.gitlab.ambu550:bugreaper-core:0.0.8'
 
     api 'com.zaxxer:HikariCP:5.1.0'
 

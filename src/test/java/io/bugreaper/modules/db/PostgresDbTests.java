@@ -415,7 +415,7 @@ class PostgresDbTests extends PostgresDbSetup {
         MatcherAssert.assertThat(
                 "No template file in resources",
                 exception.getMessage(),
-                StringContains.containsString("Can't find file in resources: templates/postgresql/NOT_EXISTS.TABLE.json"));
+                StringContains.containsString("File not exist in resources: templates/postgresql/NOT_EXISTS.TABLE.json"));
 
     }
 
