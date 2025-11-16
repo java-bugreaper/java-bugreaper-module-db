@@ -41,8 +41,4 @@ for interaction with Databases
 - ### [Report-db](https://bug-reaper.gitlab.io/java-bugreaper-sandbox/#behaviors)
 - ### [Tests](https://gitlab.com/bug-reaper/java-bugreaper-sandbox/-/tree/main/java-test-db)
 
-### Dependencies
-| Lib                                                                                   | Version  | Description       |
-|---------------------------------------------------------------------------------------|----------|-------------------|
-| [bugreaper-core](https://mvnrepository.com/artifact/io.gitlab.ambu550/bugreaper-core) | 0.0.8-rc | bugreaper CORE    |
 
