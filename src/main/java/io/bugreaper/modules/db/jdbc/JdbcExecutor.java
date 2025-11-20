@@ -150,7 +150,7 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AssertLogi
     }
 
     @Override
-    @Step("(DB) Truncate tables: {tablesName}")
+    @Step("(DB) Truncate tables: {tablesNames}")
     public void truncateTables(String... tablesNames) {
         for (String table : tablesNames) {
             jdbc.sqlExecute("TRUNCATE TABLE " + table);
@@ -159,7 +159,6 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AssertLogi
     }
 
     @Override
-    @Step("(DB) UPDATE {tableName} {set}")
     public void updateTable(String tableName, Object[][] setArray) {
 
         Allure.step("(DB)UPDATE from " + tableName + " " + Arrays.deepToString(setArray), (Allure.ThrowableContextRunnableVoid<Allure.StepContext>) step ->
