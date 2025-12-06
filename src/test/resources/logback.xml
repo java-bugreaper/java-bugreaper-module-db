@@ -9,6 +9,7 @@
     </appender>
 
 
+    <logger name="io.qameta.allure.AllureLifecycle" level="OFF" />
     <logger name="bugreaper-module-db" level="DEBUG" />
     <logger name="com.github.dockerjava.zerodep.shaded" level="INFO" />
 

@@ -1,8 +1,13 @@
 package testcontainers;
 
+import com.github.dockerjava.api.model.ExposedPort;
+import com.github.dockerjava.api.model.PortBinding;
+import com.github.dockerjava.api.model.Ports;
 import io.bugreaper.modules.db.MySQL;
 import org.testcontainers.mysql.MySQLContainer;
 import org.testcontainers.utility.DockerImageName;
+
+import java.util.Objects;
 
 
 public class MySqlDbSetup {
@@ -14,6 +19,11 @@ public class MySqlDbSetup {
 
     public MySqlDbSetup() {
         container
+                .withUsername("mysql_user")
+                .withPassword("mysql_pass")
+                .withCreateContainerCmdModifier(cmd -> Objects.requireNonNull(cmd.getHostConfig()).withPortBindings(
+                        new PortBinding(Ports.Binding.bindPort(3308),
+                                new ExposedPort(3306))))
                 .withInitScript("dump/mysql_setup.sql")
                 .withDatabaseName("MYSQL_SCHEMA")
                 .start();
@@ -33,8 +43,8 @@ public class MySqlDbSetup {
                 "jdbc:mysql://"
                         + container.getHost() + ":"
                         + container.getMappedPort(3306),
-                "test",
-                "test");
+                "mysql_user",
+                "mysql_pass");
     }
 
 }

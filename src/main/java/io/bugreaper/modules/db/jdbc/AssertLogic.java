@@ -1,7 +1,6 @@
 package io.bugreaper.modules.db.jdbc;
 
 import io.bugreaper.modules.db.exceptions.JdbcExecutorException;
-import io.bugreaper.modules.db.jdbc.builders.QueryBuilder;
 import io.bugreaper.modules.db.jdbc.connection.JdbcDirectivesHikari;
 import io.qameta.allure.Allure;
 import io.qameta.allure.Param;
@@ -9,7 +8,6 @@ import io.qameta.allure.Step;
 import org.apache.commons.lang3.StringUtils;
 import org.awaitility.core.ConditionTimeoutException;
 
-import java.net.URI;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,26 +27,29 @@ import static org.junit.jupiter.api.Assertions.fail;
 @SuppressWarnings("squid:S5960")
 abstract class AssertLogic {
 
-    protected final QueryBuilder qb;
-    protected final JdbcDirectivesHikari jdbc;
-    protected final String getColumnsQuery;
+    protected JdbcDirectivesHikari jdbc;
+    protected String getColumnsQuery;
+    protected String url;
+    protected String username;
+    protected String password;
 
 
     protected static final String SELECT_ALL = "SELECT * FROM ";
     protected static final String COUNT = "COUNT_RES";
-    protected final String dbType;
 
-    protected AssertLogic(String dbUrl,
+
+    protected AssertLogic(String url,
                           String username,
-                          String passwd,
+                          String password,
                           String getColumnsQuery) {
 
-        this.dbType = StringUtils.substringBefore(URI.create(dbUrl).getSchemeSpecificPart(), ":");
+        jdbc = new JdbcDirectivesHikari(url, username, password);
 
-        jdbc = new JdbcDirectivesHikari(dbUrl, username, passwd);
-
-        this.qb = new QueryBuilder(dbType);
         this.getColumnsQuery = getColumnsQuery;
+    }
+
+    protected AssertLogic() {
+
     }
 
     @Step("(DB)[ASSERT] Count records in {tableName} {conditions} EQUAL {expectedCount}")
@@ -145,10 +146,19 @@ abstract class AssertLogic {
         for (int i = 0; i < conditionsArray.length; i++) {
             columnsName[i] = conditionsArray[i][0].toString();
 
-            if (conditionsArray[i].length > 2) {
-                expectFor.add("(" + conditionsArray[i][1] + ")" + conditionsArray[i][2]);
-            } else {
-                expectFor.add(conditionsArray[i][1]);
+            switch (conditionsArray[i].length ) {
+                //for oracle dates
+                case 4:
+                    expectFor.add("(" + conditionsArray[i][1] + ")" + conditionsArray[i][3]);
+                    break;
+                //for custom conditions
+                case 3:
+                    expectFor.add("(" + conditionsArray[i][1] + ")" + conditionsArray[i][2]);
+                    break;
+                //base two elements or else
+                default:
+                    expectFor.add(conditionsArray[i][1]);
+                    break;
             }
 
         }

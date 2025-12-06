@@ -35,7 +35,7 @@ for interaction with Databases
     mariadb:10.10
     mysql:8.0.21
     postgres:14.1
-    gvenzl/oracle-free:23.9-slim
+    gvenzl/oracle-xe:21-slim
 
 ## Real examples here:
 - ### [Report-db](https://bug-reaper.gitlab.io/java-bugreaper-sandbox/#behaviors)

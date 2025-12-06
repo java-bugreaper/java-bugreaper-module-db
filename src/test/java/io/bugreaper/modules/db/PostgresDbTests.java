@@ -1,5 +1,6 @@
 package io.bugreaper.modules.db;
 
+import com.zaxxer.hikari.pool.HikariPool;
 import io.bugreaper.core.exceptions.FileReaderException;
 import io.bugreaper.modules.db.exceptions.JdbcExecutorException;
 import io.bugreaper.modules.db.exceptions.QueryBuilderException;
@@ -89,6 +90,8 @@ class PostgresDbTests extends PostgresDbSetup {
 
     @Test
     void templateFileInsertTest() {
+
+        db.truncateTable(TEST_TABLE_FOR_TEMPLATE);
 
         db.insertIntoTable(TEST_TABLE_FOR_TEMPLATE,
                 new Object[][]{
@@ -381,12 +384,12 @@ class PostgresDbTests extends PostgresDbSetup {
         PostgreSQL dbTest = setup.getPostgresDb();
 
         Throwable exception = assertThrows(IllegalArgumentException.class, () ->
-                dbTest.setTemplateDirectory(""));
+                dbTest.setTemplatesDirectory(""));
 
         MatcherAssert.assertThat(
-                "Error on config .setTemplateDirectory empty",
+                "Error on config .setTemplatesDirectory empty",
                 exception.getMessage(),
-                StringContains.containsString("templatePath can`t be empty or null"));
+                StringContains.containsString("templatesPath can`t be empty or null"));
     }
 
     @Test
@@ -395,12 +398,12 @@ class PostgresDbTests extends PostgresDbSetup {
         PostgreSQL dbTest = setup.getPostgresDb();
 
         Throwable exception = assertThrows(IllegalArgumentException.class, () ->
-                dbTest.setTemplateDirectory(null));
+                dbTest.setTemplatesDirectory(null));
 
         MatcherAssert.assertThat(
-                "Error on config .setTemplateDirectory empty",
+                "Error on config .setTemplatesDirectory empty",
                 exception.getMessage(),
-                StringContains.containsString("templatePath can`t be empty or null"));
+                StringContains.containsString("templatesPath can`t be empty or null"));
     }
 
     @Test
@@ -419,7 +422,15 @@ class PostgresDbTests extends PostgresDbSetup {
 
     }
 
+    @Test
+    void wrongConfigConnect() {
+
+        Throwable exception = assertThrows(HikariPool.PoolInitializationException.class, PostgreSQL::new);
+
+        MatcherAssert.assertThat(
+                exception.getMessage(),
+                StringContains.containsString("Connection to localhost:5434 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections"));
+
+    }
+
 }
-
-
-

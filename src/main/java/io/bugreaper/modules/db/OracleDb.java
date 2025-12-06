@@ -10,23 +10,36 @@ import org.apache.commons.lang3.StringUtils;
  *
  * <p>Contains methods for:</p>
  * asserts with await, change data (create, update, clean)<br>
- * more info {@link JdbcExecutor},
+ * more info {@link JdbcExecutor}
  */
 public final class OracleDb extends JdbcExecutor<OracleDb> {
+
+    private static final String GET_COLUMNS = """
+            SELECT
+            column_name as COLUMN_NAME
+            FROM
+            all_tab_columns
+            WHERE
+            owner = '%s'
+            AND
+            table_name = '%s'""";
 
     public OracleDb(String dbUrl, String username, String passwd) {
         super(dbUrl,
                 username,
                 passwd,
-                """
-                        SELECT
-                        column_name as COLUMN_NAME
-                        FROM
-                        all_tab_columns
-                        WHERE
-                        owner = '%s'
-                        AND
-                        table_name = '%s'""");
+                GET_COLUMNS,
+                DbTypes.ORACLE_DB.value());
+    }
+
+    /**
+     * Constructs OracleDb client configuration.
+     *
+     * <p>Loads configuration values from a YAML file.</p>
+     * more info {@link JdbcExecutor#JdbcExecutor(String dbType, String getColumnsQuery)}
+     */
+    public OracleDb() {
+        super(DbTypes.ORACLE_DB.value(), GET_COLUMNS);
     }
 
     @Override

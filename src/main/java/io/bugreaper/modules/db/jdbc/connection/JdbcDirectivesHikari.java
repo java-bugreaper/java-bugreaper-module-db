@@ -16,8 +16,7 @@
 package io.bugreaper.modules.db.jdbc.connection;
 
 import io.bugreaper.modules.db.exceptions.SqlExecuteException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.bugreaper.modules.db.logger.Log;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -29,13 +28,8 @@ import static io.bugreaper.modules.db.allurereporter.AllureReporter.executeQuery
 
 public class JdbcDirectivesHikari {
 
-
-    private static final String TRY_EXECUTE = "Try to execute sql:\n {}";
-    private static final String FAILED_EXECUTE = "Failed to execute:\n {}";
     private ResultSet resultSet;
     DataSource dataSource;
-
-    private static final Logger LOGGER = LoggerFactory.getLogger("bugreaper-module-db");
 
 
     public JdbcDirectivesHikari(String dbUrl,
@@ -51,7 +45,7 @@ public class JdbcDirectivesHikari {
         List<Object> columnResultList = new LinkedList<>();
         resultSet = null;
 
-        LOGGER.debug(TRY_EXECUTE, query);
+        tryExecuteLog(query);
 
         try (Connection con = dataSource.getConnection();
              PreparedStatement pst = con.prepareStatement(query)) {
@@ -66,8 +60,7 @@ public class JdbcDirectivesHikari {
             }
 
         } catch (Exception sqlException) {
-            LOGGER.error(FAILED_EXECUTE, query);
-            throw new SqlExecuteException(sqlException);
+            throwException(sqlException, query);
         }
 
         return columnResultList;
@@ -78,7 +71,7 @@ public class JdbcDirectivesHikari {
         resultSet = null;
         String columnResult = null;
 
-        LOGGER.debug(TRY_EXECUTE, query);
+        tryExecuteLog(query);
 
         try (Connection con = dataSource.getConnection();
              PreparedStatement pst = con.prepareStatement(query)) {
@@ -89,8 +82,7 @@ public class JdbcDirectivesHikari {
             }
 
         } catch (Exception sqlException) {
-            LOGGER.error(FAILED_EXECUTE, query);
-            throw new SqlExecuteException(sqlException);
+            throwException(sqlException, query);
         }
         return columnResult;
     }
@@ -109,13 +101,21 @@ public class JdbcDirectivesHikari {
         try (Connection con = dataSource.getConnection();
              PreparedStatement pst = con.prepareStatement(query)) {
 
-            LOGGER.debug(TRY_EXECUTE, query);
+            tryExecuteLog(query);
             pst.executeUpdate();
 
         } catch (Exception sqlException) {
-            LOGGER.error(FAILED_EXECUTE, query);
-            throw new SqlExecuteException(sqlException);
+            throwException(sqlException, query);
         }
+    }
+
+    private static void tryExecuteLog(String query){
+        Log.LOGGER.debug("Try to execute sql:\n {}", query);
+    }
+
+    private static void throwException(Exception sqlException, String query){
+        Log.LOGGER.error("Failed to execute:\n {}", query);
+        throw new SqlExecuteException(sqlException);
     }
 
 }

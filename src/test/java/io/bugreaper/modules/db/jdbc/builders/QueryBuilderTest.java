@@ -1,26 +1,21 @@
 package io.bugreaper.modules.db.jdbc.builders;
 
-import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.net.URI;
 
+import static io.bugreaper.modules.db.helpers.Convert.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class QueryBuilderTest {
 
-    private final String oracle = convertToDbType("jdbc:oracle:thin:@//oracle/XEPDB1");
-    private final String maria = convertToDbType("jdbc:mariadb://mariadb:3306");
-    private final String mssql = convertToDbType("jdbc:sqlserver://mssql:1433;databaseName=master");
-    private final String mysql = convertToDbType("jdbc:mysql://mariadb:3306");
+    private final String oracle = convertToDbType(getOracleDbUrl());
+    private final String maria = convertToDbType(getMariaDbUrl());
+    private final String mssql = convertToDbType(getMsSqlUrl());
+    private final String mysql = convertToDbType(getMySqlUrl());
 
     private final QueryBuilder qbm = new QueryBuilder(maria);
 
-
-    private String convertToDbType(String dbUrl){
-        return  StringUtils.substringBefore(URI.create(dbUrl).getSchemeSpecificPart(), ":");
-    }
 
     @Test
     void testBuildConditionString() {

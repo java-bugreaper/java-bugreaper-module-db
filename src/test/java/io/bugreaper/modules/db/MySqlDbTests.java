@@ -8,17 +8,19 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import testcontainers.MySqlDbSetup;
 
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 import static java.lang.Thread.sleep;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SuppressWarnings("squid:S2699")
 class MySqlDbTests {
 
     private static final MySqlDbSetup setup = MySqlDbSetup.getInstance();
-    private static final MySQL db = setup.getMysqlDb().setTemplateDirectory("templates/custom/");
+    private static final MySQL db = setup.getMysqlDb().setTemplatesDirectory("templates/custom/");
 
     private static final String TEST_TABLE = "MYSQL_SCHEMA.USERS";
     private static final String TEST_TABLE2 = "MYSQL_SCHEMA.USERS2";
@@ -60,6 +62,8 @@ class MySqlDbTests {
 
     @Test
     void templateFileInsertTest() {
+
+        db.truncateTable(TEST_TABLE_FOR_TEMPLATE);
 
         db.insertIntoTable(TEST_TABLE_FOR_TEMPLATE,
                 new Object[][]{
@@ -339,7 +343,7 @@ class MySqlDbTests {
         MatcherAssert.assertThat(
                 "Exception on JSON_EQUALS for mysql",
                 exception.getMessage(),
-                StringContains.containsString("ERROR, wrong 3 elements for maria/mysql mapper: <JSON_EQUALS> must be: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE] or JSON_CONTAINS, REGEX_MATCH"));
+                StringContains.containsString("ERROR, wrong 3 elements for mariadb/mysql mapper: <JSON_EQUALS> must be: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE] or JSON_CONTAINS, REGEX_MATCH"));
     }
 
     @Test
@@ -627,6 +631,7 @@ class MySqlDbTests {
         CompletableFuture.allOf(future1, future2).join();
 
     }
+
     @SuppressWarnings("squid:S2925")
     private void pushWithSleep() {
         try {
@@ -640,6 +645,58 @@ class MySqlDbTests {
                 {"USERNAME", "Pupkin2"},
         });
     }
+
+    private static final String CI = System.getenv("CI");
+    private static final String PROPERTY = "bugreaperEnv";
+
+    String getCi(){
+        if(Objects.equals(CI, "true")){
+            return "jdbc:mysql://docker:3308";
+        }else {
+            return  "jdbc:mysql://localhost:3308";
+        }
+    }
+
+    @Test
+    void ConfigRequiredFieldsTest() {
+        if(Objects.equals(CI, "true")){
+            System.setProperty(PROPERTY, "docker");
+        }else {
+            System.clearProperty(PROPERTY);
+        }
+
+        MySQL dbConf = new MySQL();
+
+        dbConf.truncateTable(TEST_TABLE_FOR_TEMPLATE);
+
+        dbConf.insertIntoTable(TEST_TABLE_FOR_TEMPLATE,
+                new Object[][]{
+                        {"ID", 3},
+                });
+
+
+        dbConf.seeRecordExistsInTable
+                (TEST_TABLE_FOR_TEMPLATE,
+                        new Object[][]{
+                                {"ID", 3},
+                                {"NAME", "Alex"},
+                                {"AMOUNT", 10.55},
+                                {"IS_ACTIVE", false},
+                        });
+
+
+        assertEquals(String.format("""
+                        MySQL:
+                            dbType=mysql
+                            url=%s
+                            username=mysql_user
+                            password=mysql_pass
+                            awaitMs=2000
+                            templatesPath=templates/mysql/
+                        """, getCi()),
+                dbConf.getConfigSummary());
+    }
+
 }
 
 

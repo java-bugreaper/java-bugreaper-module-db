@@ -7,7 +7,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import testcontainers.MariaDbSetup;
 
+import java.util.Objects;
+
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SuppressWarnings("squid:S2699")
@@ -18,7 +21,7 @@ class MariaDbTests {
 
     private static final String TEST_TABLE = "MARIA_SCHEMA.USERS";
     private static final String TEST_TABLE2 = "MARIA_SCHEMA.USERS2";
-
+    private static final String TEST_TABLE_FOR_TEMPLATE = "MARIA_SCHEMA.TEMP";
 
     private void insertIntoUsers(Object[][] testArray) {
         final Object[][] template = {
@@ -586,7 +589,56 @@ class MariaDbTests {
                 exception.getMessage(),
                 StringContains.containsString("You have an error in your SQL syntax"));
     }
+
+    private static final String CI = System.getenv("CI");
+    private static final String PROPERTY = "bugreaperEnv";
+
+    String getCi(){
+        if(Objects.equals(CI, "true")){
+            return "jdbc:mariadb://docker:3307";
+        }else {
+            return  "jdbc:mariadb://localhost:3307";
+        }
+    }
+
+    @Test
+    void ConfigAllFieldsTest() {
+        if(Objects.equals(CI, "true")){
+            System.setProperty(PROPERTY, "docker");
+        }else {
+            System.clearProperty(PROPERTY);
+        }
+
+        MariaDb dbConf = new MariaDb();
+
+        dbConf.truncateTable(TEST_TABLE_FOR_TEMPLATE);
+
+        dbConf.insertIntoTable(TEST_TABLE_FOR_TEMPLATE,
+            new Object[][]{
+                    {"ID", 2},
+        });
+
+
+        dbConf.seeRecordExistsInTable
+                (TEST_TABLE_FOR_TEMPLATE,
+                        new Object[][]{
+                                {"ID", 2},
+                                {"NAME", "Maria"},
+                                {"AMOUNT", 10.55},
+                                {"IS_ACTIVE", false},
+                        });
+
+
+        assertEquals(String.format("""
+                        MariaDb:
+                            dbType=mariadb
+                            url=%s
+                            username=test_user
+                            password=secret_pass
+                            awaitMs=510
+                            templatesPath=templates/mariadb/
+                        """, getCi()),
+                dbConf.getConfigSummary());
+    }
+
 }
-
-
-

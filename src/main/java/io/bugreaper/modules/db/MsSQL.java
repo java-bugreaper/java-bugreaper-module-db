@@ -9,20 +9,32 @@ import org.apache.commons.lang3.StringUtils;
  *
  * <p>Contains methods for:</p>
  * asserts with await, change data (create, update, clean)<br>
- *  * more info {@link JdbcExecutor},
+ * more info {@link JdbcExecutor}
  */
 public class MsSQL extends JdbcExecutor<MsSQL> {
 
+    private static final String GET_COLUMNS = """
+            SELECT COLUMN_NAME
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA='%s'
+                AND TABLE_NAME='%s'""";
 
     public MsSQL(String dbUrl, String username, String passwd) {
         super(dbUrl,
                 username,
                 passwd,
-                """
-                        SELECT COLUMN_NAME
-                        FROM INFORMATION_SCHEMA.COLUMNS
-                        WHERE TABLE_SCHEMA='%s'
-                            AND TABLE_NAME='%s'""");
+                GET_COLUMNS,
+                DbTypes.MS_SQL.value());
+    }
+
+    /**
+     * Constructs MsSQL client configuration.
+     *
+     * <p>Loads configuration values from a YAML file.</p>
+     * more info {@link JdbcExecutor#JdbcExecutor(String dbType, String getColumnsQuery)}
+     */
+    public MsSQL() {
+        super(DbTypes.MS_SQL.value(), GET_COLUMNS);
     }
 
     @Override

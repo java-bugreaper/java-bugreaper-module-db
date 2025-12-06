@@ -1,9 +1,14 @@
 package testcontainers;
 
+import com.github.dockerjava.api.model.ExposedPort;
+import com.github.dockerjava.api.model.PortBinding;
+import com.github.dockerjava.api.model.Ports;
 import io.bugreaper.modules.db.MariaDb;
 
 import org.testcontainers.mariadb.MariaDBContainer;
 import org.testcontainers.utility.DockerImageName;
+
+import java.util.Objects;
 
 
 public class MariaDbSetup {
@@ -15,6 +20,11 @@ public class MariaDbSetup {
 
     public MariaDbSetup() {
         container
+                .withUsername("test_user")
+                .withPassword("secret_pass")
+                .withCreateContainerCmdModifier(cmd -> Objects.requireNonNull(cmd.getHostConfig()).withPortBindings(
+                        new PortBinding(Ports.Binding.bindPort(3307),
+                                new ExposedPort(3306))))
                 .withInitScript("dump/maria_setup.sql")
                 .withDatabaseName("MARIA_SCHEMA")
                 .start();
@@ -34,8 +44,8 @@ public class MariaDbSetup {
                 "jdbc:mariadb://"
                         + container.getHost() + ":"
                         + container.getMappedPort(3306),
-                "test",
-                "test");
+                "test_user",
+                "secret_pass");
     }
 
 }
