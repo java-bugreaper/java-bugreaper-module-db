@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 import org.opentest4j.AssertionFailedError;
 import testcontainers.MsSqlDbSetup;
 
+import java.util.Objects;
+
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -583,6 +585,58 @@ class MsSqlDbTests {
                         [222, Pupkin2, false, null]""",
                 exception.getMessage(),
                 "Exception on seeRecordExistsInTable");
+    }
+
+    private static final String CI = System.getenv("CI");
+    private static final String PROPERTY = "bugreaperEnv";
+    private static final String TEST_TABLE_FOR_TEMPLATE = "test_schema.temp";
+
+
+    String getCi(){
+        if(Objects.equals(CI, "true")){
+            return "jdbc:sqlserver://docker:1435;encrypt=false";
+        }else {
+            return  "jdbc:sqlserver://localhost:1435;encrypt=false";
+        }
+    }
+
+    @Test
+    void ConfigAllFieldsTest() {
+        if(Objects.equals(CI, "true")){
+            System.setProperty(PROPERTY, "docker");
+        }else {
+            System.clearProperty(PROPERTY);
+        }
+
+        MsSQL dbConf = new MsSQL();
+
+        dbConf.truncateTable(TEST_TABLE_FOR_TEMPLATE);
+
+        dbConf.insertIntoTable(TEST_TABLE_FOR_TEMPLATE,
+                new Object[][]{
+                        {"ID", 2},
+                });
+
+
+        dbConf.seeRecordExistsInTable
+                (TEST_TABLE_FOR_TEMPLATE,
+                        new Object[][]{
+                                {"ID", 2},
+                                {"USERNAME", "Test"},
+                                {"STATE", 1},
+                        });
+
+
+        assertEquals(String.format("""
+                        MsSQL:
+                            dbType=sqlserver
+                            url=%s
+                            username=sa
+                            password=YourStrong(!)Password
+                            awaitMs=250
+                            templatesPath=templates/sqlserver/
+                        """, getCi()),
+                dbConf.getConfigSummary());
     }
 }
 

@@ -1,29 +1,23 @@
 package io.bugreaper.modules.db.jdbc.builders;
 
 import io.bugreaper.modules.db.exceptions.QueryBuilderException;
-import org.apache.commons.lang3.StringUtils;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.core.StringContains;
 import org.junit.jupiter.api.Test;
 
-import java.net.URI;
-
+import static io.bugreaper.modules.db.helpers.Convert.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class QueryBuilderNegativeTest {
 
-    private final String oracle = convertToDbType("jdbc:oracle:thin:@//oracle/XEPDB1");
-    private final String maria = convertToDbType("jdbc:mariadb://mariadb:3306");
-    private final String mssql = convertToDbType("jdbc:sqlserver://mssql:1433;databaseName=master");
-    private final String mysql = convertToDbType("jdbc:mysql://mariadb:3306");
+    private final String oracle = convertToDbType(getOracleDbUrl());
+    private final String maria = convertToDbType(getMariaDbUrl());
+    private final String mssql = convertToDbType(getMsSqlUrl());
+    private final String mysql = convertToDbType(getMySqlUrl());
 
     private final QueryBuilder qbm = new QueryBuilder(maria);
 
-
-    private String convertToDbType(String dbUrl){
-        return  StringUtils.substringBefore(URI.create(dbUrl).getSchemeSpecificPart(), ":");
-    }
 
 
     @Test
@@ -125,7 +119,7 @@ class QueryBuilderNegativeTest {
                         {"COLUMN2", "SOME", "2020-05-05"},
                 }));
 
-        assertEquals("ERROR, wrong 3 elements for maria/mysql mapper: <SOME> must be: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE] or [JSON_CONTAINS, JSON_EQUALS], REGEX_MATCH",
+        assertEquals("ERROR, wrong 3 elements for mariadb/mysql mapper: <SOME> must be: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE] or [JSON_CONTAINS, JSON_EQUALS], REGEX_MATCH",
                 exception.getMessage(),
                 "Exception with 3 elements, wrong condition for maria/mysql");
     }
@@ -268,7 +262,7 @@ class QueryBuilderNegativeTest {
         MatcherAssert.assertThat(
                 "mysql not support JSON_EQUALS",
                 exception.getMessage(),
-                StringContains.containsString("ERROR, wrong 3 elements for maria/mysql mapper: <JSON_EQUALS> must be: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE] or JSON_CONTAINS, REGEX_MATCH"));
+                StringContains.containsString("ERROR, wrong 3 elements for mariadb/mysql mapper: <JSON_EQUALS> must be: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE] or JSON_CONTAINS, REGEX_MATCH"));
 
     }
 

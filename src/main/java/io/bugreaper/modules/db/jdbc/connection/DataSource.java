@@ -25,6 +25,7 @@ public class DataSource {
         config.addDataSourceProperty("cachePrepStmts", "true");
         config.addDataSourceProperty("prepStmtCacheSize", "250");
         config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+
         config.addDataSourceProperty("oracle.jdbc.timezoneAsRegion", "false");
         ds = new HikariDataSource(config);
 

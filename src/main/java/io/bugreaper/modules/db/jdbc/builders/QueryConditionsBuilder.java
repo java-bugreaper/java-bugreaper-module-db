@@ -15,9 +15,9 @@
  */
 package io.bugreaper.modules.db.jdbc.builders;
 
+import io.bugreaper.modules.db.DbTypes;
 import io.bugreaper.modules.db.exceptions.QueryBuilderException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.bugreaper.modules.db.logger.Log;
 
 import java.text.MessageFormat;
 import java.util.Arrays;
@@ -31,7 +31,6 @@ public class QueryConditionsBuilder {
 
     private final String dbType;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger("bugreaper-module-db");
     private static final List<String> basicConditions = Arrays.asList("=", "!=", "<>", ">", ">=", "<", "<=", "IS", "IS NOT", "LIKE");
     private static final String REGEX_CONDITION = "REGEX_MATCH";
 
@@ -53,10 +52,10 @@ public class QueryConditionsBuilder {
      */
     protected StringBuilder arrayCondition4Mapper(Object[] conditionsArray) {
 
-        if (Objects.equals(dbType, "oracle")) {
+        if (Objects.equals(dbType, DbTypes.ORACLE_DB.value())) {
             return arrayOracle4Mapper(conditionsArray);
         } else {
-            LOGGER.error("Query build failed for db: {} \narray {}", dbType, conditionsArray);
+            Log.LOGGER.error("Query build failed for db: {} \narray {}", dbType, conditionsArray);
             throw new QueryBuilderException("4 elements not supported for database: " + dbType);
         }
     }
@@ -74,7 +73,7 @@ public class QueryConditionsBuilder {
         } else if (Objects.equals(conditionsArray[2], oracleDateTimeEnum)) {
             return conditions.append(" ").append(conditionsArray[1]).append(" TO_DATE('").append(conditionsArray[3]).append("', 'YYYY-MM-DD HH24:MI:SS')");
         } else {
-            LOGGER.error("Query build failed for db: {} \narray {}", dbType, conditionsArray);
+            Log.LOGGER.error("Query build failed for db: {} \narray {}", dbType, conditionsArray);
             throw new QueryBuilderException("ERROR, wrong 4 elements for Oracle mapper: " + conditionsArray[2] + " must be: " +
                     oracleDateEnum + " or " + oracleDateTimeEnum);
         }
@@ -98,10 +97,10 @@ public class QueryConditionsBuilder {
 
         // specific conditions
         else {
-            if (Objects.equals(dbType, "mysql") || Objects.equals(dbType, "mariadb")) {
+            if (Objects.equals(dbType, DbTypes.MY_SQL.value()) || Objects.equals(dbType, DbTypes.MARIA_DB.value())) {
                 return arrayMaria3Mapper(conditionsArray);
             } else {
-                LOGGER.error("Query build failed for db: {} \narray {}\n use basic: {}", dbType, conditionsArray, basicConditions);
+                Log.LOGGER.error("Query build failed for db: {} \narray {}\n use basic: {}", dbType, conditionsArray, basicConditions);
 
                 throw new QueryBuilderException(MessageFormat.format("ERROR, wrong 3 elements: {0} must be: {1}",
                         conditionsArray[1], basicConditions));
@@ -117,8 +116,8 @@ public class QueryConditionsBuilder {
         StringBuilder conditions = new StringBuilder();
 
         //mysql not support JSON_EQUALS
-        if (mariaJsonContains.get(1) == conditionsArray[1] && Objects.equals(dbType, "mysql")) {
-            throw new QueryBuilderException(MessageFormat.format("ERROR, wrong 3 elements for maria/mysql mapper: <{0}> must be: {1} or {2}, {3}",
+        if (mariaJsonContains.get(1) == conditionsArray[1] && Objects.equals(dbType, DbTypes.MY_SQL.value())) {
+            throw new QueryBuilderException(MessageFormat.format("ERROR, wrong 3 elements for mariadb/mysql mapper: <{0}> must be: {1} or {2}, {3}",
                     conditionsArray[1], basicConditions, mariaJsonContains.get(0), REGEX_CONDITION));
         } else if (mariaJsonContains.contains(conditionsArray[1])) {
 
@@ -134,10 +133,10 @@ public class QueryConditionsBuilder {
                     .append(conditionsArray[0]).append(" RLIKE ").append("'").append(conditionsArray[2]).append("'");
 
         } else {
-            LOGGER.error("Query build failed for db: {} \narray {}\n use basic: {} or specific: {}, {}",
+            Log.LOGGER.error("Query build failed for db: {} \narray {}\n use basic: {} or specific: {}, {}",
                     dbType, conditionsArray, basicConditions, mariaJsonContains, REGEX_CONDITION);
 
-            throw new QueryBuilderException(MessageFormat.format("ERROR, wrong 3 elements for maria/mysql mapper: <{0}> must be: {1} or {2}, {3}",
+            throw new QueryBuilderException(MessageFormat.format("ERROR, wrong 3 elements for mariadb/mysql mapper: <{0}> must be: {1} or {2}, {3}",
                     conditionsArray[1], basicConditions, mariaJsonContains, REGEX_CONDITION));
         }
     }

@@ -10,7 +10,7 @@ import java.util.TimeZone;
 
 public class PostgresDbSetup {
 
-    static final DockerImageName POSTGRES_DB = DockerImageName.parse("postgres:14.1");
+    static final DockerImageName POSTGRES_DB = DockerImageName.parse("postgres:14.11");
     PostgreSQLContainer container = new PostgreSQLContainer(POSTGRES_DB);
     private static PostgresDbSetup instance;
 

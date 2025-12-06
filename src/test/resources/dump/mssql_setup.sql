@@ -30,3 +30,11 @@ CREATE TABLE test_schema.users2 (
 CREATE TABLE test_schema.test (
   test VARCHAR(255)
 );
+
+CREATE TABLE test_schema.temp (
+    ID INT,
+    USERNAME VARCHAR(64),
+    STATE INT NOT NULL
+);
+
+

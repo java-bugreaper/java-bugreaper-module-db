@@ -19,8 +19,6 @@ public interface Setters<T extends Setters<T>> {
      * @return self()
      * @throws IllegalArgumentException on invalid setup
      */
-    T setTemplateDirectory(String templatePath);
-
-
+    T setTemplatesDirectory(String templatePath);
 
 }

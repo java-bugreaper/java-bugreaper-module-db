@@ -16,6 +16,7 @@
 package io.bugreaper.modules.db.jdbc.builders;
 
 import io.bugreaper.modules.db.exceptions.QueryBuilderException;
+import io.bugreaper.modules.db.logger.Log;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,8 +31,11 @@ import static io.bugreaper.modules.db.allurereporter.AllureReporter.attachTableF
  */
 public class QueryBuilder extends QueryConditionsBuilder {
 
+
+
     public QueryBuilder(String dbType) {
         super(dbType);
+        Log.LOGGER.debug("Database type: {}", dbType);
     }
 
     /**

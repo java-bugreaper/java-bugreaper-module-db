@@ -1,0 +1,27 @@
+modules:
+  db:
+    mariadb:
+      url: 'jdbc:mariadb://localhost:3307'
+      username: test_user
+      password: secret_pass
+      await: 510 # optional
+    mysql:
+      url: 'jdbc:mysql://localhost:3308'
+      username: mysql_user
+      password: mysql_pass
+      #await: 600 # optional
+    postgresql:
+      url: 'jdbc:postgresql://localhost:5434/public'
+      username: mysql_user
+      password: mysql_pass
+      await: 200 # optional
+    sqlserver:
+      url: 'jdbc:sqlserver://localhost:1435;encrypt=false'
+      username: sa
+      password: YourStrong(!)Password
+      await: 250 # optional
+    oracle:
+      url: 'jdbc:oracle:thin:@//localhost:1521/XEPDB1'
+      username: ADMIN
+      password: ADMIN
+      await: 300 # optional

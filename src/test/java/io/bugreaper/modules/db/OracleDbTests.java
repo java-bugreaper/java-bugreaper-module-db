@@ -6,6 +6,8 @@ import org.opentest4j.AssertionFailedError;
 import testcontainers.OracleDbSetup;
 
 
+import java.util.Objects;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -19,8 +21,6 @@ class OracleDbTests {
     private static final String TEST_TABLE2 = "ORACLE_SCHEMA_2.COUNTRIES";
     private static final String TEST_FOR_RENAME = "ORACLE_SCHEMA.USERS";
     private static final String TEST_FOR_TEMPLATE = "ORACLE_SCHEMA.TEMP";
-
-
 
 
     public void insertIntoGoods(Object[][] testArray) {
@@ -51,6 +51,8 @@ class OracleDbTests {
     @Test
     void templateFileInsertTest() {
 
+        db.truncateTable(TEST_FOR_TEMPLATE);
+
         db.insertIntoTable(TEST_FOR_TEMPLATE,
                 new Object[][]{
                         {"ID", 2},
@@ -64,6 +66,56 @@ class OracleDbTests {
                                 {"AMOUNT", 10.55},
                                 {"CREATE_DATE", "=", "TIMESTAMP", "2020-02-02 12:00:00"},
                         });
+    }
+
+    private static final String CI = System.getenv("CI");
+    private static final String PROPERTY = "bugreaperEnv";
+
+    String getCi(){
+        if(Objects.equals(CI, "true")){
+            return "jdbc:oracle:thin:@//docker:1521/XEPDB1";
+        }else {
+            return  "jdbc:oracle:thin:@//localhost:1521/XEPDB1";
+        }
+    }
+
+    @Test
+    void ConfigAllFieldsTest() {
+        if(Objects.equals(CI, "true")){
+            System.setProperty(PROPERTY, "docker");
+        }else {
+            System.clearProperty(PROPERTY);
+        }
+
+        OracleDb dbConf = new OracleDb();
+
+        dbConf.truncateTable(TEST_FOR_TEMPLATE);
+
+        dbConf.insertIntoTable(TEST_FOR_TEMPLATE,
+                new Object[][]{
+                        {"ID", 2},
+                });
+
+        dbConf.seeRecordExistsInTable
+                (TEST_FOR_TEMPLATE,
+                        new Object[][]{
+                                {"ID", 2},
+                                {"NAME", "Alex"},
+                                {"AMOUNT", 10.55},
+                                {"CREATE_DATE", "=", "TIMESTAMP", "2020-02-02 12:00:00"},
+                        });
+
+
+        assertEquals(String.format("""
+                        OracleDb:
+                            dbType=oracle
+                            url=%s
+                            username=ADMIN
+                            password=ADMIN
+                            awaitMs=300
+                            templatesPath=templates/oracle/
+                        """, getCi()),
+                dbConf.getConfigSummary());
     }
 
 
@@ -139,7 +191,30 @@ class OracleDbTests {
                 "Exception on seeRecordExistsInTable");
     }
 
+    @Test
+    void seeRecordExistsInTableDateCatchTest() {
+        insertIntoGoods(new Object[][]{
+                {"ID", 2},
+                {"CREATE_DATE", "2020-01-01 10:00:00", "TIMESTAMP"},
+        });
+
+
+        Throwable exception = assertThrows(AssertionFailedError.class, () ->
+                db.seeRecordExistsInTable(TEST_TABLE,
+                        new Object[][]{
+                                {"ID", 2},
+                                {"CREATE_DATE", "=", "TIMESTAMP", "2020-02-02 15:15:15"},
+                        }));
+
+        assertEquals("""
+                        Failed: record/s not found in <ORACLE_SCHEMA.GOODS> within 500 milliseconds
+                        Expected for:
+                        [ID, CREATE_DATE]
+                        [2, (=)2020-02-02 15:15:15]
+                        Actual result(s)
+                        [2, 2020-01-01 10:00:00.0]""",
+                exception.getMessage(),
+                "Exception on seeRecordExistsInTable");
+    }
+
 }
-
-
-

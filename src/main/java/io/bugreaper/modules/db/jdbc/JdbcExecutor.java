@@ -1,15 +1,19 @@
 package io.bugreaper.modules.db.jdbc;
 
+import io.bugreaper.core.config.ConfigLoader;
+import io.bugreaper.core.config.YamlUtils;
+import io.bugreaper.modules.db.jdbc.builders.QueryBuilder;
+import io.bugreaper.modules.db.jdbc.connection.JdbcDirectivesHikari;
 import io.bugreaper.modules.db.jdbc.interfaces.Setters;
 import io.bugreaper.modules.db.jdbc.interfaces.SqlGet;
 import io.bugreaper.modules.db.jdbc.interfaces.SqlPost;
+import io.bugreaper.modules.db.logger.Log;
 import io.qameta.allure.Allure;
 import io.qameta.allure.Step;
 import org.awaitility.core.ConditionTimeoutException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.Map;
 
 import static io.bugreaper.core.allurereporter.AllureReporter.attachFromFileNoStep;
 import static io.bugreaper.core.filereaders.FileReader.readJsonFromFile;
@@ -51,40 +55,99 @@ import static io.bugreaper.modules.db.mapper.JsonToArrayMapper.jsonToObjectArray
  * {@link JdbcExecutor#showDataByCondition(String, Object[][])}
  *
  * <p> Await for asserts default: {@link JdbcExecutor#awaitMs}, can be changed by: {@link JdbcExecutor#withAwaitMs(int)}
- * <p> Path to template files for insert default: {@link JdbcExecutor#templatePath}, can be changed by: {@link JdbcExecutor#setTemplateDirectory(String)}
+ * <p> Path to template files for insert default: {@link JdbcExecutor#templatesPath}, can be changed by: {@link JdbcExecutor#setTemplatesDirectory(String)}
  */
 public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AssertLogic implements SqlPost, SqlGet, Setters<T> {
 
 
+
+    private static final String YML_KEY = "modules.db.";
     private static final String DELETE_FROM = "DELETE FROM %s %s";
 
     /**
      * default ms await in tests
      */
-    protected int awaitMs = 2000;
+    private int awaitMs = 2000;
 
     /**
      * default templates path for insert (dynamically for each database types)
      */
-    protected String templatePath = String.format("templates/%s/", dbType);
-
-    private static final Logger LOGGER = LoggerFactory.getLogger("bugreaper-module-db");
-
+    private String templatesPath;
+    private final String dbType;
+    private QueryBuilder qb;
 
     protected JdbcExecutor(String dbUrl,
                            String username,
                            String passwd,
-                           String getColumnsQuery) {
+                           String getColumnsQuery,
+                           String dbType) {
 
         super(dbUrl, username, passwd, getColumnsQuery);
-
-        LOGGER.debug("Database type: {}", dbType);
+        this.qb = new QueryBuilder(dbType);
+        this.dbType = dbType;
+        this.templatesPath = String.format("templates/%s/", dbType);
     }
+
+
+    /**
+     * Constructs db client configuration.
+     *
+     * <p>Loads configuration values from a YAML file.</p>
+     *
+     * <p><b>Default file:</b> {@code bugreaper.yml}</p>
+     * <p><b>Custom file:</b> using {@code -DbugreaperEnv=test} loads {@code bugreaper-test.yml}</p>
+     *
+     * <p><b>Required configuration keys:</b></p>
+     * <ul>
+     *     <li>{@code modules.db.url}</li>
+     *     <li>{@code modules.db.port}</li>
+     *     <li>{@code modules.db.username}</li>
+     *     <li>{@code modules.db.password}</li>
+     * </ul>
+     *
+     * <p><b>Optional configuration keys:</b></p>
+     * <ul>
+     *     <li>{@code modules.db.await}</li>
+     * </ul>
+     *
+     * <p>Missing required keys will result in configuration errors.
+     * Missing optional keys will fall back to predefined defaults.</p>
+     */
+    protected JdbcExecutor(String dbType, String getColumnsQuery) {
+
+        this.dbType = dbType;
+        this.getColumnsQuery = getColumnsQuery;
+        this.templatesPath = String.format("templates/%s/", dbType);
+
+        loadFromYaml(dbType);
+    }
+
+
+    private void loadFromYaml(String dbType) {
+        Map<String, Object> rawData = ConfigLoader.loadYaml();
+
+        //required config fields
+        this.url = YamlUtils.getStringValueByPath(rawData, YML_KEY + dbType + ".url");
+        this.username = YamlUtils.getStringValueByPath(rawData, YML_KEY + dbType + ".username");
+        this.password = YamlUtils.getStringValueByPath(rawData, YML_KEY + dbType + ".password");
+
+        //optional config fields
+        Object awaitVal = YamlUtils.getValueByPath(rawData, YML_KEY + dbType + ".await", true);
+        if (awaitVal instanceof Number number) {
+            withAwaitMs(number.intValue());
+        }
+
+        jdbc = new JdbcDirectivesHikari(this.url, this.username, this.password);
+        this.qb = new QueryBuilder(dbType);
+    }
+
 
     @SuppressWarnings("unchecked")
     protected T self() {
         return (T) this;
     }
+
+    // setters
 
     @Override
     public T withAwaitMs(int awaitMs) {
@@ -94,15 +157,33 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AssertLogi
         this.awaitMs = awaitMs;
         return self();
     }
-
     @Override
-    public T setTemplateDirectory(String templatePath) {
-        if (templatePath == null || templatePath.isBlank()) {
-            throw new IllegalArgumentException("templatePath can`t be empty or null");
+    public T setTemplatesDirectory(String templatesPath) {
+        if (templatesPath == null || templatesPath.isBlank()) {
+            throw new IllegalArgumentException("templatesPath can`t be empty or null");
         }
-        this.templatePath = templatePath;
+        this.templatesPath = templatesPath;
         return self();
     }
+
+    // getters
+
+    public String getConfigSummary() {
+        String info = String.format("""
+        %s:
+            dbType=%s
+            url=%s
+            username=%s
+            password=%s
+            awaitMs=%d
+            templatesPath=%s%n""",
+                this.getClass().getSimpleName(), dbType, url, username, password,
+                awaitMs, templatesPath);
+
+        Log.LOGGER.info(info);
+        return info;
+    }
+
 
     @Override
     public void insertIntoTable(String tableName,
@@ -115,14 +196,15 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AssertLogi
         );
     }
 
+
     @Override
     public void insertIntoTable(String tableName,
                                 Object[][] providedArray) {
-        LOGGER.debug("Looking for template file in resources: {}", templatePath);
+        Log.LOGGER.debug("Looking for template file in resources: {}", templatesPath);
 
         insertIntoTable(
                 tableName,
-                jsonToObjectArray(readJsonFromFile(templatePath + tableName + ".json"), true),
+                jsonToObjectArray(readJsonFromFile(templatesPath + tableName + ".json"), true),
                 providedArray);
     }
 
@@ -134,7 +216,7 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AssertLogi
 
         jdbc.sqlNoAttachExecute(readTextFromFile(path));
 
-        LOGGER.info("Script run completed from: {} ", path);
+        Log.LOGGER.info("Script run completed from: {} ", path);
     }
 
     @Override

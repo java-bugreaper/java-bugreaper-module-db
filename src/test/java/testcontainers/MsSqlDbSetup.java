@@ -1,8 +1,14 @@
 package testcontainers;
 
+import com.github.dockerjava.api.model.ExposedPort;
+import com.github.dockerjava.api.model.HostConfig;
+import com.github.dockerjava.api.model.PortBinding;
+import com.github.dockerjava.api.model.Ports;
 import io.bugreaper.modules.db.MsSQL;
 import org.testcontainers.mssqlserver.MSSQLServerContainer;
 import org.testcontainers.utility.DockerImageName;
+
+import java.util.Optional;
 
 
 public class MsSqlDbSetup {
@@ -16,6 +22,21 @@ public class MsSqlDbSetup {
     public MsSqlDbSetup() {
         container
                 .acceptLicense()
+                .withPassword("YourStrong(!)Password")
+                .withExposedPorts(1433)
+                .withCreateContainerCmdModifier(cmd -> {
+                    HostConfig hc = Optional.ofNullable(cmd.getHostConfig())
+                            .orElseGet(HostConfig::new);
+
+                    hc.withPortBindings(
+                            new PortBinding(
+                                    Ports.Binding.bindPort(1435),
+                                    new ExposedPort(1433)
+                            )
+                    );
+
+                    cmd.withHostConfig(hc);
+                })
                 .withInitScript("dump/mssql_setup.sql")
                 .start();
     }
@@ -29,6 +50,7 @@ public class MsSqlDbSetup {
     }
 
     public MsSQL getMssqlDb() {
+
         return new MsSQL(
                 container.getJdbcUrl(),
                 container.getUsername(),
