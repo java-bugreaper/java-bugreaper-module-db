@@ -1,6 +1,5 @@
 package io.bugreaper.modules.db.jdbc;
 
-import io.bugreaper.core.config.ConfigLoader;
 import io.bugreaper.core.config.YamlUtils;
 import io.bugreaper.modules.db.jdbc.builders.QueryBuilder;
 import io.bugreaper.modules.db.jdbc.connection.JdbcDirectivesHikari;
@@ -10,10 +9,8 @@ import io.bugreaper.modules.db.jdbc.interfaces.SqlPost;
 import io.bugreaper.modules.db.logger.Log;
 import io.qameta.allure.Allure;
 import io.qameta.allure.Step;
-import org.awaitility.core.ConditionTimeoutException;
 
 import java.util.Arrays;
-import java.util.Map;
 
 import static io.bugreaper.core.allurereporter.AllureReporter.attachFromFileNoStep;
 import static io.bugreaper.core.filereaders.FileReader.readJsonFromFile;
@@ -38,6 +35,7 @@ import static io.bugreaper.modules.db.mapper.JsonToArrayMapper.jsonToObjectArray
  * <p><b>Operations with data:</b>
  * {@link JdbcExecutor#insertIntoTable(String, Object[][], Object[][])}
  * {@link JdbcExecutor#insertIntoTable(String, Object[][])}
+ * {@link JdbcExecutor#insertIntoTable(String, String)}
  * {@link JdbcExecutor#runScriptFromFile(String)}
  * {@link JdbcExecutor#runScript(String)}
  * {@link JdbcExecutor#truncateTable(String)}
@@ -57,7 +55,7 @@ import static io.bugreaper.modules.db.mapper.JsonToArrayMapper.jsonToObjectArray
  * <p> Await for asserts default: {@link JdbcExecutor#awaitMs}, can be changed by: {@link JdbcExecutor#withAwaitMs(int)}
  * <p> Path to template files for insert default: {@link JdbcExecutor#templatesPath}, can be changed by: {@link JdbcExecutor#setTemplatesDirectory(String)}
  */
-public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AssertLogic implements SqlPost, SqlGet, Setters<T> {
+public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractExecutor implements SqlPost, SqlGet, Setters<T> {
 
 
 
@@ -74,18 +72,25 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AssertLogi
      */
     private String templatesPath;
     private final String dbType;
-    private QueryBuilder qb;
+    private final QueryBuilder qb;
 
-    protected JdbcExecutor(String dbUrl,
+    protected JdbcExecutor(String url,
                            String username,
-                           String passwd,
+                           String password,
                            String getColumnsQuery,
                            String dbType) {
 
-        super(dbUrl, username, passwd, getColumnsQuery);
         this.qb = new QueryBuilder(dbType);
         this.dbType = dbType;
         this.templatesPath = String.format("templates/%s/", dbType);
+
+        this.url = url;
+        this.username = username;
+        this.password = password;
+
+
+        jdbc = new JdbcDirectivesHikari(this.url, this.username, this.password);
+        this.getColumnsQuery = getColumnsQuery;
     }
 
 
@@ -120,25 +125,24 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AssertLogi
         this.templatesPath = String.format("templates/%s/", dbType);
 
         loadFromYaml(dbType);
+
+        jdbc = new JdbcDirectivesHikari(this.url, this.username, this.password);
+        this.qb = new QueryBuilder(dbType);
     }
 
 
     private void loadFromYaml(String dbType) {
-        Map<String, Object> rawData = ConfigLoader.loadYaml();
 
         //required config fields
-        this.url = YamlUtils.getStringValueByPath(rawData, YML_KEY + dbType + ".url");
-        this.username = YamlUtils.getStringValueByPath(rawData, YML_KEY + dbType + ".username");
-        this.password = YamlUtils.getStringValueByPath(rawData, YML_KEY + dbType + ".password");
+        this.url = YamlUtils.getStringValueByPath(YML_KEY + dbType + ".url");
+        this.username = YamlUtils.getStringValueByPath(YML_KEY + dbType + ".username");
+        this.password = YamlUtils.getStringValueByPath(YML_KEY + dbType + ".password");
 
         //optional config fields
-        Object awaitVal = YamlUtils.getValueByPath(rawData, YML_KEY + dbType + ".await", true);
+        Object awaitVal = YamlUtils.getValueByPath(YML_KEY + dbType + ".await", true);
         if (awaitVal instanceof Number number) {
             withAwaitMs(number.intValue());
         }
-
-        jdbc = new JdbcDirectivesHikari(this.url, this.username, this.password);
-        this.qb = new QueryBuilder(dbType);
     }
 
 
@@ -208,6 +212,15 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AssertLogi
                 providedArray);
     }
 
+   @Override
+    public void insertIntoTable(String tableName,
+                                String providedJson) {
+
+        insertIntoTable(
+                tableName,
+                jsonToObjectArray(providedJson, true));
+    }
+
     @Override
     @Step("(DB) run script from file {path}")
     public void runScriptFromFile(String path) {
@@ -243,7 +256,7 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AssertLogi
     @Override
     public void updateTable(String tableName, Object[][] setArray) {
 
-        Allure.step("(DB)UPDATE from " + tableName + " " + Arrays.deepToString(setArray), (Allure.ThrowableContextRunnableVoid<Allure.StepContext>) step ->
+        Allure.step("(DB)UPDATE " + tableName + " " + Arrays.deepToString(setArray), (Allure.ThrowableContextRunnableVoid<Allure.StepContext>) step ->
                 jdbc.sqlExecute(String.format("UPDATE %s %s", tableName, qb.sqlSetBuilder(setArray)))
         );
     }
@@ -251,7 +264,7 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AssertLogi
     @Override
     public void updateTable(String tableName, Object[][] setArray, Object[][] conditionsArray) {
 
-        Allure.step("(DB)UPDATE from " + tableName + " " + Arrays.deepToString(setArray),
+        Allure.step("(DB)UPDATE " + tableName + " " + Arrays.deepToString(setArray),
                 (Allure.ThrowableContextRunnableVoid<Allure.StepContext>) step ->
                         jdbc.sqlExecute(String.format("UPDATE %s %s %s", tableName, qb.sqlSetBuilder(setArray), qb.sqlConditionBuilder(conditionsArray)))
         );
@@ -312,14 +325,6 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AssertLogi
         assertCountInTableBuilder(tableName, conditions, conditionsArray, Integer.toString(expectedCount), awaitMs);
     }
 
-    /**
-     * Check count from table by string-conditions
-     *
-     * @param tableName     name of table with schema
-     * @param conditions    converted to String
-     * @param expectedCount how many rows expected
-     * @throws ConditionTimeoutException on assert fail (and adds Allure attachments)
-     */
     @Override
     public void seeRowsCountInTableExactly(String tableName, String conditions, int expectedCount) {
         assertCountInTableBuilder(tableName, conditions, null, Integer.toString(expectedCount), awaitMs);
@@ -330,13 +335,6 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AssertLogi
         assertCountInTableBuilder(tableName, conditions, null, Integer.toString(expectedCount), awaitMs);
     }
 
-    /**
-     * Check count from table without conditions
-     *
-     * @param tableName     name of table with schema
-     * @param expectedCount how many rows expected
-     * @throws ConditionTimeoutException on assert fail (and adds Allure attachments)
-     */
     @Override
     public void seeRowsCountInTableExactly(String tableName, int expectedCount) {
         assertCountInTableBuilder(tableName, "", null, Integer.toString(expectedCount), awaitMs);

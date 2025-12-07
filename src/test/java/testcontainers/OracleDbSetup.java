@@ -43,11 +43,9 @@ public class OracleDbSetup {
     }
 
     public OracleDb getOracleDb() {
-        return new OracleDb(
 
-                "jdbc:oracle:thin:@//"
-                        + container.getHost()
-                        + "/XEPDB1",
+        return new OracleDb(
+                container.getJdbcUrl(),
                 "ADMIN",
                 "ADMIN");
     }

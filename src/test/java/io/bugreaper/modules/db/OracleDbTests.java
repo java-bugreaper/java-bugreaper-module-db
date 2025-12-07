@@ -73,14 +73,29 @@ class OracleDbTests {
 
     String getCi(){
         if(Objects.equals(CI, "true")){
-            return "jdbc:oracle:thin:@//docker:1521/XEPDB1";
+            return "jdbc:oracle:thin:@docker:1521/xepdb1";
         }else {
-            return  "jdbc:oracle:thin:@//localhost:1521/XEPDB1";
+            return  "jdbc:oracle:thin:@localhost:1521/xepdb1";
         }
     }
 
     @Test
-    void ConfigAllFieldsTest() {
+    void getConfigSummaryTest() {
+
+        assertEquals(String.format("""
+                        OracleDb:
+                            dbType=oracle
+                            url=%s
+                            username=ADMIN
+                            password=ADMIN
+                            awaitMs=500
+                            templatesPath=templates/oracle/
+                        """, getCi()),
+                db.getConfigSummary());
+    }
+
+    @Test
+    void configAllFieldsTest() {
         if(Objects.equals(CI, "true")){
             System.setProperty(PROPERTY, "docker");
         }else {
@@ -92,9 +107,11 @@ class OracleDbTests {
         dbConf.truncateTable(TEST_FOR_TEMPLATE);
 
         dbConf.insertIntoTable(TEST_FOR_TEMPLATE,
-                new Object[][]{
-                        {"ID", 2},
-                });
+                """
+                        {
+                          "ID": 2,
+                          "CREATE_DATE:TIMESTAMP": "2020-02-02 12:00:00"
+                        }""");
 
         dbConf.seeRecordExistsInTable
                 (TEST_FOR_TEMPLATE,

@@ -25,7 +25,7 @@ import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @SuppressWarnings("squid:S5960")
-abstract class AssertLogic {
+abstract class AbstractExecutor {
 
     protected JdbcDirectivesHikari jdbc;
     protected String getColumnsQuery;
@@ -38,19 +38,7 @@ abstract class AssertLogic {
     protected static final String COUNT = "COUNT_RES";
 
 
-    protected AssertLogic(String url,
-                          String username,
-                          String password,
-                          String getColumnsQuery) {
-
-        jdbc = new JdbcDirectivesHikari(url, username, password);
-
-        this.getColumnsQuery = getColumnsQuery;
-    }
-
-    protected AssertLogic() {
-
-    }
+    protected AbstractExecutor() {}
 
     @Step("(DB)[ASSERT] Count records in {tableName} {conditions} EQUAL {expectedCount}")
     protected void assertCountInTableBuilder(String tableName,

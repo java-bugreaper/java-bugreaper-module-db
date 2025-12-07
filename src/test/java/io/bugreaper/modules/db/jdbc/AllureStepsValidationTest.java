@@ -13,7 +13,7 @@ class AllureStepsValidationTest {
 
     @Test
     void testStepsAssertLogic() {
-        validateAllSteps("io.bugreaper.modules.db.jdbc.AssertLogic");
+        validateAllSteps("io.bugreaper.modules.db.jdbc.AbstractExecutor");
     }
 
     @Test
