@@ -601,7 +601,7 @@ class MsSqlDbTests {
     }
 
     @Test
-    void ConfigAllFieldsTest() {
+    void configAllFieldsTest() {
         if(Objects.equals(CI, "true")){
             System.setProperty(PROPERTY, "docker");
         }else {

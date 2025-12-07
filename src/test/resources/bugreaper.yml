@@ -21,7 +21,7 @@ modules:
       password: YourStrong(!)Password
       await: 250 # optional
     oracle:
-      url: 'jdbc:oracle:thin:@//localhost:1521/XEPDB1'
+      url: 'jdbc:oracle:thin:@localhost:1521/xepdb1'
       username: ADMIN
       password: ADMIN
       await: 300 # optional

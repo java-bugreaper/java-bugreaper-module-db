@@ -43,10 +43,10 @@ public interface SqlPost {
      * default path can be changed by {@link JdbcExecutor#setTemplatesDirectory(String)}<br>
      * <pre>
      *{
-     *     "id": 2,<br>
-     *     "name": "Alex",<br>
-     *     "age": 21,<br>
-     *     "fee": 33.05<br>
+     *     "id": 2,
+     *     "name": "Alex",
+     *     "age": 21,
+     *     "fee": 33.05
      * }
      * </pre>
      * providedArray {{"name", "Nikita"}, {"fee", null}}<br>
@@ -65,6 +65,42 @@ public interface SqlPost {
      *                      CREATE_DATE = TO_DATE('2020-01-01 10:00:00', 'YYYY-MM-DD HH24:MI:SS'),
      */
     void insertIntoTable(String tableName, Object[][] providedArray);
+
+    /**
+     * Merge arrays with template data
+     *
+     * <p>
+     * example:<br>
+     * tableName: "schema.table1"<br>
+     * (will search in resources file templates/{database_type}/schema.table1.json)<br>
+     * database_types : {@link DbTypes}<br>
+     * default path can be changed by {@link JdbcExecutor#setTemplatesDirectory(String)}
+     * <pre>
+     *{
+     *     "id": 2,
+     *     "name": "Alex",
+     *     "age": 21,
+     *     "fee": 33.05
+     * }
+     * </pre>
+     * providedJson:
+     * <pre>
+     *{
+     *     "name": "Nikita",
+     *     "fee": null
+     * }
+     * </pre>
+     * result:<br>
+     * INSERT INTO schema.table1<br>
+     * (id, name, age, fee)<br>
+     * VALUES(2, 'Nikita', 21, null)<br>
+     *
+     * @param tableName     schema_name.table_name
+     * @param providedJson String with json to merge """{"column1": "test_value1", ...}"""<br>
+     * <b>NOTE:</b> for oracleDb dateTime insert supported 3 elements in json {"CREATE_DATE:TIMESTAMP", "2020-01-01 10:00:00"}<br>
+     *                      CREATE_DATE = TO_DATE('2020-01-01 10:00:00', 'YYYY-MM-DD HH24:MI:SS'),<br>
+     */
+    void insertIntoTable(String tableName, String providedJson);
 
     /**
      * Execute sql script from file

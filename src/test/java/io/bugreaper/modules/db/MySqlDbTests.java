@@ -658,7 +658,7 @@ class MySqlDbTests {
     }
 
     @Test
-    void ConfigRequiredFieldsTest() {
+    void configRequiredFieldsTest() {
         if(Objects.equals(CI, "true")){
             System.setProperty(PROPERTY, "docker");
         }else {
