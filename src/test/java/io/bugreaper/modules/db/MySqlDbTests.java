@@ -300,7 +300,7 @@ class MySqlDbTests {
                 {"ID", "6"},
         });
 
-        db.seeRowsCountInTableExactly(TEST_TABLE, "where ID >=1 AND DEPOSIT is null", 1);
+        db.seeRowsCountInTableExactlyCustom(TEST_TABLE, "where ID >=1 AND DEPOSIT is null", 1);
     }
 
 
@@ -507,7 +507,7 @@ class MySqlDbTests {
         });
 
         Throwable exception = assertThrows(AssertionError.class, () ->
-                db.seeRowsCountInTableExactly(TEST_TABLE, "where ID >7 AND DEPOSIT is null",
+                db.seeRowsCountInTableExactlyCustom(TEST_TABLE, "where ID >7 AND DEPOSIT is null",
                         1, 500));
 
         MatcherAssert.assertThat(

@@ -95,6 +95,63 @@ class OracleDbTests {
     }
 
     @Test
+    void fullJsonFeatureTest() {
+        db.truncateTable(TEST_FOR_TEMPLATE);
+
+        db.insertIntoTable(TEST_FOR_TEMPLATE,
+                """
+                        {
+                          "ID": 2,
+                          "CREATE_DATE": "2020-02-02 12:00:00"
+                        }""");
+
+        db.seeRecordExistsInTable(TEST_FOR_TEMPLATE,
+                """
+                        {
+                            "ID": 2,
+                            "NAME": "Alex",
+                            "AMOUNT": 10.55,
+                            "CREATE_DATE:=:TIMESTAMP": "2020-02-02 12:00:00"
+                        }""");
+
+        db.seeRowsCountInTableExactly(TEST_FOR_TEMPLATE,
+                """
+                        {
+                            "ID": 2,
+                            "NAME": "Alex"
+                        }""", 1);
+    }
+
+    @Test
+    void fullJsonFeature2Test() {
+        db.truncateTable(TEST_FOR_TEMPLATE);
+
+        db.insertIntoTable(TEST_FOR_TEMPLATE,
+                """
+                        {
+                          "ID": 2,
+                          "CREATE_DATE:DATE": "2020-02-02"
+                        }""");
+
+        db.seeRecordExistsInTable(TEST_FOR_TEMPLATE,
+                """
+                        {
+                            "ID": 2,
+                            "NAME": "Alex",
+                            "AMOUNT": 10.55,
+                            "CREATE_DATE:=:TIMESTAMP": "2020-02-02 00:00:00"
+                        }""");
+
+        db.seeRowsCountInTableExactly(TEST_FOR_TEMPLATE,
+                """
+                        {
+                            "ID": 2,
+                            "NAME": "Alex",
+                            "CREATE_DATE:=:DATE": "2020-02-02"
+                        }""", 1);
+    }
+
+    @Test
     void configAllFieldsTest() {
         if(Objects.equals(CI, "true")){
             System.setProperty(PROPERTY, "docker");
