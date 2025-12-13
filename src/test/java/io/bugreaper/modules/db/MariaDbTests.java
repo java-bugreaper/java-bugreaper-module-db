@@ -69,6 +69,35 @@ class MariaDbTests {
 
 
     @Test
+    void fullJsonFeatureTest() {
+        db.truncateTable(TEST_TABLE_FOR_TEMPLATE);
+
+        db.insertIntoTable(TEST_TABLE_FOR_TEMPLATE,
+                """
+                        {
+                            "ID": 1,
+                            "AMOUNT": 10.55
+                        }""");
+
+        db.seeRecordExistsInTable(TEST_TABLE_FOR_TEMPLATE,
+                """
+                        {
+                            "ID": 1,
+                            "NAME": "Maria",
+                            "AMOUNT": 10.55
+                        }""");
+
+        db.seeRowsCountInTableExactly(TEST_TABLE_FOR_TEMPLATE,
+                """
+                        {
+                            "ID": 1,
+                            "NAME": "Maria",
+                            "AMOUNT": 10.55
+                        }""", 1);
+    }
+
+
+    @Test
     void renameAndRollbackTable() {
         db.showDataFromTableMethod("MARIA_SCHEMA.TEST");
         db.renameTable("MARIA_SCHEMA.TEST");
@@ -285,7 +314,7 @@ class MariaDbTests {
                 {"ID", "6"},
         });
 
-        db.seeRowsCountInTableExactly(TEST_TABLE, "where ID >=1 AND DEPOSIT is null", 1);
+        db.seeRowsCountInTableExactlyCustom(TEST_TABLE, "where ID >=1 AND DEPOSIT is null", 1);
     }
 
     @Test
@@ -479,7 +508,7 @@ class MariaDbTests {
         });
 
         Throwable exception = assertThrows(AssertionError.class, () ->
-                db.seeRowsCountInTableExactly(TEST_TABLE, "where ID >7 AND DEPOSIT is null",
+                db.seeRowsCountInTableExactlyCustom(TEST_TABLE, "where ID >7 AND DEPOSIT is null",
                         1, 500));
 
         MatcherAssert.assertThat(

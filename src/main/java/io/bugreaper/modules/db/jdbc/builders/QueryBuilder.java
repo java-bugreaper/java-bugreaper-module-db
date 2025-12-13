@@ -18,10 +18,7 @@ package io.bugreaper.modules.db.jdbc.builders;
 import io.bugreaper.modules.db.exceptions.QueryBuilderException;
 import io.bugreaper.modules.db.logger.Log;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.StringJoiner;
+import java.util.*;
 
 import static io.bugreaper.modules.db.allurereporter.AllureReporter.attachTableForDb;
 
@@ -158,7 +155,7 @@ public class QueryBuilder extends QueryConditionsBuilder {
             return "null";
         }
 
-        // If 3rd element exists
+        // If 3rd element exists (oracleDb) => DATE '3033-03-33'
         if (type != null) {
             return type + " '" + escapeSql(String.valueOf(value)) + "'";
         }
@@ -188,73 +185,47 @@ public class QueryBuilder extends QueryConditionsBuilder {
      */
     private Object[][] templateMapper(Object[][] templateArray, Object[][] providedArray) {
 
-        final int COLUMNS_COUNT = templateArray.length;
-
-        // Create list of all columns (from template)
-        String[] templateColumnsList = new String[COLUMNS_COUNT];
-        for (int i = 0; i < COLUMNS_COUNT; i++) {
-            templateColumnsList[i] = templateArray[i][0].toString();
+        // Collect template keys
+        Set<Object> templateKeys = new HashSet<>();
+        for (Object[] row : templateArray) {
+            templateKeys.add(row[0]);
         }
 
-        List<String> templateCheck = new ArrayList<>(Arrays.asList(templateColumnsList));
+        // Validate provided columns (existence + uniqueness)
+        Map<Object, Object[]> providedMap = new HashMap<>();
+        for (Object[] row : providedArray) {
+            Object columns = row[0];
 
-
-        // Create lists of columns and values from test data
-        String[] testColumnsList = new String[providedArray.length];
-        Object[] testValuesList = new Object[providedArray.length];
-        for (int i = 0; i < providedArray.length; i++) {
-
-            var column = providedArray[i][0];
-            if (templateCheck.contains(column)) {
-                testColumnsList[i] = column.toString();
-                testValuesList[i] = providedArray[i][1];
-                //  Check test column in template column list
-            } else {
-                throw new QueryBuilderException("ERROR, column not exist in template: " + column);
-            }
-        }
-
-        //  Duplicate checks
-        checkForDuplicates(testColumnsList);
-
-        //  Create list of test columns
-        List<String> testCheck = new ArrayList<>(Arrays.asList(testColumnsList));
-
-        //  Create array for insert
-        Object[][] newArray = new Object[COLUMNS_COUNT][];
-
-        for (int i = 0; i < COLUMNS_COUNT; i++) {
-            // Data from test data
-            if (testCheck.contains(templateColumnsList[i])) {
-                int index = testCheck.indexOf(templateColumnsList[i]);
-
-                // Part for three elements (ORACLE params)
-                Object[] add;
-                if (templateArray[i].length > 2) {
-                    add = new Object[]{testColumnsList[index], testValuesList[index], templateArray[i][2]};
-                } else {
-                    add = new Object[]{testColumnsList[index], testValuesList[index]};
-                }
-                newArray[i] = add;
-
-                //  Data from template
-            } else {
-                newArray[i] = templateArray[i];
-                newArray[i][0] = templateArray[i][0];
+            if (!templateKeys.contains(columns)) {
+                throw new QueryBuilderException("ERROR, column not exist in template: " + columns);
             }
 
-        }
-        return newArray;
-    }
+            if (providedMap.containsKey(columns)) {
+                throw new QueryBuilderException("ERROR, duplicate column found: " + columns);
+            }
 
-    private void checkForDuplicates(Object[] array) {
-        for (int i = 0; i < array.length; i++) {
-            for (int j = i + 1; j < array.length; j++) {
-                if (array[i].equals(array[j])) {
-                    throw new QueryBuilderException("ERROR, duplicate column found: " + array[i]);
+            providedMap.put(columns, row);
+        }
+
+        // Merge
+        Object[][] result = new Object[templateArray.length][];
+
+        for (int i = 0; i < templateArray.length; i++) {
+            Object[] templateRow = templateArray[i];
+            Object[] mergedRow = Arrays.copyOf(templateRow, templateRow.length);
+
+            Object[] providedRow = providedMap.get(templateRow[0]);
+            if (providedRow != null) {
+                for (int j = 1; j < mergedRow.length && j < providedRow.length; j++) {
+                    // overwrite EVEN if provided value is null
+                    mergedRow[j] = providedRow[j];
                 }
             }
+
+            result[i] = mergedRow;
         }
+
+        return result;
     }
 
 }

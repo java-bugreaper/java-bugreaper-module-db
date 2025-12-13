@@ -74,6 +74,27 @@ class JsonToArrayMapperTests {
     }
 
     @Test
+        //for inserts
+    void testBuildObjectWithTwoElements() {
+        String json = """
+                {"name": "alex"}""";
+
+        Object[][] result = jsonToObjectArray(json, true);
+
+        assertEquals(
+                "name",
+                result[0][0]
+        );
+
+        assertEquals(
+                "alex",
+                result[0][1]
+        );
+
+    }
+
+    @Test
+        //for inserts oracle
     void testBuildObjectWithThreeElements() {
         String json = """
                 {"name:LIKE": "alex"}""";
@@ -97,6 +118,26 @@ class JsonToArrayMapperTests {
     }
 
     @Test
+        //for asserts
+    void testBuildObjectWithTwoElementsOtherOrder() {
+        String json = """
+                {"name": "alex"}""";
+
+        Object[][] result = jsonToObjectArray(json, false);
+
+        assertEquals(
+                "name",
+                result[0][0]
+        );
+
+        assertEquals(
+                "alex",
+                result[0][1]
+        );
+    }
+
+    @Test
+        //for asserts
     void testBuildObjectWithThreeElementsOtherOrder() {
         String json = """
                 {"name:LIKE": "alex"}""";
@@ -120,6 +161,35 @@ class JsonToArrayMapperTests {
     }
 
     @Test
+        //for asserts
+    void testBuildObjectWithFourElementsOtherOrder() {
+        String json = """
+                {"name:LIKE:THREE": "alex"}""";
+
+        Object[][] result = jsonToObjectArray(json, false);
+
+        assertEquals(
+                "name",
+                result[0][0]
+        );
+
+        assertEquals(
+                "LIKE",
+                result[0][1]
+        );
+
+        assertEquals(
+                "THREE",
+                result[0][2]
+        );
+
+        assertEquals(
+                "alex",
+                result[0][3]
+        );
+    }
+
+    @Test
     void testBuildObjectError() {
         String json = """
                 [{
@@ -134,6 +204,24 @@ class JsonToArrayMapperTests {
                 "JsonArray provided",
                 exception.getMessage(),
                 StringContains.containsString("Failed to convert JSON to Object[][]: JSON must be a flat object"));
+
+    }
+
+    @Test
+    void testBuildTooManyOptionsError() {
+        String json = """
+                {
+                   "id": 1,
+                   "name:IS:LIKE:WRONG": "alex"
+                }""";
+
+        Throwable exception = assertThrows(QueryBuilderException.class, () ->
+                jsonToObjectArray(json,true));
+
+        MatcherAssert.assertThat(
+                "Too many options provided",
+                exception.getMessage(),
+                StringContains.containsString("Failed to convert JSON to Object[][]: Maximum supported key format is FIELD:OPT1:OPT2, but got: name:IS:LIKE:WRONG"));
 
     }
 

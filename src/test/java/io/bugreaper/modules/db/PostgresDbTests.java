@@ -301,7 +301,7 @@ class PostgresDbTests extends PostgresDbSetup {
     void seeRecordExistsInTableEmptyConditionsTest() {
 
         Throwable exception = assertThrows(AssertionFailedError.class, () ->
-                dbAwait.seeRecordExistsInTable(TEST_TABLE, ""));
+                dbAwait.seeRecordExistsInTableCustom(TEST_TABLE, ""));
 
         assertEquals("""
                         Failed: record/s not found in public.users within 1 second""",
@@ -317,7 +317,7 @@ class PostgresDbTests extends PostgresDbSetup {
         });
 
         Throwable exception = assertThrows(AssertionFailedError.class, () ->
-                dbAwait.seeRecordExistsInTable(TEST_TABLE, "where ID=15"));
+                dbAwait.seeRecordExistsInTableCustom(TEST_TABLE, "where ID=15"));
 
         assertEquals("""
                         Failed: record/s not found in public.users within 1 second
@@ -329,7 +329,7 @@ class PostgresDbTests extends PostgresDbSetup {
     @Test
     void parallelTestForAwaitRecordExists() {
 
-        CompletableFuture<Void> future1 = CompletableFuture.runAsync(() -> db.seeRecordExistsInTable(TEST_TABLE, "where ID >=1 AND USERNAME = 'Pupkin2'"));
+        CompletableFuture<Void> future1 = CompletableFuture.runAsync(() -> db.seeRecordExistsInTableCustom(TEST_TABLE, "where ID >=1 AND USERNAME = 'Pupkin2'"));
         CompletableFuture<Void> future2 = CompletableFuture.runAsync(this::pushWithSleep);
 
         CompletableFuture.allOf(future1, future2).join();

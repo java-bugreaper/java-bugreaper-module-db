@@ -1,9 +1,10 @@
 package io.bugreaper.modules.db.jdbc;
 
 import io.bugreaper.core.config.YamlUtils;
+import io.bugreaper.modules.db.DbTypes;
 import io.bugreaper.modules.db.jdbc.builders.QueryBuilder;
 import io.bugreaper.modules.db.jdbc.connection.JdbcDirectivesHikari;
-import io.bugreaper.modules.db.jdbc.interfaces.Setters;
+import io.bugreaper.modules.db.jdbc.interfaces.SqlConfig;
 import io.bugreaper.modules.db.jdbc.interfaces.SqlGet;
 import io.bugreaper.modules.db.jdbc.interfaces.SqlPost;
 import io.bugreaper.modules.db.logger.Log;
@@ -22,10 +23,10 @@ import static io.bugreaper.modules.db.mapper.JsonToArrayMapper.jsonToObjectArray
  *
  * <p><b>Asserts:</b>
  * {@link JdbcExecutor#seeRowsCountInTableExactly(String, Object[][], int)}
- * {@link JdbcExecutor#seeRowsCountInTableExactly(String, String, int)}
+ * {@link JdbcExecutor#seeRowsCountInTableExactlyCustom(String, String, int)}
  * {@link JdbcExecutor#seeRowsCountInTableExactly(String, int)}
  * {@link JdbcExecutor#seeRowsCountInTableExactly(String, Object[][], int, int)}
- * {@link JdbcExecutor#seeRowsCountInTableExactly(String, String, int, int)}
+ * {@link JdbcExecutor#seeRowsCountInTableExactlyCustom(String, String, int, int)}
  * {@link JdbcExecutor#seeRowsCountInTableExactly(String, int, int)}
  * {@link JdbcExecutor#seeTableIsEmpty(String)}
  * {@link JdbcExecutor#seeTableDoesNotEmpty(String)}
@@ -52,10 +53,12 @@ import static io.bugreaper.modules.db.mapper.JsonToArrayMapper.jsonToObjectArray
  * {@link JdbcExecutor#showDataFromTable(String)}
  * {@link JdbcExecutor#showDataByCondition(String, Object[][])}
  *
+ * <p>Supported dbTypes: {@link DbTypes}</p>
+ *
  * <p> Await for asserts default: {@link JdbcExecutor#awaitMs}, can be changed by: {@link JdbcExecutor#withAwaitMs(int)}
  * <p> Path to template files for insert default: {@link JdbcExecutor#templatesPath}, can be changed by: {@link JdbcExecutor#setTemplatesDirectory(String)}
  */
-public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractExecutor implements SqlPost, SqlGet, Setters<T> {
+public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractExecutor implements SqlPost, SqlGet, SqlConfig<T> {
 
 
 
@@ -103,16 +106,17 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
      * <p><b>Custom file:</b> using {@code -DbugreaperEnv=test} loads {@code bugreaper-test.yml}</p>
      *
      * <p><b>Required configuration keys:</b></p>
+     * <p>Supported dbTypes: {@link DbTypes}</p>
      * <ul>
-     *     <li>{@code modules.db.url}</li>
-     *     <li>{@code modules.db.port}</li>
-     *     <li>{@code modules.db.username}</li>
-     *     <li>{@code modules.db.password}</li>
+     *     <li>{@code modules.db.${dbType}.url}</li>
+     *     <li>{@code modules.db.${dbType}.port}</li>
+     *     <li>{@code modules.db.${dbType}.username}</li>
+     *     <li>{@code modules.db.${dbType}.password}</li>
      * </ul>
      *
      * <p><b>Optional configuration keys:</b></p>
      * <ul>
-     *     <li>{@code modules.db.await}</li>
+     *     <li>{@code modules.db.${dbType}.await}</li>
      * </ul>
      *
      * <p>Missing required keys will result in configuration errors.
@@ -161,6 +165,7 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
         this.awaitMs = awaitMs;
         return self();
     }
+
     @Override
     public T setTemplatesDirectory(String templatesPath) {
         if (templatesPath == null || templatesPath.isBlank()) {
@@ -171,7 +176,7 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
     }
 
     // getters
-
+    @Override
     public String getConfigSummary() {
         String info = String.format("""
         %s:
@@ -318,6 +323,16 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
 
     @Override
     public void seeRowsCountInTableExactly(String tableName,
+                                           String providedJson,
+                                           int expectedCount) {
+        seeRowsCountInTableExactly(
+                tableName,
+                jsonToObjectArray(providedJson, false),
+                expectedCount);
+    }
+
+    @Override
+    public void seeRowsCountInTableExactly(String tableName,
                                            Object[][] conditionsArray,
                                            int expectedCount,
                                            int awaitMs) {
@@ -325,13 +340,11 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
         assertCountInTableBuilder(tableName, conditions, conditionsArray, Integer.toString(expectedCount), awaitMs);
     }
 
-    @Override
-    public void seeRowsCountInTableExactly(String tableName, String conditions, int expectedCount) {
+    public void seeRowsCountInTableExactlyCustom(String tableName, String conditions, int expectedCount) {
         assertCountInTableBuilder(tableName, conditions, null, Integer.toString(expectedCount), awaitMs);
     }
 
-    @Override
-    public void seeRowsCountInTableExactly(String tableName, String conditions, int expectedCount, int awaitMs) {
+    public void seeRowsCountInTableExactlyCustom(String tableName, String conditions, int expectedCount, int awaitMs) {
         assertCountInTableBuilder(tableName, conditions, null, Integer.toString(expectedCount), awaitMs);
     }
 
@@ -351,8 +364,16 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
     }
 
     @Override
-    public void seeRecordExistsInTable(String tableName, String conditions) {
+    public void seeRecordExistsInTableCustom(String tableName, String conditions) {
         recordExistsBuilder(tableName, conditions, null, awaitMs);
+    }
+
+    @Override
+    public void seeRecordExistsInTable(String tableName, String providedJson) {
+
+        seeRecordExistsInTable(
+                tableName,
+                jsonToObjectArray(providedJson, false));
     }
 
     @Override

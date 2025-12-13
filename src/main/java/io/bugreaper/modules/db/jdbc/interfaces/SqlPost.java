@@ -4,6 +4,19 @@ package io.bugreaper.modules.db.jdbc.interfaces;
 import io.bugreaper.modules.db.DbTypes;
 import io.bugreaper.modules.db.jdbc.JdbcExecutor;
 
+
+/**
+ * Defines operations for executing SQL data-modifying queries.
+ * <p>
+ * Implementations of this interface are responsible for performing
+ * state-changing SQL operations
+ * </p>
+ *
+ * <p>
+ * This interface must not include any read-only operations.
+ * Use {@link SqlGet} for SELECT queries.
+ * </p>
+ */
 public interface SqlPost {
 
     /**
@@ -72,7 +85,7 @@ public interface SqlPost {
      * <p>
      * example:<br>
      * tableName: "schema.table1"<br>
-     * (will search in resources file templates/{database_type}/schema.table1.json)<br>
+     * (will search in resources file templates/${database_type}/schema.table1.json)<br>
      * database_types : {@link DbTypes}<br>
      * default path can be changed by {@link JdbcExecutor#setTemplatesDirectory(String)}
      * <pre>

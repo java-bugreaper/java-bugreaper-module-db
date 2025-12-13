@@ -247,6 +247,27 @@ class QueryBuilderTest {
     }
 
     @Test
+    void testBuildOracleParamMergeSqlInsert() {
+        QueryBuilder qb = new QueryBuilder(oracle);
+
+        assertEquals(
+                """
+                        INSERT INTO TEST_SCHEMA.TEST_TABLE
+                        (COLUMN1, COLUMN3, DATE_COLUMN)
+                        VALUES (null, null, DATE '3033-03-33')""",
+                qb.sqlInsertBuilder(
+                        "TEST_SCHEMA.TEST_TABLE",
+                        new Object[][]{
+                                {"COLUMN1", null},
+                                {"COLUMN3", "test"},
+                                {"DATE_COLUMN", "2022-01-01", "TIMESTAMP"}},
+                        new Object[][]{
+                                {"DATE_COLUMN", "3033-03-33", "DATE"},
+                                {"COLUMN3", null}}),
+                "Insert create currently, with null and DATE with parameter");
+    }
+
+    @Test
     void testBuildOracleNullableParamSqlInsert() {
         assertEquals(
                 """

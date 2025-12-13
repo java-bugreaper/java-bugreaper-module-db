@@ -3,6 +3,19 @@ package io.bugreaper.modules.db.jdbc.interfaces;
 
 import org.awaitility.core.ConditionTimeoutException;
 
+/**
+ * Defines operations for executing SQL SELECT queries.
+ * <p>
+ * Implementations of this interface are responsible for performing
+ * read-only database operations that retrieve data without modifying
+ * the database state, such as get data for asserts or reports.
+ * </p>
+ *
+ * <p>
+ * This interface should contain only non-mutating operations.
+ * All data-changing SQL commands must be handled by {@link SqlPost}.
+ * </p>
+ */
 public interface SqlGet {
 
     /**
@@ -25,7 +38,7 @@ public interface SqlGet {
      * @param expectedCount expected rows count
      * @throws ConditionTimeoutException on assert fail (and adds Allure attachments)
      */
-    void seeRowsCountInTableExactly(String tableName,
+    void seeRowsCountInTableExactlyCustom(String tableName,
                                     String conditions,
                                     int expectedCount);
 
@@ -38,6 +51,22 @@ public interface SqlGet {
      */
     void seeRowsCountInTableExactly(String tableName,
                                     int expectedCount);
+
+    /**
+     * Assert of records EXACTLY count with await
+     *
+     * @param tableName     schema_name.table_name
+     * @param providedJson String with json """{"column1": "test_value1", ...}"""<br>
+     *     support up to 2 options in key after field <br>
+     *    "CREATE_DATE:>="<br>
+     *    "CREATE_DATE:=:TIMESTAMP" (for oracleDd)<br>
+     * @param expectedCount expected rows count
+     * @throws ConditionTimeoutException on assert fail (and adds Allure attachments)
+     */
+    void seeRowsCountInTableExactly(String tableName,
+                                    String providedJson,
+                                    int expectedCount);
+
 
     /**
      * Assert of records EXACTLY count by conditions with custom await
@@ -62,7 +91,7 @@ public interface SqlGet {
      * @param awaitMs       await in ms
      * @throws ConditionTimeoutException on assert fail (and adds Allure attachments)
      */
-    void seeRowsCountInTableExactly(String tableName,
+    void seeRowsCountInTableExactlyCustom(String tableName,
                                     String conditions,
                                     int expectedCount,
                                     int awaitMs);
@@ -109,11 +138,25 @@ public interface SqlGet {
     /**
      * Assert that exists at least one record by conditions with await
      *
+     * @param tableName       schema_name.table_name
+     * @param providedJson String with json """{"column1": "test_value1", ...}"""<br>
+     *     support up to 2 options in key after field <br>
+     *    "CREATE_DATE:>="<br>
+     *    "CREATE_DATE:=:TIMESTAMP" (for oracleDd)<br>
+     * @throws ConditionTimeoutException on assert fail (and adds Allure attachments)
+     */
+    void seeRecordExistsInTable(String tableName,
+                                String providedJson);
+
+    /**
+     * Assert that exists at least one record by conditions with await
+     * <p>Use custom sql conditions only if it`s necessary, otherwise use {@link #seeRecordExistsInTable}
+     *
      * @param tableName  schema_name.table_name
      * @param conditions String "where id=1"
      * @throws ConditionTimeoutException on assert fail (and adds Allure attachments)
      */
-    void seeRecordExistsInTable(String tableName, String conditions);
+    void seeRecordExistsInTableCustom(String tableName, String conditions);
 
 
     /**
