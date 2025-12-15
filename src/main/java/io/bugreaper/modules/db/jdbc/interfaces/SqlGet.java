@@ -54,6 +54,7 @@ public interface SqlGet {
 
     /**
      * Assert of records EXACTLY count with await
+     * <p>Use custom sql conditions only if it`s necessary, otherwise use {@link #seeRowsCountInTableExactly}
      *
      * @param tableName     schema_name.table_name
      * @param providedJson String with json """{"column1": "test_value1", ...}"""<br>
