@@ -43,8 +43,8 @@ class AllureReporterTest {
 
     @Test
     void testHtmlReportAllFromTableTwoRows() throws IOException {
-        var columns = new String[]{"ID", "NAME"};
-        var dataRows = new Object[]{"1", "name_1", "2", null, "3", ""};
+        var columns = new String[]{"ID", "NAME", "IS_BOOL"};
+        var dataRows = new Object[]{"1", "name_1", true, "2", null, false, "3", "", true};
 
         assertEquals(readString(Path.of(filePath + "testdata/allure/see_in_db_two_rows.html")),
                 reportHtmlTableAllBuilder(tableName, columns, dataRows),
