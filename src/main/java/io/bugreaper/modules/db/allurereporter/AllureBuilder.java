@@ -95,12 +95,7 @@ public class AllureBuilder {
 
             dataRows.append("<tr>");
             for (int i = COLUMN_NUMBER * r; i < COLUMN_NUMBER * (r + 1); i++) {
-                if (resultArray[i] != null) {
-                    dataRows.append("<td>").append(resultArray[i]).append(CELL_END);
-                } else {
-                    dataRows.append("<td style=\"color:silver;\">[NULL]</td>");
-                }
-
+                dataRows.append("<td>").append(valueBeautifier(resultArray[i])).append(CELL_END);
             }
             dataRows.append(ROW_END).append("\n");
         }
