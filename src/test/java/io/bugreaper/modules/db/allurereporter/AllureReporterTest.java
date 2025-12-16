@@ -80,12 +80,22 @@ class AllureReporterTest {
     @Test
     void testHtmlReportWantToSeeWithFourElementConditions() throws IOException {
         var conditions = new Object[][]{
-                {"ORACLE_DATE", "=", "2020-01-01", "DATE"},
-                {"DATA", "id", "134", "JSON_CONTAINS"}};
+                {"ORACLE_DATE", "=", "DATE", "2020-01-01", },
+                {"DATA", "OPERATOR_1", "OPTION_2", "VALUE_3"}};
 
         assertEquals(readString(Path.of(filePath + "testdata/allure/want_to_see_with_4_conditions.html")),
                 reportHtmlIWantToSeeBuilder(tableName, conditions),
                 "HTML with 4 elements in conditions");
+    }
+
+    @Test
+    void testHtmlReportWantToSeeWithOneElement() throws IOException {
+        var conditions = new Object[][]{
+                {"ORACLE_DATE"}};
+
+        assertEquals(readString(Path.of(filePath + "testdata/allure/want_to_see_with_1_element.html")),
+                reportHtmlIWantToSeeBuilder(tableName, conditions),
+                "HTML with 1 element -> impossible (will be validate on QueryBuilder)");
     }
 
     @Test

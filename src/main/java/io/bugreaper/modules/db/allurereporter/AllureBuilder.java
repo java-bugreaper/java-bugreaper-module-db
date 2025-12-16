@@ -32,11 +32,26 @@ public class AllureBuilder {
             columns.append("<th>").append(condition[0]).append(HEADER_END);
 
             dataRows.append("<td>");
-            if (condition.length > 2) {
-                dataRows.append("<b><i>").append(condition[1]).append("</i></b> ").append(valueBeautifier(condition[2]));
-            } else {
-                dataRows.append(valueBeautifier(condition[1]));
+
+            switch (condition.length ) {
+                //for basic 2 elements -> "id", 1
+                case 2:
+                    dataRows.append(valueBeautifier(condition[1]));
+                    break;
+                //for custom conditions -> "id", ">=", "1"
+                case 3:
+                    dataRows.append("<b><i>").append(condition[1]).append("</i></b> ").append(valueBeautifier(condition[2]));
+                    break;
+                //for custom conditions with type (oracle -> "UPDATE_DATE", "=", "DATE", "2022-07-18")
+                case 4:
+                    dataRows.append("<b><i>").append(condition[1]).append("</i></b> ").append(valueBeautifier(condition[3]));
+                    break;
+                //ignore
+                default:
+                    break;
             }
+
+
             dataRows.append(CELL_END);
 
         }
