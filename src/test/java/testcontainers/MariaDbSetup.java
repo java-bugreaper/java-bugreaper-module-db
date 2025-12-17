@@ -3,7 +3,7 @@ package testcontainers;
 import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.PortBinding;
 import com.github.dockerjava.api.model.Ports;
-import io.bugreaper.modules.db.MariaDb;
+import net.bugreaper.modules.db.MariaDb;
 
 import org.testcontainers.mariadb.MariaDBContainer;
 import org.testcontainers.utility.DockerImageName;
