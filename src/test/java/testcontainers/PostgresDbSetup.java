@@ -1,6 +1,6 @@
 package testcontainers;
 
-import io.bugreaper.modules.db.PostgreSQL;
+import net.bugreaper.modules.db.PostgreSQL;
 
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
