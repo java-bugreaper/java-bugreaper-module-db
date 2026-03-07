@@ -6,6 +6,7 @@ import org.hamcrest.core.StringContains;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import testcontainers.MariaDbSetup;
 
 import java.util.Objects;
@@ -13,11 +14,13 @@ import java.util.Objects;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@SuppressWarnings("squid:S2699")
-class MariaDbTests {
+@SuppressWarnings({"squid:S2699", "java:S5778"})
+@TestInstance(TestInstance.Lifecycle.PER_CLASS) //To call connection once!
+class MariaDbTests extends MariaDbSetup {
 
-    private static final MariaDbSetup setup = MariaDbSetup.getInstance();
-    private static final MariaDb db = setup.getMariDb();
+    private static final MariaDb db = new MariaDbSetup().getMariDb();
+    private static final MariaDb dbConf = new MariaDb();
+
 
     private static final String TEST_TABLE = "MARIA_SCHEMA.USERS";
     private static final String TEST_TABLE2 = "MARIA_SCHEMA.USERS2";
@@ -59,7 +62,7 @@ class MariaDbTests {
 
     @Test
     void getDataFromEmptyTable() {
-        db.showDataFromTableMethod(TEST_TABLE);
+        db.showDataFromTable(TEST_TABLE);
     }
 
     @Test
@@ -99,12 +102,12 @@ class MariaDbTests {
 
     @Test
     void renameAndRollbackTable() {
-        db.showDataFromTableMethod("MARIA_SCHEMA.TEST");
+        db.showDataFromTable("MARIA_SCHEMA.TEST");
         db.renameTable("MARIA_SCHEMA.TEST");
-        db.showDataFromTableMethod("MARIA_SCHEMA.TEST_X_");
+        db.showDataFromTable("MARIA_SCHEMA.TEST_X_");
 
         db.rollbackTable("MARIA_SCHEMA.TEST");
-        db.showDataFromTableMethod("MARIA_SCHEMA.TEST");
+        db.showDataFromTable("MARIA_SCHEMA.TEST");
     }
 
     @Test
@@ -363,6 +366,21 @@ class MariaDbTests {
     }
 
     @Test
+    void checkLongType() {
+        insertIntoUsers(new Object[][]{
+                {"ID", 9223372036854775807L},
+                {"USERNAME", "Pupkin"},
+                {"IS_ACTIVE", true},
+        });
+
+        db.seeRecordExistsInTable
+                (TEST_TABLE,
+                        new Object[][]{
+                                {"ID", 9223372036854775807L },
+                        });
+    }
+
+    @Test
     void runFromFile() {
         db.truncateTable(TEST_TABLE2);
 
@@ -449,7 +467,7 @@ class MariaDbTests {
         });
 
         Throwable exception = assertThrows(AssertionError.class, () ->
-                db.seeRowsCountInTableExactly(TEST_TABLE, 1, 500));
+                db.withAwaitMs(500).seeRowsCountInTableExactly(TEST_TABLE, 1));
 
         MatcherAssert.assertThat(
                 "Exception on failed assert count in table(filled table) with custom timeout",
@@ -483,12 +501,12 @@ class MariaDbTests {
     void checkConditionExceptionOnEmptyTableCustomTO() {
 
         Throwable exception = assertThrows(AssertionError.class, () ->
-                db.seeRowsCountInTableExactly
+                db.withAwaitMs(600).seeRowsCountInTableExactly
                         (TEST_TABLE,
                                 new Object[][]{
                                         {"ID", "4"},
                                 },
-                                1, 600));
+                                1));
 
         MatcherAssert.assertThat(
                 "Exception on failed assert count in table(empty table) with custom timeout",
@@ -508,8 +526,8 @@ class MariaDbTests {
         });
 
         Throwable exception = assertThrows(AssertionError.class, () ->
-                db.seeRowsCountInTableExactlyCustom(TEST_TABLE, "where ID >7 AND DEPOSIT is null",
-                        1, 500));
+                db.withAwaitMs(500).seeRowsCountInTableExactlyCustom(TEST_TABLE, "where ID >7 AND DEPOSIT is null",
+                        1));
 
         MatcherAssert.assertThat(
                 "Exception on failed assert count in table(empty table) with custom condition & timeout",
@@ -637,8 +655,6 @@ class MariaDbTests {
         }else {
             System.clearProperty(PROPERTY);
         }
-
-        MariaDb dbConf = new MariaDb();
 
         dbConf.truncateTable(TEST_TABLE_FOR_TEMPLATE);
 

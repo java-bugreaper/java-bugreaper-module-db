@@ -91,7 +91,7 @@ class QueryBuilderNegativeTest {
                         {"COLUMN2", "=", "DUMMY", "2020-05-05"},
                 }));
 
-        assertEquals("ERROR, wrong 4 elements for Oracle mapper: DUMMY must be: DATE or TIMESTAMP",
+        assertEquals("ERROR, wrong 4 elements option for Oracle mapper: <DUMMY> supported: DATE or TIMESTAMP",
                 exception.getMessage(),
                 "Exception with invalid Oracle four elements enum");
     }
@@ -105,7 +105,7 @@ class QueryBuilderNegativeTest {
                         {"COLUMN2", "SOME", "2020-05-05"},
                 }));
 
-        assertEquals("ERROR, wrong 3 elements: SOME must be: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE]",
+        assertEquals("ERROR, wrong 3 elements operator: <SOME> supported: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE]",
                 exception.getMessage(),
                 "Exception with 3 elements not basic conditions for not supported DB");
     }
@@ -119,9 +119,22 @@ class QueryBuilderNegativeTest {
                         {"COLUMN2", "SOME", "2020-05-05"},
                 }));
 
-        assertEquals("ERROR, wrong 3 elements for mariadb/mysql mapper: <SOME> must be: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE] or [JSON_CONTAINS, JSON_EQUALS], REGEX_MATCH",
+        assertEquals("ERROR, wrong 3 elements operator for mariadb mapper: <SOME> supported: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE] or [JSON_CONTAINS, JSON_EQUALS], REGEX_MATCH",
                 exception.getMessage(),
-                "Exception with 3 elements, wrong condition for maria/mysql");
+                "Exception with 3 elements, wrong condition for mariadb");
+    }
+
+    @Test
+    void testBuildConditionMysqlWrong3SpecificConditionsSupport() {
+        QueryBuilder qb = new QueryBuilder(mysql);
+
+        Throwable exception = assertThrows(QueryBuilderException.class, () ->
+                qb.sqlConditionBuilder(new Object[][]{
+                        {"COLUMN2", "JSON_EQUALS", "{}"},
+                }));
+
+        assertEquals("ERROR, wrong 3 elements operator for mysql mapper: <JSON_EQUALS> supported: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE] or JSON_CONTAINS, REGEX_MATCH",
+                exception.getMessage());
     }
 
     @Test
@@ -262,7 +275,7 @@ class QueryBuilderNegativeTest {
         MatcherAssert.assertThat(
                 "mysql not support JSON_EQUALS",
                 exception.getMessage(),
-                StringContains.containsString("ERROR, wrong 3 elements for mysql mapper: <JSON_EQUALS> must be: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE] or JSON_CONTAINS, REGEX_MATCH"));
+                StringContains.containsString("ERROR, wrong 3 elements operator for mysql mapper: <JSON_EQUALS> supported: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE] or JSON_CONTAINS, REGEX_MATCH"));
 
     }
 

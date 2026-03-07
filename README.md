@@ -14,16 +14,16 @@ for interaction with Databases
 
 ### IMPORTANT add jdbc for your database type(not included in helper):
 
-    testImplementation 'org.mariadb.jdbc:mariadb-java-client:2.7.12'
+    implementation 'org.mariadb.jdbc:mariadb-java-client:2.7.12'
 
-    testImplementation "com.mysql:mysql-connector-j:8.2.0"
+    implementation "com.mysql:mysql-connector-j:8.2.0"
     implementation "mysql:mysql-connector-java:8.0.33"
 
-    testImplementation 'org.postgresql:postgresql:42.7.1'
+    implementation 'org.postgresql:postgresql:42.7.1'
 
-    testImplementation 'com.oracle.database.jdbc:ojdbc11:23.2.0.0'
+    implementation 'com.oracle.database.jdbc:ojdbc11:23.2.0.0'
 
-    testImplementation 'com.microsoft.sqlserver:mssql-jdbc:12.4.2.jre11'
+    implementation 'com.microsoft.sqlserver:mssql-jdbc:12.4.2.jre11'
 
 ### Logging:
 

@@ -33,9 +33,10 @@ public class JdbcDirectivesHikari {
 
     public JdbcDirectivesHikari(String dbUrl,
                                 String username,
-                                String passwd) {
+                                String passwd,
+                                String dbType) {
 
-        dataSource = new DataSource(dbUrl, username, passwd);
+        dataSource = new DataSource(dbUrl, username, passwd, dbType);
 
     }
 
@@ -108,11 +109,11 @@ public class JdbcDirectivesHikari {
         }
     }
 
-    private static void tryExecuteLog(String query){
+    private static void tryExecuteLog(String query) {
         Log.LOGGER.debug("Try to execute sql:\n {}", query);
     }
 
-    private static void throwException(Exception sqlException, String query){
+    private static void throwException(Exception sqlException, String query) {
         Log.LOGGER.error("Failed to execute:\n {}", query);
         throw new SqlExecuteException(sqlException);
     }

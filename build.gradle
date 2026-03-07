@@ -27,7 +27,7 @@ repositories {
 }
 
 dependencies {
-    api 'net.bugreaper:core:1.0.0'
+    api 'net.bugreaper:core:1.1.0'
 
     api 'com.zaxxer:HikariCP:5.1.0'
 
@@ -54,10 +54,14 @@ test {
     useJUnitPlatform()
     systemProperty('allure.results.directory', project.buildDir.toString() + "/allure-results")
 
+    systemProperties(System.getProperties())
+
     testLogging {
         events("PASSED", "FAILED", "SKIPPED")
+//        showStandardStreams = true
         exceptionFormat = "full"
     }
+
     finalizedBy jacocoTestReport
 }
 

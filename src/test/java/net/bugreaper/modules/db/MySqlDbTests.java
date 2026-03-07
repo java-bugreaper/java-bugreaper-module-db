@@ -6,6 +6,7 @@ import org.hamcrest.MatcherAssert;
 import org.hamcrest.core.StringContains;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import testcontainers.MySqlDbSetup;
 
 import java.util.Objects;
@@ -16,11 +17,13 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@SuppressWarnings("squid:S2699")
+@SuppressWarnings({"squid:S2699", "java:S5778"})
+@TestInstance(TestInstance.Lifecycle.PER_CLASS) //To call connection once!
 class MySqlDbTests {
 
     private static final MySqlDbSetup setup = MySqlDbSetup.getInstance();
     private static final MySQL db = setup.getMysqlDb().setTemplatesDirectory("templates/custom/");
+    private static final MySQL dbConf = new MySQL();
 
     private static final String TEST_TABLE = "MYSQL_SCHEMA.USERS";
     private static final String TEST_TABLE2 = "MYSQL_SCHEMA.USERS2";
@@ -84,17 +87,17 @@ class MySqlDbTests {
 
     @Test
     void getDataFromEmptyTable() {
-        db.showDataFromTableMethod(TEST_TABLE);
+        db.showDataFromTable(TEST_TABLE);
     }
 
     @Test
     void renameAndRollbackTable() {
-        db.showDataFromTableMethod("MYSQL_SCHEMA.TEST");
+        db.showDataFromTable("MYSQL_SCHEMA.TEST");
         db.renameTable("MYSQL_SCHEMA.TEST");
-        db.showDataFromTableMethod("MYSQL_SCHEMA.TEST_X_");
+        db.showDataFromTable("MYSQL_SCHEMA.TEST_X_");
 
         db.rollbackTable("MYSQL_SCHEMA.TEST");
-        db.showDataFromTableMethod("MYSQL_SCHEMA.TEST");
+        db.showDataFromTable("MYSQL_SCHEMA.TEST");
     }
 
     @Test
@@ -343,7 +346,7 @@ class MySqlDbTests {
         MatcherAssert.assertThat(
                 "Exception on JSON_EQUALS for mysql",
                 exception.getMessage(),
-                StringContains.containsString("ERROR, wrong 3 elements for mysql mapper: <JSON_EQUALS> must be: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE] or JSON_CONTAINS, REGEX_MATCH"));
+                StringContains.containsString("ERROR, wrong 3 elements operator for mysql mapper: <JSON_EQUALS> supported: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE] or JSON_CONTAINS, REGEX_MATCH"));
     }
 
     @Test
@@ -448,7 +451,7 @@ class MySqlDbTests {
         });
 
         Throwable exception = assertThrows(AssertionError.class, () ->
-                db.seeRowsCountInTableExactly(TEST_TABLE, 1, 500));
+                db.withAwaitMs(500).seeRowsCountInTableExactly(TEST_TABLE, 1));
 
         MatcherAssert.assertThat(
                 "Exception on failed assert count in table(filled table) with custom timeout",
@@ -482,12 +485,12 @@ class MySqlDbTests {
     void checkConditionExceptionOnEmptyTableCustomAwait() {
 
         Throwable exception = assertThrows(AssertionError.class, () ->
-                db.seeRowsCountInTableExactly
+                db.withAwaitMs(600).seeRowsCountInTableExactly
                         (TEST_TABLE,
                                 new Object[][]{
                                         {"ID", "4"},
                                 },
-                                1, 600));
+                                1));
 
         MatcherAssert.assertThat(
                 "Exception on failed assert count in table(empty table) with custom timeout",
@@ -507,8 +510,8 @@ class MySqlDbTests {
         });
 
         Throwable exception = assertThrows(AssertionError.class, () ->
-                db.seeRowsCountInTableExactlyCustom(TEST_TABLE, "where ID >7 AND DEPOSIT is null",
-                        1, 500));
+                db.withAwaitMs(500).seeRowsCountInTableExactlyCustom(TEST_TABLE, "where ID >7 AND DEPOSIT is null",
+                        1));
 
         MatcherAssert.assertThat(
                 "Exception on failed assert count in table(empty table) with custom condition & timeout",
@@ -664,8 +667,6 @@ class MySqlDbTests {
         }else {
             System.clearProperty(PROPERTY);
         }
-
-        MySQL dbConf = new MySQL();
 
         dbConf.truncateTable(TEST_TABLE_FOR_TEMPLATE);
 

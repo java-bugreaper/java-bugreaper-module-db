@@ -74,7 +74,7 @@ public class QueryConditionsBuilder {
             return conditions.append(" ").append(conditionsArray[1]).append(" TO_DATE('").append(conditionsArray[3]).append("', 'YYYY-MM-DD HH24:MI:SS')");
         } else {
             Log.LOGGER.error("Query build failed for db: {} \narray {}", dbType, conditionsArray);
-            throw new QueryBuilderException("ERROR, wrong 4 elements for Oracle mapper: " + conditionsArray[2] + " must be: " +
+            throw new QueryBuilderException("ERROR, wrong 4 elements option for Oracle mapper: <" + conditionsArray[2] + "> supported: " +
                     oracleDateEnum + " or " + oracleDateTimeEnum);
         }
     }
@@ -102,7 +102,7 @@ public class QueryConditionsBuilder {
             } else {
                 Log.LOGGER.error("Query build failed for db: {} \narray {}\n use basic: {}", dbType, conditionsArray, basicConditions);
 
-                throw new QueryBuilderException(MessageFormat.format("ERROR, wrong 3 elements: {0} must be: {1}",
+                throw new QueryBuilderException(MessageFormat.format("ERROR, wrong 3 elements operator: <{0}> supported: {1}",
                         conditionsArray[1], basicConditions));
             }
         }
@@ -117,7 +117,7 @@ public class QueryConditionsBuilder {
 
         //mysql not support JSON_EQUALS
         if (mariaJsonContains.get(1) == conditionsArray[1] && Objects.equals(dbType, DbTypes.MY_SQL.value())) {
-            throw new QueryBuilderException(MessageFormat.format("ERROR, wrong 3 elements for mysql mapper: <{0}> must be: {1} or {2}, {3}",
+            throw new QueryBuilderException(MessageFormat.format("ERROR, wrong 3 elements operator for mysql mapper: <{0}> supported: {1} or {2}, {3}",
                     conditionsArray[1], basicConditions, mariaJsonContains.get(0), REGEX_CONDITION));
         } else if (mariaJsonContains.contains(conditionsArray[1])) {
 
@@ -133,11 +133,17 @@ public class QueryConditionsBuilder {
                     .append(conditionsArray[0]).append(" RLIKE ").append("'").append(conditionsArray[2]).append("'");
 
         } else {
+
+            if (Objects.equals(dbType, DbTypes.MY_SQL.value())) {
+                //remove equals(not supported for mysql
+                mariaJsonContains.remove(1);
+            }
+
             Log.LOGGER.error("Query build failed for db: {} \narray {}\n use basic: {} or specific: {}, {}",
                     dbType, conditionsArray, basicConditions, mariaJsonContains, REGEX_CONDITION);
 
-            throw new QueryBuilderException(MessageFormat.format("ERROR, wrong 3 elements for mariadb/mysql mapper: <{0}> must be: {1} or {2}, {3}",
-                    conditionsArray[1], basicConditions, mariaJsonContains, REGEX_CONDITION));
+            throw new QueryBuilderException(MessageFormat.format("ERROR, wrong 3 elements operator for {0} mapper: <{1}> supported: {2} or {3}, {4}",
+                    dbType, conditionsArray[1], basicConditions, mariaJsonContains, REGEX_CONDITION));
         }
     }
 

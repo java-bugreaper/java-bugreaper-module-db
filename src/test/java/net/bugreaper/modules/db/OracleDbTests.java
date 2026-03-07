@@ -2,6 +2,7 @@ package net.bugreaper.modules.db;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.opentest4j.AssertionFailedError;
 import testcontainers.OracleDbSetup;
 
@@ -12,10 +13,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SuppressWarnings("squid:S2699")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS) //To call connection once!
 class OracleDbTests {
 
     private static final OracleDbSetup setup = OracleDbSetup.getInstance();
-    private static final OracleDb db = setup.getOracleDb().withAwaitMs(500);
+    private static final OracleDb db = setup.getOracleDb().setAwaitMs(500);
+    private static final OracleDb dbConf = new OracleDb(); //For config
 
     private static final String TEST_TABLE = "ORACLE_SCHEMA.GOODS";
     private static final String TEST_TABLE2 = "ORACLE_SCHEMA_2.COUNTRIES";
@@ -159,7 +162,7 @@ class OracleDbTests {
             System.clearProperty(PROPERTY);
         }
 
-        OracleDb dbConf = new OracleDb();
+
 
         dbConf.truncateTable(TEST_FOR_TEMPLATE);
 
@@ -200,7 +203,7 @@ class OracleDbTests {
 
     @Test
     void getDataFromEmptyTable() {
-        db.showDataFromTableMethod(TEST_TABLE);
+        db.showDataFromTable(TEST_TABLE);
     }
 
 
@@ -208,10 +211,10 @@ class OracleDbTests {
     void renameAndRollbackTable() {
         db.truncateTable(TEST_FOR_RENAME);
         db.renameTable(TEST_FOR_RENAME);
-        db.showDataFromTableMethod(TEST_FOR_RENAME + "_X_");
+        db.showDataFromTable(TEST_FOR_RENAME + "_X_");
 
         db.rollbackTable(TEST_FOR_RENAME);
-        db.showDataFromTableMethod(TEST_FOR_RENAME);
+        db.showDataFromTable(TEST_FOR_RENAME);
     }
 
     @Test

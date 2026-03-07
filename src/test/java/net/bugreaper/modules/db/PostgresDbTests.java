@@ -9,6 +9,7 @@ import org.hamcrest.core.StringContains;
 import org.hamcrest.core.StringStartsWith;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.opentest4j.AssertionFailedError;
 import testcontainers.PostgresDbSetup;
 
@@ -20,7 +21,8 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@SuppressWarnings("squid:S2699")
+@SuppressWarnings({"squid:S2699", "java:S5778"})
+@TestInstance(TestInstance.Lifecycle.PER_CLASS) //To call connection once!
 class PostgresDbTests extends PostgresDbSetup {
 
     @BeforeEach
@@ -30,16 +32,15 @@ class PostgresDbTests extends PostgresDbSetup {
 
     @Test
     void getDataFromEmptyTable() {
-        db.showDataFromTableMethod(TEST_TABLE);
+        db.showDataFromTable(TEST_TABLE);
     }
 
     @Test
     void getDataFromEmptyTableWrongUpperCase() {
 
         String wrongTableName = TEST_TABLE.toUpperCase();
-
         Throwable exception = assertThrows(JdbcExecutorException.class, () ->
-                db.showDataFromTableMethod(wrongTableName));
+                db.showDataFromTable(wrongTableName));
 
         MatcherAssert.assertThat(
                 "Exception on failed when wrong case (may be in postgres) given to sql request",
@@ -54,7 +55,7 @@ class PostgresDbTests extends PostgresDbSetup {
                 {"USERNAME", "Pupkin2"},
         });
 
-        db.showDataFromTableMethod(TEST_TABLE);
+        db.showDataFromTable(TEST_TABLE);
     }
 
     @Test
@@ -67,7 +68,7 @@ class PostgresDbTests extends PostgresDbSetup {
         db.seeTableIsEmpty(TEST_TABLE_FOR_RENAME + "_X_");
 
         db.rollbackTable(TEST_TABLE_FOR_RENAME);
-        db.showDataFromTableMethod(TEST_TABLE_FOR_RENAME);
+        db.showDataFromTable(TEST_TABLE_FOR_RENAME);
     }
 
     @Test
@@ -184,12 +185,12 @@ class PostgresDbTests extends PostgresDbSetup {
     void checkConditionExceptionOnEmptyTableCustomAwait() {
 
         Throwable exception = assertThrows(AssertionError.class, () ->
-                db.seeRowsCountInTableExactly
+                db.withAwaitMs(600).seeRowsCountInTableExactly
                         (TEST_TABLE,
                                 new Object[][]{
                                         {"ID", "4"},
                                 },
-                                1, 600));
+                                1));
 
         MatcherAssert.assertThat(
                 "Exception on failed assert count in table(empty table) with custom timeout",
@@ -241,7 +242,7 @@ class PostgresDbTests extends PostgresDbSetup {
                                 1));
 
         assertEquals("""
-                        ERROR, wrong 3 elements: JSON_CONTAINS must be: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE]""",
+                        ERROR, wrong 3 elements operator: <JSON_CONTAINS> supported: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE]""",
                 exception.getMessage(),
                 "Exception with JSON in db not supported yet");
     }
@@ -370,7 +371,7 @@ class PostgresDbTests extends PostgresDbSetup {
         PostgreSQL dbTest = setup.getPostgresDb();
 
         Throwable exception = assertThrows(IllegalArgumentException.class, () ->
-                dbTest.withAwaitMs(100));
+                dbTest.setAwaitMs(100));
 
         MatcherAssert.assertThat(
                 "Error on config .withAwaitMs negative validation",

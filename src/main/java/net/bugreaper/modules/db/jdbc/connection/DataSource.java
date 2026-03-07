@@ -2,10 +2,12 @@ package net.bugreaper.modules.db.jdbc.connection;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import net.bugreaper.modules.db.DbTypes;
 import net.bugreaper.modules.db.logger.Log;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Objects;
 
 public class DataSource {
 
@@ -13,9 +15,10 @@ public class DataSource {
 
     DataSource(String dbUrl,
                String username,
-               String passwd) {
+               String passwd,
+               String dbType) {
 
-        HikariConfig config = getHikariConfig(dbUrl, username, passwd);
+        HikariConfig config = getHikariConfig(dbUrl, username, passwd, dbType);
 
         Log.LOGGER.debug("HikariCP pool started: {}", config.getPoolName());
 
@@ -31,7 +34,7 @@ public class DataSource {
 
     }
 
-    private HikariConfig getHikariConfig(String dbUrl, String username, String passwd) {
+    private HikariConfig getHikariConfig(String dbUrl, String username, String passwd, String dbType) {
         HikariConfig config = new HikariConfig();
         config.setPoolName(username + System.currentTimeMillis());
 
@@ -40,11 +43,10 @@ public class DataSource {
         config.setPassword(passwd);
         config.setMaximumPoolSize(10);
         config.setConnectionTimeout(1000);
-        config.addDataSourceProperty("cachePrepStmts", "true");
-        config.addDataSourceProperty("prepStmtCacheSize", "250");
-        config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
 
-        config.addDataSourceProperty("oracle.jdbc.timezoneAsRegion", "false");
+        if(Objects.equals(dbType, DbTypes.ORACLE_DB.value())) {
+            config.addDataSourceProperty("oracle.jdbc.timezoneAsRegion", "false");
+        }
 
         return config;
     }

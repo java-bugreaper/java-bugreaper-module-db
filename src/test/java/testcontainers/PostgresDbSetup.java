@@ -44,7 +44,7 @@ public class PostgresDbSetup {
 
     protected static final PostgresDbSetup setup = PostgresDbSetup.getInstance();
     protected static final PostgreSQL db = setup.getPostgresDb();
-    protected static final PostgreSQL dbAwait = setup.getPostgresDb().withAwaitMs(1000);
+    protected static final PostgreSQL dbAwait = setup.getPostgresDb().setAwaitMs(1000);
 
     protected static final String TEST_TABLE = "public.users";
     protected static final String TEST_TABLE2 = "public.users2";
