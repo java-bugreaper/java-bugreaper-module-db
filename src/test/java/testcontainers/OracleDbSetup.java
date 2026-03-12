@@ -43,7 +43,7 @@ public class OracleDbSetup {
     }
 
     public OracleDb getOracleDb() {
-
+        container.isHostAccessible();
         return new OracleDb(
                 container.getJdbcUrl(),
                 "ADMIN",

@@ -10,7 +10,17 @@ package net.bugreaper.modules.db.jdbc.interfaces;
 public interface SqlConfig<T extends SqlConfig<T>> {
 
     /**
-     * Configure await in asserts with await
+     * Configure global await for asserts with await
+     *
+     * @param awaitMs ms await
+     * @return this instance for method chaining
+     * @throws IllegalArgumentException on invalid setup
+     */
+    T setAwaitMs(int awaitMs);
+
+    /**
+     * Configure await for specific assert with await once
+     * global {@link #setAwaitMs(int)} will be replaced for specific assert
      *
      * @param awaitMs ms await
      * @return this instance for method chaining

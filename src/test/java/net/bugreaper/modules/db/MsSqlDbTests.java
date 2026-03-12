@@ -6,6 +6,7 @@ import org.hamcrest.MatcherAssert;
 import org.hamcrest.core.StringContains;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.opentest4j.AssertionFailedError;
 import testcontainers.MsSqlDbSetup;
 
@@ -15,11 +16,13 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@SuppressWarnings("squid:S2699")
+@SuppressWarnings({"squid:S2699", "java:S5778"})
+@TestInstance(TestInstance.Lifecycle.PER_CLASS) //To call connection once!
 class MsSqlDbTests {
 
     private static final MsSqlDbSetup setup = MsSqlDbSetup.getInstance();
     private static final MsSQL db = setup.getMssqlDb();
+    private static final MsSQL dbConf = new MsSQL();
 
     private static final String TEST_TABLE = "test_schema.users";
     private static final String TEST_TABLE2 = "test_schema.USERS2";
@@ -61,17 +64,17 @@ class MsSqlDbTests {
 
     @Test
     void getDataFromEmptyTable() {
-        db.showDataFromTableMethod(TEST_TABLE);
+        db.showDataFromTable(TEST_TABLE);
     }
 
     @Test
     void renameAndRollbackTable() {
-        db.showDataFromTableMethod("test_schema.test");
+        db.showDataFromTable("test_schema.test");
         db.renameTable("test_schema.test");
-        db.showDataFromTableMethod("test_schema.test_X_");
+        db.showDataFromTable("test_schema.test_X_");
 
         db.rollbackTable("test_schema.test");
-        db.showDataFromTableMethod("test_schema.test");
+        db.showDataFromTable("test_schema.test");
     }
 
     @Test
@@ -308,7 +311,7 @@ class MsSqlDbTests {
                                 1));
 
         assertEquals("""
-                        ERROR, wrong 3 elements: JSON_CONTAINS must be: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE]""",
+                        ERROR, wrong 3 elements operator: <JSON_CONTAINS> supported: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE]""",
                 exception.getMessage(),
                 "Exception with JSON in db not supported yet");
     }
@@ -385,7 +388,7 @@ class MsSqlDbTests {
         });
 
         Throwable exception = assertThrows(AssertionError.class, () ->
-                db.seeRowsCountInTableExactly(TEST_TABLE, 1, 500));
+                db.withAwaitMs(500).seeRowsCountInTableExactly(TEST_TABLE, 1));
 
         MatcherAssert.assertThat(
                 "Exception on failed assert count in table(filled table) with custom timeout",
@@ -419,12 +422,12 @@ class MsSqlDbTests {
     void checkConditionExceptionOnEmptyTableCustomTO() {
 
         Throwable exception = assertThrows(AssertionError.class, () ->
-                db.seeRowsCountInTableExactly
+                db.withAwaitMs(600).seeRowsCountInTableExactly
                         (TEST_TABLE,
                                 new Object[][]{
                                         {"ID", "4"},
                                 },
-                                1, 600));
+                                1));
 
         MatcherAssert.assertThat(
                 "Exception on failed assert count in table(empty table) with custom timeout",
@@ -438,20 +441,31 @@ class MsSqlDbTests {
     }
 
     @Test
-    void checkCustomConditionExceptionAssertCustomTime() {
+    void checkCustomConditionExceptionAssertCustomTimeOnce() {
         insertIntoUsers(new Object[][]{
                 {"ID", "6"},
         });
 
         Throwable exception = assertThrows(AssertionError.class, () ->
-                db.seeRowsCountInTableExactlyCustom(TEST_TABLE, "where ID >7 AND DEPOSIT is null",
-                        1, 500));
+                db.withAwaitMs(500).seeRowsCountInTableExactlyCustom(TEST_TABLE, "where ID >7 AND DEPOSIT is null",
+                        1));
 
         MatcherAssert.assertThat(
                 "Exception on failed assert count in table(empty table) with custom condition & timeout",
                 exception.getMessage(),
                 is("""
                         Failed assert count: ER <1> with AR <0> in test_schema.users within 500 milliseconds
+                        where ID >7 AND DEPOSIT is null"""));
+
+        Throwable exception2 = assertThrows(AssertionError.class, () ->
+                db.seeRowsCountInTableExactlyCustom(TEST_TABLE, "where ID >7 AND DEPOSIT is null",
+                        1));
+
+        MatcherAssert.assertThat(
+                "Exception on failed assert count in table(empty table) with custom condition & timeout",
+                exception2.getMessage(),
+                is("""
+                        Failed assert count: ER <1> with AR <0> in test_schema.users within 2 seconds
                         where ID >7 AND DEPOSIT is null"""));
     }
 
@@ -607,8 +621,6 @@ class MsSqlDbTests {
         }else {
             System.clearProperty(PROPERTY);
         }
-
-        MsSQL dbConf = new MsSQL();
 
         dbConf.truncateTable(TEST_TABLE_FOR_TEMPLATE);
 

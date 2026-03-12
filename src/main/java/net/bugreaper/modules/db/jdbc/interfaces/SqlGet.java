@@ -70,45 +70,6 @@ public interface SqlGet {
 
 
     /**
-     * Assert of records EXACTLY count by conditions with custom await
-     *
-     * @param tableName       schema_name.table_name
-     * @param conditionsArray Object[][] with template {{"column1", "value1"},...}
-     * @param expectedCount   expected rows count
-     * @param awaitMs         await in ms
-     * @throws ConditionTimeoutException on assert fail (and adds Allure attachments)
-     */
-    void seeRowsCountInTableExactly(String tableName,
-                                    Object[][] conditionsArray,
-                                    int expectedCount,
-                                    int awaitMs);
-
-    /**
-     * Assert of records EXACTLY count by conditions with custom await
-     *
-     * @param tableName     schema_name.table_name
-     * @param conditions    String "where id=1"
-     * @param expectedCount expected rows count
-     * @param awaitMs       await in ms
-     * @throws ConditionTimeoutException on assert fail (and adds Allure attachments)
-     */
-    void seeRowsCountInTableExactlyCustom(String tableName,
-                                    String conditions,
-                                    int expectedCount,
-                                    int awaitMs);
-
-    /**
-     * Assert of records EXACTLY count with custom await
-     *
-     * @param tableName     schema_name.table_name
-     * @param expectedCount expected rows count
-     * @param awaitMs       await in ms
-     * @throws ConditionTimeoutException on assert fail (and adds Allure attachments)
-     */
-    void seeRowsCountInTableExactly(String tableName, int expectedCount, int awaitMs);
-
-
-    /**
      * Assert That table has at least one record with await
      *
      * @param tableName schema_name.table_name

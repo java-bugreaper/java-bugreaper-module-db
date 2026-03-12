@@ -25,9 +25,6 @@ import static net.bugreaper.modules.db.mapper.JsonToArrayMapper.jsonToObjectArra
  * {@link JdbcExecutor#seeRowsCountInTableExactly(String, Object[][], int)}
  * {@link JdbcExecutor#seeRowsCountInTableExactlyCustom(String, String, int)}
  * {@link JdbcExecutor#seeRowsCountInTableExactly(String, int)}
- * {@link JdbcExecutor#seeRowsCountInTableExactly(String, Object[][], int, int)}
- * {@link JdbcExecutor#seeRowsCountInTableExactlyCustom(String, String, int, int)}
- * {@link JdbcExecutor#seeRowsCountInTableExactly(String, int, int)}
  * {@link JdbcExecutor#seeTableIsEmpty(String)}
  * {@link JdbcExecutor#seeTableDoesNotEmpty(String)}
  * {@link JdbcExecutor#seeRecordExistsInTable(String, Object[][])}
@@ -55,7 +52,7 @@ import static net.bugreaper.modules.db.mapper.JsonToArrayMapper.jsonToObjectArra
  *
  * <p>Supported dbTypes: {@link DbTypes}</p>
  *
- * <p> Await for asserts default: {@link JdbcExecutor#awaitMs}, can be changed by: {@link JdbcExecutor#withAwaitMs(int)}
+ * <p> Await for asserts default: {@link JdbcExecutor#awaitMs}, can be changed globally by: {@link JdbcExecutor#setAwaitMs(int)}, or once for specific assert by {@link JdbcExecutor#withAwaitMs(int)}
  * <p> Path to template files for insert default: {@link JdbcExecutor#templatesPath}, can be changed by: {@link JdbcExecutor#setTemplatesDirectory(String)}
  */
 public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractExecutor implements SqlPost, SqlGet, SqlConfig<T> {
@@ -66,9 +63,13 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
     private static final String DELETE_FROM = "DELETE FROM %s %s";
 
     /**
-     * default ms await in tests
+     * default ms await in asserts (configure with {@link #setAwaitMs(int)})
      */
     private int awaitMs = 2000;
+    /**
+     * specific ms await in specific assert (configure with {@link #withAwaitMs(int)})
+     */
+    private ThreadLocal<Integer> specificAwaitMs = ThreadLocal.withInitial(() -> 0);
 
     /**
      * default templates path for insert (dynamically for each database types)
@@ -92,7 +93,7 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
         this.password = password;
 
 
-        jdbc = new JdbcDirectivesHikari(this.url, this.username, this.password);
+        jdbc = new JdbcDirectivesHikari(this.url, this.username, this.password, this.dbType);
         this.getColumnsQuery = getColumnsQuery;
     }
 
@@ -130,7 +131,7 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
 
         loadFromYaml(dbType);
 
-        jdbc = new JdbcDirectivesHikari(this.url, this.username, this.password);
+        jdbc = new JdbcDirectivesHikari(this.url, this.username, this.password, this.dbType);
         this.qb = new QueryBuilder(dbType);
     }
 
@@ -145,7 +146,7 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
         //optional config fields
         Object awaitVal = YamlUtils.getValueByPath(YML_KEY + dbType + ".await", true);
         if (awaitVal instanceof Number number) {
-            withAwaitMs(number.intValue());
+            setAwaitMs(number.intValue());
         }
     }
 
@@ -158,11 +159,19 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
     // setters
 
     @Override
-    public T withAwaitMs(int awaitMs) {
+    public T setAwaitMs(int awaitMs) {
         if (awaitMs < 200) {
             throw new IllegalArgumentException("awaitMs too small (can`t bee less 200ms)");
         }
         this.awaitMs = awaitMs;
+        return self();
+    }
+
+    public T withAwaitMs(int specificAwaitMs) {
+        if (specificAwaitMs < 200) {
+            throw new IllegalArgumentException("specificAwaitMs too small (can`t bee less 200ms)");
+        }
+        this.specificAwaitMs.set(specificAwaitMs);
         return self();
     }
 
@@ -318,7 +327,7 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
                                            Object[][] conditionsArray,
                                            int expectedCount) {
         var conditions = qb.sqlConditionBuilder(conditionsArray);
-        assertCountInTableBuilder(tableName, conditions, conditionsArray, Integer.toString(expectedCount), awaitMs);
+        assertCountInTableBuilder(tableName, conditions, conditionsArray, Integer.toString(expectedCount), await());
     }
 
     @Override
@@ -331,41 +340,23 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
                 expectedCount);
     }
 
-    @Override
-    public void seeRowsCountInTableExactly(String tableName,
-                                           Object[][] conditionsArray,
-                                           int expectedCount,
-                                           int awaitMs) {
-        var conditions = qb.sqlConditionBuilder(conditionsArray);
-        assertCountInTableBuilder(tableName, conditions, conditionsArray, Integer.toString(expectedCount), awaitMs);
-    }
-
     public void seeRowsCountInTableExactlyCustom(String tableName, String conditions, int expectedCount) {
-        assertCountInTableBuilder(tableName, conditions, null, Integer.toString(expectedCount), awaitMs);
-    }
-
-    public void seeRowsCountInTableExactlyCustom(String tableName, String conditions, int expectedCount, int awaitMs) {
-        assertCountInTableBuilder(tableName, conditions, null, Integer.toString(expectedCount), awaitMs);
+        assertCountInTableBuilder(tableName, conditions, null, Integer.toString(expectedCount), await());
     }
 
     @Override
     public void seeRowsCountInTableExactly(String tableName, int expectedCount) {
-        assertCountInTableBuilder(tableName, "", null, Integer.toString(expectedCount), awaitMs);
-    }
-
-    @Override
-    public void seeRowsCountInTableExactly(String tableName, int expectedCount, int awaitMs) {
-        assertCountInTableBuilder(tableName, "", null, Integer.toString(expectedCount), awaitMs);
+        assertCountInTableBuilder(tableName, "", null, Integer.toString(expectedCount), await());
     }
 
     @Override
     public void seeTableIsEmpty(String tableName) {
-        assertCountInTableBuilder(tableName, "", null, "0", awaitMs);
+        assertCountInTableBuilder(tableName, "", null, "0", await());
     }
 
     @Override
     public void seeRecordExistsInTableCustom(String tableName, String conditions) {
-        recordExistsBuilder(tableName, conditions, null, awaitMs);
+        recordExistsBuilder(tableName, conditions, null, await());
     }
 
     @Override
@@ -380,13 +371,13 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
     public void seeRecordExistsInTable(String tableName,
                                        Object[][] conditionsArray) {
         var conditions = qb.sqlConditionBuilder(conditionsArray);
-        recordExistsBuilder(tableName, conditions, conditionsArray, awaitMs);
+        recordExistsBuilder(tableName, conditions, conditionsArray, await());
     }
 
 
     @Override
     public void seeTableDoesNotEmpty(String tableName) {
-        recordExistsBuilder(tableName, "", null, awaitMs);
+        recordExistsBuilder(tableName, "", null, await());
     }
 
     @Override
@@ -398,6 +389,17 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
     @Step("(DB) Show data from table {tableName}")
     public void showDataFromTable(String tableName) {
         showDataFromTableMethod(tableName);
+    }
+
+
+    private int await(){
+        if (specificAwaitMs.get() != 0 ) {
+            int result = specificAwaitMs.get();
+            specificAwaitMs.remove();
+            return result;
+        } else {
+            return awaitMs;
+        }
     }
 
 }

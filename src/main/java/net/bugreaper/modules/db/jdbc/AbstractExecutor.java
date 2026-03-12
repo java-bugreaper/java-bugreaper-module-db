@@ -8,6 +8,8 @@ import io.qameta.allure.Step;
 import net.bugreaper.modules.db.allurereporter.AllureReporter;
 import org.apache.commons.lang3.StringUtils;
 import org.awaitility.core.ConditionTimeoutException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 @SuppressWarnings("squid:S5960")
 abstract class AbstractExecutor {
 
+    private static final Logger log = LoggerFactory.getLogger(AbstractExecutor.class);
     protected JdbcDirectivesHikari jdbc;
     protected String getColumnsQuery;
     protected String url;
@@ -38,7 +41,8 @@ abstract class AbstractExecutor {
     protected static final String COUNT = "COUNT_RES";
 
 
-    protected AbstractExecutor() {}
+    protected AbstractExecutor() {
+    }
 
     @Step("(DB)[ASSERT] Count records in {tableName} {conditions} EQUAL {expectedCount}")
     protected void assertCountInTableBuilder(String tableName,
@@ -62,7 +66,7 @@ abstract class AbstractExecutor {
                                     expectedCount));
         } catch (ConditionTimeoutException ex) {
 
-            showDataFromTableMethod(tableName);
+            showDataFromTableNoExceptionMethod(tableName);
 
             if (conditionsArray != null) {
 
@@ -99,7 +103,7 @@ abstract class AbstractExecutor {
                             assertGreaterThanExpected(0, Integer.parseInt(jdbc.getSqlResultForCount(query, COUNT))));
         } catch (ConditionTimeoutException ex) {
 
-            showDataFromTableMethod(tableName);
+            showDataFromTableNoExceptionMethod(tableName);
 
             if (conditionsArray != null) {
 
@@ -134,7 +138,7 @@ abstract class AbstractExecutor {
         for (int i = 0; i < conditionsArray.length; i++) {
             columnsName[i] = conditionsArray[i][0].toString();
 
-            switch (conditionsArray[i].length ) {
+            switch (conditionsArray[i].length) {
                 //for oracle dates
                 case 4:
                     expectFor.add("(" + conditionsArray[i][1] + ")" + conditionsArray[i][3]);
@@ -159,6 +163,7 @@ abstract class AbstractExecutor {
 
         StringBuilder dataRows = new StringBuilder();
         final int ROWS = resultArray.size() / COLUMN_NUMBER;
+
         for (int r = 0; r < ROWS; r++) {
             dataRows.append("\n[");
             for (int i = COLUMN_NUMBER * r; i < COLUMN_NUMBER * (r + 1); i++) {
@@ -174,7 +179,7 @@ abstract class AbstractExecutor {
     }
 
 
-    public void showDataFromTableMethod(String tableName) {
+    protected void showDataFromTableMethod(String tableName) {
         String[] columnsArray = getTableColumns(tableName);
 
         if (columnsArray.length == 0) {
@@ -186,6 +191,18 @@ abstract class AbstractExecutor {
         Object[] resultArray = jdbc.getSqlResultList(SELECT_ALL + tableName, columnsArray).toArray(Object[]::new);
 
         reportHtmlTableAllBuilder(tableName, columnsArray, resultArray);
+    }
+
+    private void showDataFromTableNoExceptionMethod(String tableName) {
+        String[] columnsArray = getTableColumns(tableName);
+
+        if (columnsArray.length == 0 && log.isWarnEnabled()) {
+            log.warn("No columns for allure in result after:\n{}", columnRequest(tableName));
+        } else {
+
+            Object[] resultArray = jdbc.getSqlResultList(SELECT_ALL + tableName, columnsArray).toArray(Object[]::new);
+            reportHtmlTableAllBuilder(tableName, columnsArray, resultArray);
+        }
     }
 
     @Step("(DB)[ASSERT] Records exists in {tableName}: {conditions}")
@@ -207,10 +224,14 @@ abstract class AbstractExecutor {
      */
     protected String[] getTableColumns(String tableName) {
 
-        return jdbc.getSqlResultList(
-                        columnRequest(tableName),
-                        "COLUMN_NAME")
-                .toArray(String[]::new);
+        try {
+            return jdbc.getSqlResultList(
+                            columnRequest(tableName),
+                            "COLUMN_NAME")
+                    .toArray(String[]::new);
+        } catch (Exception e) {
+            return new String[0];
+        }
     }
 
     private String columnRequest(String tableName) {

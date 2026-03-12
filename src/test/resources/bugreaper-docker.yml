@@ -1,5 +1,10 @@
 modules:
   db:
+    custom-db:
+      url: 'jdbc:mariadb://docker:3307'
+      username: test_user
+      password: secret_pass
+      await: 420 # optional
     mariadb:
       url: 'jdbc:mariadb://docker:3307'
       username: test_user

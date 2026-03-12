@@ -12,6 +12,7 @@
     <logger name="io.qameta.allure.AllureLifecycle" level="OFF" />
     <logger name="com.zaxxer.hikari.HikariDataSource" level="INFO" />
     <logger name="bugreaper-module-db" level="DEBUG" />
+    <logger name="net.bugreaper.core" level="INFO"/>
     <logger name="com.github.dockerjava.zerodep.shaded" level="INFO" />
 
     <root level="INFO">
