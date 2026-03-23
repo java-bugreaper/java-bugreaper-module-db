@@ -18,7 +18,7 @@ class OracleDbTests {
 
     private static final OracleDbSetup setup = OracleDbSetup.getInstance();
     private static final OracleDb db = setup.getOracleDb().setAwaitMs(500);
-    private static final OracleDb dbConf = new OracleDb(); //For config
+    private static final OracleDb dbConf = OracleDb.getInstance(); //For config
 
     private static final String TEST_TABLE = "ORACLE_SCHEMA.GOODS";
     private static final String TEST_TABLE2 = "ORACLE_SCHEMA_2.COUNTRIES";
@@ -182,6 +182,8 @@ class OracleDbTests {
                                 {"CREATE_DATE", "=", "TIMESTAMP", "2020-02-02 12:00:00"},
                         });
 
+        //for second call
+        OracleDb dbConf2 = OracleDb.getInstance();
 
         assertEquals(String.format("""
                         OracleDb:
@@ -192,7 +194,7 @@ class OracleDbTests {
                             awaitMs=300
                             templatesPath=templates/oracle/
                         """, getCi()),
-                dbConf.getConfigSummary());
+                dbConf2.getConfigSummary());
     }
 
 

@@ -7,11 +7,15 @@ import org.apache.commons.lang3.StringUtils;
 /**
  * Class for interacting with PostgreSQL
  *
+ * <p>For one instance run recommended: {@code PostgreSQL db = PostgreSQL.getInstance()}</p>
+ *
  * <p>Contains methods for:</p>
  * asserts with await, change data (create, update, clean)<br>
  * more info {@link JdbcExecutor}
  */
 public class PostgreSQL extends JdbcExecutor<PostgreSQL> {
+
+    private static PostgreSQL instance;
 
     private static final String GET_COLUMNS = """
             SELECT COLUMN_NAME
@@ -25,6 +29,17 @@ public class PostgreSQL extends JdbcExecutor<PostgreSQL> {
                 passwd,
                 GET_COLUMNS,
                 DbTypes.POSTGRE_SQL.value());
+    }
+
+    /**
+     * Run {@link #PostgreSQL()} from config in one instance
+     */
+    public static PostgreSQL getInstance() {
+        if (instance == null) {
+            instance = new PostgreSQL();
+        }
+
+        return instance;
     }
 
     /**

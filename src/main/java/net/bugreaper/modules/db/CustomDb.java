@@ -5,6 +5,9 @@ import net.bugreaper.modules.db.jdbc.JdbcExecutor;
 
 /**
  * Class for interacting with custom DB (that not supported by default)
+ *
+ * <p>For one instance run recommended: {@code CustomDb db = CustomDb.getInstance()}</p>
+ *
  * Supports only basic features:
  * <ul>
  *   <li>Get all data for allure on failed not supported</li>
@@ -19,6 +22,8 @@ import net.bugreaper.modules.db.jdbc.JdbcExecutor;
  */
 public class CustomDb extends JdbcExecutor<CustomDb> {
 
+    private static CustomDb instance;
+
     private static final String GET_COLUMNS = "Get all data for allure not supported for CustomDb";
 
 
@@ -31,23 +36,33 @@ public class CustomDb extends JdbcExecutor<CustomDb> {
     }
 
     /**
-     * Constructs MariaDB client configuration.
+     * Run {@link #CustomDb()} from config in one instance
+     */
+    public static CustomDb getInstance() {
+        if (instance == null) {
+            instance = new CustomDb();
+        }
+
+        return instance;
+    }
+
+    /**
+     * Constructs custom database (that not yet supported) client configuration.
      *
      * <p>Loads configuration values from a YAML file.</p>
      * Example:
-     * <p>CustomDb db = new CustomDb("custom-db");</p>
+     * <p>{@code CustomDb db = new CustomDb();}</p>
      * <pre>
-     * custom-db:
+     * custom-db: # reserved type
      *   url: jdbc:mysql://localhost:3308
      *   username: mysql_user
      *   password: mysql_pass
      *   await: 600 (optional)
      * </pre>
      * more info {@link JdbcExecutor#JdbcExecutor(String dbType, String getColumnsQuery)}
-     * @param dbType key for config
      */
-    public CustomDb(String dbType) {
-        super(dbType, GET_COLUMNS);
+    public CustomDb() {
+        super(DbTypes.CUSTOM_DB.value(), GET_COLUMNS);
     }
 
 

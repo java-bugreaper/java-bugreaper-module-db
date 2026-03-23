@@ -23,7 +23,7 @@ class MySqlDbTests {
 
     private static final MySqlDbSetup setup = MySqlDbSetup.getInstance();
     private static final MySQL db = setup.getMysqlDb().setTemplatesDirectory("templates/custom/");
-    private static final MySQL dbConf = new MySQL();
+    private static final MySQL dbConf = MySQL.getInstance();
 
     private static final String TEST_TABLE = "MYSQL_SCHEMA.USERS";
     private static final String TEST_TABLE2 = "MYSQL_SCHEMA.USERS2";
@@ -675,8 +675,10 @@ class MySqlDbTests {
                         {"ID", 3},
                 });
 
+        //for second call
+        MySQL dbConf2 = MySQL.getInstance();
 
-        dbConf.seeRecordExistsInTable
+        dbConf2.seeRecordExistsInTable
                 (TEST_TABLE_FOR_TEMPLATE,
                         new Object[][]{
                                 {"ID", 3},
@@ -695,7 +697,7 @@ class MySqlDbTests {
                             awaitMs=2000
                             templatesPath=templates/mysql/
                         """, getCi()),
-                dbConf.getConfigSummary());
+                dbConf2.getConfigSummary());
     }
 
 }

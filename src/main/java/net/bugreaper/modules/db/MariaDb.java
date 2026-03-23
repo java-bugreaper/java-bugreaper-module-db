@@ -6,11 +6,15 @@ import net.bugreaper.modules.db.jdbc.JdbcExecutor;
 /**
  * Class for interacting with MariaDB
  *
+ * <p>For one instance run recommended: {@code MariaDb db = MariaDb.getInstance()}</p>
+ *
  * <p>Contains methods for:</p>
  * asserts with await, change data (create, update, clean)<br>
  * more info {@link JdbcExecutor}
  */
 public class MariaDb extends JdbcExecutor<MariaDb> {
+
+    private static MariaDb instance;
 
     private static final String GET_COLUMNS = """
             SELECT COLUMN_NAME
@@ -26,6 +30,17 @@ public class MariaDb extends JdbcExecutor<MariaDb> {
                 DbTypes.MARIA_DB.value());
     }
 
+    /**
+     * Run {@link #MariaDb()} from config in one instance
+     */
+    public static MariaDb getInstance() {
+        if (instance == null) {
+            instance = new MariaDb();
+        }
+
+        return instance;
+    }
+    
     /**
      * Constructs MariaDB client configuration.
      *

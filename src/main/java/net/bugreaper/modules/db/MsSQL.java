@@ -7,11 +7,15 @@ import org.apache.commons.lang3.StringUtils;
 /**
  * Class for interacting with MsSql
  *
+ * <p>For one instance run recommended: {@code MsSQL db = MsSQL.getInstance()}</p>
+ *
  * <p>Contains methods for:</p>
  * asserts with await, change data (create, update, clean)<br>
  * more info {@link JdbcExecutor}
  */
 public class MsSQL extends JdbcExecutor<MsSQL> {
+
+    private static MsSQL instance;
 
     private static final String GET_COLUMNS = """
             SELECT COLUMN_NAME
@@ -25,6 +29,17 @@ public class MsSQL extends JdbcExecutor<MsSQL> {
                 passwd,
                 GET_COLUMNS,
                 DbTypes.MS_SQL.value());
+    }
+
+    /**
+     * Run {@link #MsSQL()} from config in one instance
+     */
+    public static MsSQL getInstance() {
+        if (instance == null) {
+            instance = new MsSQL();
+        }
+
+        return instance;
     }
 
     /**

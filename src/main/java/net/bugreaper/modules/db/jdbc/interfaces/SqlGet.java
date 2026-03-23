@@ -1,8 +1,5 @@
 package net.bugreaper.modules.db.jdbc.interfaces;
 
-
-import org.awaitility.core.ConditionTimeoutException;
-
 /**
  * Defines operations for executing SQL SELECT queries.
  * <p>
@@ -24,7 +21,7 @@ public interface SqlGet {
      * @param tableName       schema_name.table_name
      * @param conditionsArray Object[][] with template {{"column1", "value1"},...}
      * @param expectedCount   expected rows count
-     * @throws ConditionTimeoutException on assert fail (and adds Allure attachments)
+     * @throws AssertionError on assert fail (and adds Allure attachments)
      */
     void seeRowsCountInTableExactly(String tableName,
                                     Object[][] conditionsArray,
@@ -36,7 +33,7 @@ public interface SqlGet {
      * @param tableName     schema_name.table_name
      * @param conditions    String "where id=1"
      * @param expectedCount expected rows count
-     * @throws ConditionTimeoutException on assert fail (and adds Allure attachments)
+     * @throws AssertionError on assert fail (and adds Allure attachments)
      */
     void seeRowsCountInTableExactlyCustom(String tableName,
                                     String conditions,
@@ -47,7 +44,7 @@ public interface SqlGet {
      *
      * @param tableName     schema_name.table_name
      * @param expectedCount expected rows count
-     * @throws ConditionTimeoutException on assert fail (and adds Allure attachments)
+     * @throws AssertionError on assert fail (and adds Allure attachments)
      */
     void seeRowsCountInTableExactly(String tableName,
                                     int expectedCount);
@@ -62,7 +59,7 @@ public interface SqlGet {
      *    "CREATE_DATE:>="<br>
      *    "CREATE_DATE:=:TIMESTAMP" (for oracleDd)<br>
      * @param expectedCount expected rows count
-     * @throws ConditionTimeoutException on assert fail (and adds Allure attachments)
+     * @throws AssertionError on assert fail (and adds Allure attachments)
      */
     void seeRowsCountInTableExactly(String tableName,
                                     String providedJson,
@@ -73,7 +70,7 @@ public interface SqlGet {
      * Assert That table has at least one record with await
      *
      * @param tableName schema_name.table_name
-     * @throws ConditionTimeoutException on assert fail (and adds Allure attachments)
+     * @throws AssertionError on assert fail (and adds Allure attachments)
      */
     void seeTableIsEmpty(String tableName);
 
@@ -82,7 +79,7 @@ public interface SqlGet {
      * Assert That table has no records with await
      *
      * @param tableName schema_name.table_name
-     * @throws ConditionTimeoutException on assert fail (and adds Allure attachments)
+     * @throws AssertionError on assert fail (and adds Allure attachments)
      */
     void seeTableDoesNotEmpty(String tableName);
 
@@ -92,7 +89,7 @@ public interface SqlGet {
      *
      * @param tableName       schema_name.table_name
      * @param conditionsArray Object[][] with template {{"column1", "value1"},...}
-     * @throws ConditionTimeoutException on assert fail (and adds Allure attachments)
+     * @throws AssertionError on assert fail (and adds Allure attachments)
      */
     void seeRecordExistsInTable(String tableName,
                                 Object[][] conditionsArray);
@@ -105,7 +102,7 @@ public interface SqlGet {
      *     support up to 2 options in key after field <br>
      *    "CREATE_DATE:>="<br>
      *    "CREATE_DATE:=:TIMESTAMP" (for oracleDd)<br>
-     * @throws ConditionTimeoutException on assert fail (and adds Allure attachments)
+     * @throws AssertionError on assert fail (and adds Allure attachments)
      */
     void seeRecordExistsInTable(String tableName,
                                 String providedJson);
@@ -116,7 +113,7 @@ public interface SqlGet {
      *
      * @param tableName  schema_name.table_name
      * @param conditions String "where id=1"
-     * @throws ConditionTimeoutException on assert fail (and adds Allure attachments)
+     * @throws AssertionError on assert fail (and adds Allure attachments)
      */
     void seeRecordExistsInTableCustom(String tableName, String conditions);
 
@@ -133,7 +130,7 @@ public interface SqlGet {
      *
      * @param tableName       schema_name.table_name
      * @param conditionsArray Object[][] with conditions {{"ID", "1"}, {"NAME", "Alex"}}
-     * @throws ConditionTimeoutException if record/s not found by conditions
+     * @throws AssertionError if record/s not found by conditions
      */
     void showDataByCondition(String tableName, Object[][] conditionsArray);
 
