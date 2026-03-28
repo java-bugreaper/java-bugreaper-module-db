@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class MariaDbTests extends MariaDbSetup {
 
     private static final MariaDb db = new MariaDbSetup().getMariDb();
-    private static final MariaDb dbConf = new MariaDb();
+    private static final MariaDb dbConf = MariaDb.getInstance();
 
 
     private static final String TEST_TABLE = "MARIA_SCHEMA.USERS";
@@ -663,8 +663,10 @@ class MariaDbTests extends MariaDbSetup {
                     {"ID", 2},
         });
 
+        //for second call
+        MariaDb dbConf2 = MariaDb.getInstance();
 
-        dbConf.seeRecordExistsInTable
+        dbConf2.seeRecordExistsInTable
                 (TEST_TABLE_FOR_TEMPLATE,
                         new Object[][]{
                                 {"ID", 2},
@@ -683,7 +685,7 @@ class MariaDbTests extends MariaDbSetup {
                             awaitMs=510
                             templatesPath=templates/mariadb/
                         """, getCi()),
-                dbConf.getConfigSummary());
+                dbConf2.getConfigSummary());
     }
 
 }

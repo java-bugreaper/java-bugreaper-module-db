@@ -22,7 +22,7 @@ class MsSqlDbTests {
 
     private static final MsSqlDbSetup setup = MsSqlDbSetup.getInstance();
     private static final MsSQL db = setup.getMssqlDb();
-    private static final MsSQL dbConf = new MsSQL();
+    private static final MsSQL dbConf = MsSQL.getInstance();
 
     private static final String TEST_TABLE = "test_schema.users";
     private static final String TEST_TABLE2 = "test_schema.USERS2";
@@ -630,7 +630,10 @@ class MsSqlDbTests {
                 });
 
 
-        dbConf.seeRecordExistsInTable
+        //for second call
+        MsSQL dbConf2 = MsSQL.getInstance();
+
+        dbConf2.seeRecordExistsInTable
                 (TEST_TABLE_FOR_TEMPLATE,
                         new Object[][]{
                                 {"ID", 2},
@@ -648,7 +651,7 @@ class MsSqlDbTests {
                             awaitMs=250
                             templatesPath=templates/sqlserver/
                         """, getCi()),
-                dbConf.getConfigSummary());
+                dbConf2.getConfigSummary());
     }
 }
 

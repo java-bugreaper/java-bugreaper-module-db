@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class CustomDbTests {
 
     private static final CustomDb db = new MariaDbSetup().getCustomDb();
-    private static final CustomDb customDb = new CustomDb("custom-db");
+    private static final CustomDb customDb = CustomDb.getInstance();
 
     private static final String CI = System.getenv("CI");
     private static final String PROPERTY = "bugreaperEnv";
@@ -102,9 +102,14 @@ class CustomDbTests {
     @Test
     void getDataPassCustomDbTests() {
 
+
+
         customDb.truncateTable(TEST_TABLE_FOR_TEMPLATE);
 
-        customDb.insertIntoTable(TEST_TABLE_FOR_TEMPLATE,
+        //for second call
+        CustomDb customDb2 = CustomDb.getInstance();
+
+        customDb2.insertIntoTable(TEST_TABLE_FOR_TEMPLATE,
                 new Object[][]{
                         {"ID", 2},
                 });

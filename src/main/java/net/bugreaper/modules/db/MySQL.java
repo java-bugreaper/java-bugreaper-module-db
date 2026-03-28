@@ -5,11 +5,15 @@ import net.bugreaper.modules.db.jdbc.JdbcExecutor;
 /**
  * Class for interacting with MySQL
  *
+ * <p>For one instance run recommended: {@code MySQL db = MySQL.getInstance()}</p>
+ *
  * <p>Contains methods for:</p>
  * asserts with await, change data (create, update, clean)<br>
  * more info {@link JdbcExecutor}
  */
 public class MySQL extends JdbcExecutor<MySQL> {
+
+    private static MySQL instance;
 
     private static final String GET_COLUMNS = """
             SELECT COLUMN_NAME
@@ -23,6 +27,17 @@ public class MySQL extends JdbcExecutor<MySQL> {
                 passwd,
                 GET_COLUMNS,
                 DbTypes.MY_SQL.value());
+    }
+
+    /**
+     * Run {@link #MySQL()} from config in one instance
+     */
+    public static MySQL getInstance() {
+        if (instance == null) {
+            instance = new MySQL();
+        }
+
+        return instance;
     }
 
     /**

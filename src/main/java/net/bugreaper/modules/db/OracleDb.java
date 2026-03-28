@@ -8,11 +8,15 @@ import org.apache.commons.lang3.StringUtils;
 /**
  * Class for interacting with OracleDb
  *
+ * <p>For one instance run recommended: {@code Kafka OracleDb db = OracleDb.getInstance()}</p>
+ *
  * <p>Contains methods for:</p>
  * asserts with await, change data (create, update, clean)<br>
  * more info {@link JdbcExecutor}
  */
 public final class OracleDb extends JdbcExecutor<OracleDb> {
+
+    private static OracleDb instance;
 
     private static final String GET_COLUMNS = """
             SELECT
@@ -30,6 +34,17 @@ public final class OracleDb extends JdbcExecutor<OracleDb> {
                 passwd,
                 GET_COLUMNS,
                 DbTypes.ORACLE_DB.value());
+    }
+
+    /**
+     * Run {@link #OracleDb()} from config in one instance
+     */
+    public static OracleDb getInstance() {
+        if (instance == null) {
+            instance = new OracleDb();
+        }
+
+        return instance;
     }
 
     /**

@@ -69,7 +69,7 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
     /**
      * specific ms await in specific assert (configure with {@link #withAwaitMs(int)})
      */
-    private ThreadLocal<Integer> specificAwaitMs = ThreadLocal.withInitial(() -> 0);
+    private final ThreadLocal<Integer> specificAwaitMs = ThreadLocal.withInitial(() -> 0);
 
     /**
      * default templates path for insert (dynamically for each database types)

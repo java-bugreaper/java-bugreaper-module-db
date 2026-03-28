@@ -6,7 +6,8 @@ public enum DbTypes {
     MS_SQL("sqlserver"),
     MY_SQL("mysql"),
     ORACLE_DB("oracle"),
-    POSTGRE_SQL("postgresql");
+    POSTGRE_SQL("postgresql"),
+    CUSTOM_DB("custom-db");
 
     private final String value;
 

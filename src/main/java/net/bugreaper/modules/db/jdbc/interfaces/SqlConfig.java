@@ -19,8 +19,8 @@ public interface SqlConfig<T extends SqlConfig<T>> {
     T setAwaitMs(int awaitMs);
 
     /**
-     * Configure await for specific assert with await once
-     * global {@link #setAwaitMs(int)} will be replaced for specific assert
+     * Configure await for next assert with await (than await rollback to global)
+     * global {@link #setAwaitMs(int)} will be ignored
      *
      * @param awaitMs ms await
      * @return this instance for method chaining
