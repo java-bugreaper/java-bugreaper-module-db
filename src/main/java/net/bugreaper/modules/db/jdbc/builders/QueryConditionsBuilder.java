@@ -49,6 +49,7 @@ public class QueryConditionsBuilder {
      *                        Oracle:
      *                        <p>{"COLUMN NAME", ">= ", "2020-01-01", "DATE"} will build: COLUMN NAME" >= TO_DATE('2022-01-01’, 'YYYY-MM-DD')
      *                        <p>{"COLUMN NAME", "=", "2022-01-01 10:10:22", "TIMESTAMP"} will build: COLUMN NAME = TO_DATE('2022-01-01 10:10:22’, 'YYYY-MM-DD HH24:MI:SS')
+     * @return StringBuilder with condition part of query
      */
     protected StringBuilder arrayCondition4Mapper(Object[] conditionsArray) {
 

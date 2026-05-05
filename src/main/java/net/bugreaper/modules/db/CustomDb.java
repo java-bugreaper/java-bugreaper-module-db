@@ -27,6 +27,15 @@ public class CustomDb extends JdbcExecutor<CustomDb> {
     private static final String GET_COLUMNS = "Get all data for allure not supported for CustomDb";
 
 
+    /**
+     * Creates a new Custom database helper instance with the specified connection parameters.
+     *
+     * @param dbUrl    the JDBC connection URL for the Custom database
+     * @param username the username used to authenticate with the database
+     * @param passwd   the password used to authenticate with the database
+     *
+     * @throws IllegalArgumentException if any of the required parameters are null or empty
+     */
     public CustomDb(String dbUrl, String username, String passwd) {
         super(dbUrl,
                 username,
@@ -36,9 +45,14 @@ public class CustomDb extends JdbcExecutor<CustomDb> {
     }
 
     /**
-     * Run {@link #CustomDb()} from config in one instance
+     * Returns the singleton instance of {@link CustomDb}.
+     * <p>
+     * This implementation is thread-safe using method-level synchronization.
+     * However, it may have performance overhead due to synchronization on every call.
+     *
+     * @return the singleton instance of {@link CustomDb}
      */
-    public static CustomDb getInstance() {
+    public static synchronized CustomDb getInstance() {
         if (instance == null) {
             instance = new CustomDb();
         }

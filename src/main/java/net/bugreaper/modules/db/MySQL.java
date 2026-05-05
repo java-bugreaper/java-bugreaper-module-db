@@ -21,6 +21,15 @@ public class MySQL extends JdbcExecutor<MySQL> {
             WHERE TABLE_SCHEMA='%s'
                 AND TABLE_NAME='%s'""";
 
+    /**
+     * Creates a new MySQL database helper instance with the specified connection parameters.
+     *
+     * @param dbUrl    the JDBC connection URL for the MySQL database
+     * @param username the username used to authenticate with the database
+     * @param passwd   the password used to authenticate with the database
+     *
+     * @throws IllegalArgumentException if any of the required parameters are null or empty
+     */
     public MySQL(String dbUrl, String username, String passwd) {
         super(dbUrl,
                 username,
@@ -30,9 +39,14 @@ public class MySQL extends JdbcExecutor<MySQL> {
     }
 
     /**
-     * Run {@link #MySQL()} from config in one instance
+     * Returns the singleton instance of {@link MySQL}.
+     * <p>
+     * This implementation is thread-safe using method-level synchronization.
+     * However, it may have performance overhead due to synchronization on every call.
+     *
+     * @return the singleton instance of {@link MySQL}
      */
-    public static MySQL getInstance() {
+    public static synchronized MySQL getInstance() {
         if (instance == null) {
             instance = new MySQL();
         }

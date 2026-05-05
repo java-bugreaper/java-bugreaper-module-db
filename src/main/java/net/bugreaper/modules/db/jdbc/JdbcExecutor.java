@@ -120,6 +120,9 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
      *     <li>{@code modules.db.${dbType}.await}</li>
      * </ul>
      *
+     * @param dbType the database type identifier (e.g., "mariadb", "custom-db");
+     * @param getColumnsQuery query to get all columns names from table;
+     *
      * <p>Missing required keys will result in configuration errors.
      * Missing optional keys will fall back to predefined defaults.</p>
      */
@@ -311,11 +314,13 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
         jdbc.sqlExecute(String.format(DELETE_FROM, tableName, conditions));
     }
 
+    @Override
     @Step("(DB) Rename table {tableName}")
     public void renameTable(String tableName) {
         jdbc.sqlExecute("RENAME TABLE " + tableName + " TO " + tableName + "_X_");
     }
 
+    @Override
     @Step("(DB) Rollback renamed table {tableName}")
     public void rollbackTable(String tableName) {
         jdbc.sqlExecute("RENAME TABLE " + tableName + "_X_ TO " + tableName);

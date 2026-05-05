@@ -28,6 +28,16 @@ public final class OracleDb extends JdbcExecutor<OracleDb> {
             AND
             table_name = '%s'""";
 
+
+    /**
+     * Creates a new Oracle database helper instance with the specified connection parameters.
+     *
+     * @param dbUrl    the JDBC connection URL for the Oracle database
+     * @param username the username used to authenticate with the database
+     * @param passwd   the password used to authenticate with the database
+     *
+     * @throws IllegalArgumentException if any of the required parameters are null or empty
+     */
     public OracleDb(String dbUrl, String username, String passwd) {
         super(dbUrl,
                 username,
@@ -37,9 +47,14 @@ public final class OracleDb extends JdbcExecutor<OracleDb> {
     }
 
     /**
-     * Run {@link #OracleDb()} from config in one instance
+     * Returns the singleton instance of {@link OracleDb}.
+     * <p>
+     * This implementation is thread-safe using method-level synchronization.
+     * However, it may have performance overhead due to synchronization on every call.
+     *
+     * @return the singleton instance of {@link OracleDb}
      */
-    public static OracleDb getInstance() {
+    public static synchronized OracleDb getInstance() {
         if (instance == null) {
             instance = new OracleDb();
         }

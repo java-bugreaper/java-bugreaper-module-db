@@ -8,6 +8,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * Utility class for converting a flat JSON object into a two-dimensional {@code Object[][]} array.
+ * <p>
+ * This converter is designed for scenarios such as dynamic query building, test data preparation,
+ * or mapping JSON-based conditions into structured array form.
+ */
 public class JsonToArrayMapper {
 
     private JsonToArrayMapper() {

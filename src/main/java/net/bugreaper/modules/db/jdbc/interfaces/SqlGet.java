@@ -16,7 +16,8 @@ package net.bugreaper.modules.db.jdbc.interfaces;
 public interface SqlGet {
 
     /**
-     * Assert of records EXACTLY count by conditions with await
+     * Assert of records EXACTLY count by conditions
+     * <p><b>with await</b></p>
      *
      * @param tableName       schema_name.table_name
      * @param conditionsArray Object[][] with template {{"column1", "value1"},...}
@@ -28,7 +29,8 @@ public interface SqlGet {
                                     int expectedCount);
 
     /**
-     * Assert of records EXACTLY count by conditions with await
+     * Assert of records EXACTLY count by conditions
+     * <p><b>with await</b></p>
      *
      * @param tableName     schema_name.table_name
      * @param conditions    String "where id=1"
@@ -40,7 +42,8 @@ public interface SqlGet {
                                     int expectedCount);
 
     /**
-     * Assert of records EXACTLY count with await
+     * Assert of records EXACTLY count
+     * <p><b>with await</b></p>
      *
      * @param tableName     schema_name.table_name
      * @param expectedCount expected rows count
@@ -50,7 +53,8 @@ public interface SqlGet {
                                     int expectedCount);
 
     /**
-     * Assert of records EXACTLY count with await
+     * Assert of records EXACTLY count
+     * <p><b>with await</b></p>
      * <p>Use custom sql conditions only if it`s necessary, otherwise use {@link #seeRowsCountInTableExactly}
      *
      * @param tableName     schema_name.table_name
@@ -67,7 +71,8 @@ public interface SqlGet {
 
 
     /**
-     * Assert That table has at least one record with await
+     * Assert That table has no records
+     * <p><b>with await</b></p>
      *
      * @param tableName schema_name.table_name
      * @throws AssertionError on assert fail (and adds Allure attachments)
@@ -76,7 +81,8 @@ public interface SqlGet {
 
 
     /**
-     * Assert That table has no records with await
+     * Assert That table has at least one record
+     * <p><b>with await</b></p>
      *
      * @param tableName schema_name.table_name
      * @throws AssertionError on assert fail (and adds Allure attachments)
@@ -85,7 +91,8 @@ public interface SqlGet {
 
 
     /**
-     * Assert that exists at least one record by conditions with await
+     * Assert that exists at least one record by conditions
+     * <p><b>with await</b></p>
      *
      * @param tableName       schema_name.table_name
      * @param conditionsArray Object[][] with template {{"column1", "value1"},...}
@@ -95,7 +102,8 @@ public interface SqlGet {
                                 Object[][] conditionsArray);
 
     /**
-     * Assert that exists at least one record by conditions with await
+     * Assert that exists at least one record by conditions
+     * <p><b>with await</b></p>
      *
      * @param tableName       schema_name.table_name
      * @param providedJson String with json """{"column1": "test_value1", ...}"""<br>
