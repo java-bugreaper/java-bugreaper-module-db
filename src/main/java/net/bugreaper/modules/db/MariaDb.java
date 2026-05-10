@@ -40,10 +40,9 @@ public class MariaDb extends JdbcExecutor<MariaDb> {
     }
 
     /**
-     * Returns the singleton instance of {@link MariaDb}.
+     * Returns the instance of {@link MariaDb} with config builder {@link #MariaDb()}.
      * <p>
      * This implementation is thread-safe using method-level synchronization.
-     * However, it may have performance overhead due to synchronization on every call.
      *
      * @return the singleton instance of {@link MariaDb}
      */

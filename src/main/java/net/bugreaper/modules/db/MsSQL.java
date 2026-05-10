@@ -41,10 +41,9 @@ public class MsSQL extends JdbcExecutor<MsSQL> {
     }
 
     /**
-     * Returns the singleton instance of {@link MsSQL}.
+     * Returns the singleton instance of {@link MsSQL} with config builder {@link #MsSQL()}.
      * <p>
      * This implementation is thread-safe using method-level synchronization.
-     * However, it may have performance overhead due to synchronization on every call.
      *
      * @return the singleton instance of {@link MsSQL}
      */
