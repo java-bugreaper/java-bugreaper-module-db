@@ -47,10 +47,9 @@ public final class OracleDb extends JdbcExecutor<OracleDb> {
     }
 
     /**
-     * Returns the singleton instance of {@link OracleDb}.
+     * Returns the singleton instance of {@link OracleDb} with config builder {@link #OracleDb()}.
      * <p>
      * This implementation is thread-safe using method-level synchronization.
-     * However, it may have performance overhead due to synchronization on every call.
      *
      * @return the singleton instance of {@link OracleDb}
      */

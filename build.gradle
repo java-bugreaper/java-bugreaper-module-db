@@ -27,7 +27,7 @@ repositories {
 }
 
 dependencies {
-    api 'net.bugreaper:core:1.1.0'
+    api 'net.bugreaper:core:1.3.0'
 
     api 'com.zaxxer:HikariCP:5.1.0'
 

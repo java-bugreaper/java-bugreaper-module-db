@@ -39,10 +39,9 @@ public class MySQL extends JdbcExecutor<MySQL> {
     }
 
     /**
-     * Returns the singleton instance of {@link MySQL}.
+     * Returns the singleton instance of {@link MySQL} with config builder {@link #MySQL()}.
      * <p>
      * This implementation is thread-safe using method-level synchronization.
-     * However, it may have performance overhead due to synchronization on every call.
      *
      * @return the singleton instance of {@link MySQL}
      */

@@ -41,10 +41,9 @@ public class PostgreSQL extends JdbcExecutor<PostgreSQL> {
     }
 
     /**
-     * Returns the singleton instance of {@link PostgreSQL}.
+     * Returns the singleton instance of {@link PostgreSQL} with config builder {@link #PostgreSQL()}.
      * <p>
      * This implementation is thread-safe using method-level synchronization.
-     * However, it may have performance overhead due to synchronization on every call.
      *
      * @return the singleton instance of {@link PostgreSQL}
      */

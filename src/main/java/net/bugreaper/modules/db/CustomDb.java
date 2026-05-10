@@ -45,10 +45,9 @@ public class CustomDb extends JdbcExecutor<CustomDb> {
     }
 
     /**
-     * Returns the singleton instance of {@link CustomDb}.
+     * Returns the singleton instance of {@link CustomDb} with config builder {@link #CustomDb()}.
      * <p>
      * This implementation is thread-safe using method-level synchronization.
-     * However, it may have performance overhead due to synchronization on every call.
      *
      * @return the singleton instance of {@link CustomDb}
      */

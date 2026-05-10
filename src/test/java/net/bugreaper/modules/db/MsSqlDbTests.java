@@ -606,19 +606,19 @@ class MsSqlDbTests {
     private static final String TEST_TABLE_FOR_TEMPLATE = "test_schema.temp";
 
 
-    String getCi(){
-        if(Objects.equals(CI, "true")){
+    String getCi() {
+        if (Objects.equals(CI, "true")) {
             return "jdbc:sqlserver://docker:1435;encrypt=false";
-        }else {
-            return  "jdbc:sqlserver://localhost:1435;encrypt=false";
+        } else {
+            return "jdbc:sqlserver://localhost:1435;encrypt=false";
         }
     }
 
     @Test
     void configAllFieldsTest() {
-        if(Objects.equals(CI, "true")){
+        if (Objects.equals(CI, "true")) {
             System.setProperty(PROPERTY, "docker");
-        }else {
+        } else {
             System.clearProperty(PROPERTY);
         }
 
