@@ -52,6 +52,7 @@ public final class OracleDb extends JdbcExecutor<OracleDb> {
      * This implementation is thread-safe using method-level synchronization.
      *
      * @return the singleton instance of {@link OracleDb}
+     * @see #OracleDb() config setup
      */
     public static synchronized OracleDb getInstance() {
         if (instance == null) {
@@ -65,7 +66,17 @@ public final class OracleDb extends JdbcExecutor<OracleDb> {
      * Constructs OracleDb client configuration.
      *
      * <p>Loads configuration values from a YAML file.</p>
-     * more info {@link JdbcExecutor#JdbcExecutor(String dbType, String getColumnsQuery)}
+     * Example:
+     * <p>{@code OracleDb db = new OracleDb();}</p>
+     * <pre>
+     * oracle:
+     *   url: 'jdbc:oracle:thin:@localhost:1521/xepdb1'
+     *   username: user
+     *   password: pass
+     *   await: 1000 (optional)
+     * </pre>
+     *
+     * @see JdbcExecutor#JdbcExecutor(String dbType, String getColumnsQuery) JdbcExecutor
      */
     public OracleDb() {
         super(DbTypes.ORACLE_DB.value(), GET_COLUMNS);

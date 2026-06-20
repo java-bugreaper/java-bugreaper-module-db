@@ -46,6 +46,7 @@ public class MsSQL extends JdbcExecutor<MsSQL> {
      * This implementation is thread-safe using method-level synchronization.
      *
      * @return the singleton instance of {@link MsSQL}
+     * @see #MsSQL() config setup
      */
     public static synchronized MsSQL getInstance() {
         if (instance == null) {
@@ -59,7 +60,17 @@ public class MsSQL extends JdbcExecutor<MsSQL> {
      * Constructs MsSQL client configuration.
      *
      * <p>Loads configuration values from a YAML file.</p>
-     * more info {@link JdbcExecutor#JdbcExecutor(String dbType, String getColumnsQuery)}
+     * Example:
+     * <p>{@code MsSQL db = new MsSQL();}</p>
+     * <pre>
+     * sqlserver:
+     *   url: 'jdbc:sqlserver://localhost:1435;encrypt=false'
+     *   username: user
+     *   password: pass
+     *   await: 1000 (optional)
+     * </pre>
+     *
+     * @see JdbcExecutor#JdbcExecutor(String dbType, String getColumnsQuery) JdbcExecutor
      */
     public MsSQL() {
         super(DbTypes.MS_SQL.value(), GET_COLUMNS);
