@@ -50,6 +50,7 @@ public class CustomDb extends JdbcExecutor<CustomDb> {
      * This implementation is thread-safe using method-level synchronization.
      *
      * @return the singleton instance of {@link CustomDb}
+     * @see #CustomDb() config setup
      */
     public static synchronized CustomDb getInstance() {
         if (instance == null) {
@@ -67,12 +68,13 @@ public class CustomDb extends JdbcExecutor<CustomDb> {
      * <p>{@code CustomDb db = new CustomDb();}</p>
      * <pre>
      * custom-db: # reserved type
-     *   url: jdbc:mysql://localhost:3308
-     *   username: mysql_user
-     *   password: mysql_pass
-     *   await: 600 (optional)
+     *   url: 'jdbc:mysql://localhost:3308'
+     *   username: user
+     *   password: pass
+     *   await: 1000 (optional)
      * </pre>
-     * more info {@link JdbcExecutor#JdbcExecutor(String dbType, String getColumnsQuery)}
+     *
+     * @see JdbcExecutor#JdbcExecutor(String dbType, String getColumnsQuery) JdbcExecutor
      */
     public CustomDb() {
         super(DbTypes.CUSTOM_DB.value(), GET_COLUMNS);

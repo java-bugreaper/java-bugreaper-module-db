@@ -221,11 +221,14 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
     @Override
     public void insertIntoTable(String tableName,
                                 Object[][] providedArray) {
-        Log.LOGGER.debug("Looking for template file in resources: {}", templatesPath);
+
+        String fullTemplatePath = templatesPath + tableName + ".json";
+
+        Log.LOGGER.debug("Looking for template file in resources: {}", fullTemplatePath);
 
         insertIntoTable(
                 tableName,
-                jsonToObjectArray(readJsonFromFile(templatesPath + tableName + ".json"), true),
+                jsonToObjectArray(readJsonFromFile(fullTemplatePath), true),
                 providedArray);
     }
 
@@ -246,7 +249,7 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
 
         jdbc.sqlNoAttachExecute(readTextFromFile(path));
 
-        Log.LOGGER.info("Script run completed from: {} ", path);
+        Log.LOGGER.info("Script executed from: {}", path);
     }
 
     @Override

@@ -45,6 +45,7 @@ public class MariaDb extends JdbcExecutor<MariaDb> {
      * This implementation is thread-safe using method-level synchronization.
      *
      * @return the singleton instance of {@link MariaDb}
+     * @see #MariaDb() config setup
      */
     public static synchronized MariaDb getInstance() {
         if (instance == null) {
@@ -53,12 +54,22 @@ public class MariaDb extends JdbcExecutor<MariaDb> {
 
         return instance;
     }
-    
+
     /**
      * Constructs MariaDB client configuration.
      *
      * <p>Loads configuration values from a YAML file.</p>
-     * more info {@link JdbcExecutor#JdbcExecutor(String dbType, String getColumnsQuery)}
+     * Example:
+     * <p>{@code MariaDb db = new MariaDb();}</p>
+     * <pre>
+     * mariadb:
+     *   url: 'jdbc:mariadb://localhost:3308'
+     *   username: user
+     *   password: pass
+     *   await: 1000 (optional)
+     * </pre>
+     *
+     * @see JdbcExecutor#JdbcExecutor(String dbType, String getColumnsQuery) JdbcExecutor
      */
     public MariaDb() {
         super(DbTypes.MARIA_DB.value(), GET_COLUMNS);

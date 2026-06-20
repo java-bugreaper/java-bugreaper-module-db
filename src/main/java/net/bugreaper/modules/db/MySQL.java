@@ -44,6 +44,7 @@ public class MySQL extends JdbcExecutor<MySQL> {
      * This implementation is thread-safe using method-level synchronization.
      *
      * @return the singleton instance of {@link MySQL}
+     * @see #MySQL() config setup
      */
     public static synchronized MySQL getInstance() {
         if (instance == null) {
@@ -54,10 +55,20 @@ public class MySQL extends JdbcExecutor<MySQL> {
     }
 
     /**
-     * Constructs MysSQL client configuration.
+     * Constructs MySQL client configuration.
      *
      * <p>Loads configuration values from a YAML file.</p>
-     * more info {@link JdbcExecutor#JdbcExecutor(String dbType, String getColumnsQuery)}
+     * Example:
+     * <p>{@code MySQL db = new MySQL();}</p>
+     * <pre>
+     * mysql:
+     *   url: 'jdbc:mysql://localhost:3308'
+     *   username: user
+     *   password: pass
+     *   await: 1000 (optional)
+     * </pre>
+     *
+     * @see JdbcExecutor#JdbcExecutor(String dbType, String getColumnsQuery) JdbcExecutor
      */
     public MySQL() {
         super(DbTypes.MY_SQL.value(), GET_COLUMNS);

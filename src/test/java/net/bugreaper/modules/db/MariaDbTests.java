@@ -1,21 +1,26 @@
 package net.bugreaper.modules.db;
 
+import ch.qos.logback.classic.Level;
+import com.fasterxml.jackson.databind.JsonNode;
+import net.bugreaper.core.utils.AllureAssert;
+import net.bugreaper.core.utils.AllureResultLoader;
+import net.bugreaper.core.utils.LogWatcher;
 import net.bugreaper.modules.db.exceptions.SqlExecuteException;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.core.StringContains;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.*;
 import testcontainers.MariaDbSetup;
 
 import java.util.Objects;
 
+import static net.bugreaper.core.filereaders.FileReader.readTextFromFile;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SuppressWarnings({"squid:S2699", "java:S5778"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS) //To call connection once!
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class MariaDbTests extends MariaDbSetup {
 
     private static final MariaDb db = new MariaDbSetup().getMariDb();
@@ -25,6 +30,18 @@ class MariaDbTests extends MariaDbSetup {
     private static final String TEST_TABLE = "MARIA_SCHEMA.USERS";
     private static final String TEST_TABLE2 = "MARIA_SCHEMA.USERS2";
     private static final String TEST_TABLE_FOR_TEMPLATE = "MARIA_SCHEMA.TEMP";
+
+    private LogWatcher logWatcher;
+    @BeforeEach
+    void setup() {
+        logWatcher = new LogWatcher("bugreaper-module-db", Level.DEBUG);
+    }
+
+    @AfterEach
+    void teardown() {
+        logWatcher.detach();
+    }
+
 
     private void insertIntoUsers(Object[][] testArray) {
         final Object[][] template = {
@@ -72,6 +89,7 @@ class MariaDbTests extends MariaDbSetup {
 
 
     @Test
+    @Order(1)
     void fullJsonFeatureTest() {
         db.truncateTable(TEST_TABLE_FOR_TEMPLATE);
 
@@ -81,6 +99,15 @@ class MariaDbTests extends MariaDbSetup {
                             "ID": 1,
                             "AMOUNT": 10.55
                         }""");
+
+        assertEquals(
+                """
+                        [[DEBUG] Try to execute sql:
+                         TRUNCATE TABLE MARIA_SCHEMA.TEMP, [DEBUG] Looking for template file in resources: templates/mariadb/MARIA_SCHEMA.TEMP.json, [DEBUG] Try to execute sql:
+                         INSERT INTO MARIA_SCHEMA.TEMP
+                        (ID, NAME, AMOUNT, IS_ACTIVE)
+                        VALUES (1, 'Maria', 10.55, false)]""",
+                logWatcher.getLoggedEvents(Level.DEBUG).toString());
 
         db.seeRecordExistsInTable(TEST_TABLE_FOR_TEMPLATE,
                 """
@@ -99,6 +126,27 @@ class MariaDbTests extends MariaDbSetup {
                         }""", 1);
     }
 
+    @Test
+    @Order(2)
+    void fullJsonFeatureTestAllure() {
+        JsonNode result = AllureResultLoader.loadByTestName("fullJsonFeatureTest");
+
+        AllureAssert.assertThat(result)
+                .hasStep("(DB) Truncate table MARIA_SCHEMA.TEMP")
+                .hasAttachment("execute sql with", "TRUNCATE TABLE MARIA_SCHEMA.TEMP;")
+
+                .hasStep("(DB) Insert into table MARIA_SCHEMA.TEMP record: [[ID, 1], [AMOUNT, 10.55]]")
+                .hasAttachment("Inserted in table MARIA_SCHEMA.TEMP", readTextFromFile("testdata/allure/attachments/insert1.html"))
+                .hasAttachment("execute sql with", """
+                        INSERT INTO MARIA_SCHEMA.TEMP
+                        (ID, NAME, AMOUNT, IS_ACTIVE)
+                        VALUES (1, 'Maria', 10.55, false);""")
+
+                .hasStep("(DB)[ASSERT] Record/s exists in MARIA_SCHEMA.TEMP where ID=1 AND NAME='Maria' AND AMOUNT=10.55")
+                .hasAttachment("Expected in table MARIA_SCHEMA.TEMP", readTextFromFile("testdata/allure/attachments/assert1.html"))
+                .hasAttachment("execute sql with", """
+                        SELECT COUNT(*) as COUNT_RES FROM MARIA_SCHEMA.TEMP where ID=1 AND NAME='Maria' AND AMOUNT=10.55;""");
+    }
 
     @Test
     void renameAndRollbackTable() {
@@ -386,6 +434,10 @@ class MariaDbTests extends MariaDbSetup {
 
         db.runScriptFromFile("dump/test_script_maria.sql");
 
+        assertEquals(
+                "[[INFO] Script executed from: dump/test_script_maria.sql]",
+                logWatcher.getLoggedEvents(Level.INFO).toString());
+
         db.showDataByCondition(TEST_TABLE2, new Object[][]{
                 {"USERNAME", "Alex1"},
         });
@@ -560,6 +612,7 @@ class MariaDbTests extends MariaDbSetup {
     }
 
     @Test
+    @Order(3)
     void checkConditionExceptionOnFilledTable() {
 
         insertIntoUsers(new Object[][]{
@@ -590,6 +643,59 @@ class MariaDbTests extends MariaDbSetup {
                         Actual result(s)
                         [1, Alex]
                         [2, Max]"""));
+    }
+
+    @Test
+    @Order(4)
+    void checkConditionExceptionOnFilledTableAllure() {
+        JsonNode result = AllureResultLoader.loadByTestName("checkConditionExceptionOnFilledTable");
+
+        AllureAssert.assertThat(result)
+                .hasStep("(DB)[ASSERT] Count records in MARIA_SCHEMA.USERS where ID='5' AND USERNAME='Stas' EQUAL 1")
+                .hasAttachment("I see in table MARIA_SCHEMA.USERS", readTextFromFile("testdata/allure/attachments/failed1.html"));
+    }
+
+    @Test
+    @Order(5)
+    void checkConditionExceptionExistsOnFilledTable() {
+
+        insertIntoUsers(new Object[][]{
+                {"ID", "1"},
+                {"USERNAME", "Alex"},
+        });
+        insertIntoUsers(new Object[][]{
+                {"ID", "2"},
+                {"USERNAME", "Max"},
+        });
+        Throwable exception = assertThrows(AssertionError.class, () ->
+                db.seeRecordExistsInTable
+                        (TEST_TABLE,
+                                new Object[][]{
+                                        {"ID", "5"},
+                                        {"USERNAME", "Stas"},
+                                }));
+
+        MatcherAssert.assertThat(
+                "Exception on failed assert count in table(empty table)",
+                exception.getMessage(),
+                is("""
+                        Failed: record/s not found in <MARIA_SCHEMA.USERS> within 2 seconds
+                        Expected for:
+                        [ID, USERNAME]
+                        [5, Stas]
+                        Actual result(s)
+                        [1, Alex]
+                        [2, Max]"""));
+    }
+
+    @Test
+    @Order(6)
+    void checkConditionExceptionExistsOnFilledTableAllure() {
+        JsonNode result = AllureResultLoader.loadByTestName("checkConditionExceptionExistsOnFilledTable");
+
+        AllureAssert.assertThat(result)
+                .hasStep("(DB)[ASSERT] Record/s exists in MARIA_SCHEMA.USERS where ID='5' AND USERNAME='Stas'")
+                .hasAttachment("I see in table MARIA_SCHEMA.USERS", readTextFromFile("testdata/allure/attachments/failed1.html"));
     }
 
     @Test

@@ -46,6 +46,7 @@ public class PostgreSQL extends JdbcExecutor<PostgreSQL> {
      * This implementation is thread-safe using method-level synchronization.
      *
      * @return the singleton instance of {@link PostgreSQL}
+     * @see #PostgreSQL() config setup
      */
     public static synchronized PostgreSQL getInstance() {
         if (instance == null) {
@@ -56,10 +57,20 @@ public class PostgreSQL extends JdbcExecutor<PostgreSQL> {
     }
 
     /**
-     * Constructs PostgreSQL client configuration.
+     * Constructs OracleDb client configuration.
      *
      * <p>Loads configuration values from a YAML file.</p>
-     * more info {@link JdbcExecutor#JdbcExecutor(String dbType, String getColumnsQuery)}
+     * Example:
+     * <p>{@code PostgreSQL db = new PostgreSQL();}</p>
+     * <pre>
+     * postgresql:
+     *   url: 'jdbc:postgresql://localhost:5434/public'
+     *   username: user
+     *   password: pass
+     *   await: 1000 (optional)
+     * </pre>
+     *
+     * @see JdbcExecutor#JdbcExecutor(String dbType, String getColumnsQuery) JdbcExecutor
      */
     public PostgreSQL() {
         super(DbTypes.POSTGRE_SQL.value(), GET_COLUMNS);
