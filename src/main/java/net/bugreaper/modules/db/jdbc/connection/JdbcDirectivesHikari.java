@@ -27,7 +27,6 @@ import java.util.List;
 
 public class JdbcDirectivesHikari {
 
-    private ResultSet resultSet;
     DataSource dataSource;
 
 
@@ -40,22 +39,18 @@ public class JdbcDirectivesHikari {
 
     }
 
-    public List<Object> getSqlResultList(String query, String... columnName) {
+    public List<Object> getSqlResultList(String query, String... columnNames) {
 
         List<Object> columnResultList = new LinkedList<>();
-        resultSet = null;
-
         tryExecuteLog(query);
 
         try (Connection con = dataSource.getConnection();
-             PreparedStatement pst = con.prepareStatement(query)) {
-            resultSet = pst.executeQuery();
+             PreparedStatement pst = con.prepareStatement(query);
+             ResultSet resultSet = pst.executeQuery()) {
 
             while (resultSet.next()) {
-                for (String i : columnName) {
-
-                    Object column = resultSet.getObject(i);
-                    columnResultList.add(column);
+                for (String columnName : columnNames) {
+                    columnResultList.add(resultSet.getObject(columnName));
                 }
             }
 
@@ -68,16 +63,15 @@ public class JdbcDirectivesHikari {
 
     public String getSqlResultForCount(String query, String columnName) {
 
-        resultSet = null;
         String columnResult = null;
 
         tryExecuteLog(query);
 
         try (Connection con = dataSource.getConnection();
-             PreparedStatement pst = con.prepareStatement(query)) {
+             PreparedStatement pst = con.prepareStatement(query);
+             ResultSet resultSet = pst.executeQuery()) {
 
-            resultSet = pst.executeQuery();
-            while (resultSet.next()) {
+            if (resultSet.next()) {
                 columnResult = resultSet.getString(columnName);
             }
 

@@ -32,6 +32,12 @@ class MariaDbTests extends MariaDbSetup {
     private static final String TEST_TABLE_FOR_TEMPLATE = "MARIA_SCHEMA.TEMP";
 
     private LogWatcher logWatcher;
+
+    @BeforeAll
+    static void clean() {
+        AllureResultLoader.cleanResultsDir();
+    }
+
     @BeforeEach
     void setup() {
         logWatcher = new LogWatcher("bugreaper-module-db", Level.DEBUG);
@@ -78,8 +84,19 @@ class MariaDbTests extends MariaDbSetup {
     }
 
     @Test
+    @Order(7)
     void getDataFromEmptyTable() {
         db.showDataFromTable(TEST_TABLE);
+    }
+
+    @Test
+    @Order(8)
+    void getDataFromEmptyAllure() {
+        JsonNode result = AllureResultLoader.loadByTestName("getDataFromEmptyTable");
+
+        AllureAssert.assertThat(result)
+                .hasStep("(DB) Show data from table MARIA_SCHEMA.USERS")
+                .hasAttachment("I see in table MARIA_SCHEMA.USERS",  readTextFromFile("testdata/allure/attachments/maria_show_empty.html"));
     }
 
     @Test
@@ -181,6 +198,7 @@ class MariaDbTests extends MariaDbSetup {
 
 
     @Test
+    @Order(9)
     void checkRunScriptAndAssert() {
         insertIntoUsers(new Object[][]{
                 {"ID", "2"},
@@ -198,6 +216,16 @@ class MariaDbTests extends MariaDbSetup {
                         1);
 
         db.showDataFromTable(TEST_TABLE);
+    }
+
+    @Test
+    @Order(10)
+    void checkRunScriptAndAllureAssert() {
+        JsonNode result = AllureResultLoader.loadByTestName("checkRunScriptAndAssert");
+
+        AllureAssert.assertThat(result)
+                .hasStep("(DB) Show data from table MARIA_SCHEMA.USERS")
+                .hasAttachment("I see in table MARIA_SCHEMA.USERS",  readTextFromFile("testdata/allure/attachments/maria_show_all.html"));
     }
 
     @Test
@@ -458,6 +486,19 @@ class MariaDbTests extends MariaDbSetup {
                 {"USERNAME", "Max"},
         });
         db.seeRowsCountInTableExactly(TEST_TABLE, 2);
+        db.showDataByCondition(TEST_TABLE, new Object[][]{
+                {"ROLES", "manager"},
+        });
+    }
+
+
+    @Test
+    void showDataByConditionTest() {
+        insertIntoUsers(new Object[][]{
+                {"ID", "1"},
+                {"USERNAME", "Alex"},
+        });
+
         db.showDataByCondition(TEST_TABLE, new Object[][]{
                 {"ROLES", "manager"},
         });

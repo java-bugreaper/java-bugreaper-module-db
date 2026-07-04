@@ -10,7 +10,7 @@ for interaction with Databases
 ### Requirements:
 
     JAVA >= 17
-    Allure server >= 2.15
+    Allure server >= 2.15 (only if push reports)
 
 ### IMPORTANT add jdbc for your database type(not included in helper):
 

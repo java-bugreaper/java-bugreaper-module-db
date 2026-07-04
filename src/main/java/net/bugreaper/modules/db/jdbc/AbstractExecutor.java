@@ -17,14 +17,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-import static net.bugreaper.core.assertions.Asserts.assertGreaterThanExpected;
 import static net.bugreaper.core.assertions.Asserts.assertStrings;
 import static net.bugreaper.core.mappers.StringMappers.formatMilliseconds;
 import static net.bugreaper.modules.db.allurereporter.AllureBuilder.reportHtmlTableAllBuilder;
 import static io.qameta.allure.model.Parameter.Mode.HIDDEN;
 import static java.time.Duration.ofMillis;
 import static org.awaitility.Awaitility.await;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 @SuppressWarnings("squid:S5960")
 abstract class AbstractExecutor {
@@ -72,14 +71,14 @@ abstract class AbstractExecutor {
 
                 var extendLog = extendedLogBuilder(tableName, conditionsArray);
 
-                fail(MessageFormat.format("Failed assert count: ER <{0}> with AR <{1}> in {2} within {3}\n{4}",
+                throw new AssertionError(MessageFormat.format("Failed assert count: ER <{0}> with AR <{1}> in {2} within {3}\n{4}",
                         expectedCount, jdbc.getSqlResultForCount(query, COUNT), tableName, formatMilliseconds(awaitMs), extendLog));
             } else if (!Objects.equals(conditions, "")) {
-                fail(MessageFormat.format("Failed assert count: ER <{0}> with AR <{1}> in {2} within {3}\n{4}",
+                throw new AssertionError(MessageFormat.format("Failed assert count: ER <{0}> with AR <{1}> in {2} within {3}\n{4}",
                         expectedCount, jdbc.getSqlResultForCount(query, COUNT), tableName, formatMilliseconds(awaitMs), conditions));
             }
 
-            fail(MessageFormat.format("Failed assert count: ER <{0}> with AR <{1}> in {2} within {3}",
+            throw new AssertionError(MessageFormat.format("Failed assert count: ER <{0}> with AR <{1}> in {2} within {3}",
                     expectedCount, jdbc.getSqlResultForCount(query, COUNT), tableName, formatMilliseconds(awaitMs)));
         }
     }
@@ -100,7 +99,7 @@ abstract class AbstractExecutor {
         try {
             await().with()
                     .pollDelay(ofMillis(0)).atMost(ofMillis(awaitMs)).untilAsserted(() ->
-                            assertGreaterThanExpected(0, Integer.parseInt(jdbc.getSqlResultForCount(query, COUNT))));
+                            assertNotEquals(0, Integer.parseInt(jdbc.getSqlResultForCount(query, COUNT))));
         } catch (ConditionTimeoutException ex) {
 
             showDataFromTableNoExceptionMethod(tableName);
@@ -109,14 +108,14 @@ abstract class AbstractExecutor {
 
                 var extendLog = extendedLogBuilder(tableName, conditionsArray);
 
-                fail(MessageFormat.format("Failed: record/s not found in <{0}> within {1}\n{2}",
+                throw new AssertionError(MessageFormat.format("Failed: record/s not found in <{0}> within {1}\n{2}",
                         tableName, formatMilliseconds(awaitMs), extendLog));
             } else if (!Objects.equals(conditions, "")) {
-                fail(MessageFormat.format("Failed: record/s not found in {0} within {1}\n{2}",
+                throw new AssertionError(MessageFormat.format("Failed: record/s not found in {0} within {1}\n{2}",
                         tableName, formatMilliseconds(awaitMs), conditions));
             }
 
-            fail(MessageFormat.format("Failed: record/s not found in {0} within {1}",
+            throw new AssertionError(MessageFormat.format("Failed: record/s not found in {0} within {1}",
                     tableName, formatMilliseconds(awaitMs)));
         }
     }
@@ -213,7 +212,7 @@ abstract class AbstractExecutor {
 
         if (resultArray.length == 0) {
             showDataFromTableMethod(tableName);
-            fail("No records in " + tableName + " by conditions: " + conditions);
+            throw new AssertionError("No records in " + tableName + " by conditions: " + conditions);
         }
 
         reportHtmlTableAllBuilder(tableName, columnsArray, resultArray);

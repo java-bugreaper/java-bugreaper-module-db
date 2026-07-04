@@ -21,35 +21,6 @@ import static net.bugreaper.modules.db.mapper.JsonToArrayMapper.jsonToObjectArra
 /**
  * Parent class for interacting with Databases
  *
- * <p><b>Asserts:</b>
- * {@link JdbcExecutor#seeRowsCountInTableExactly(String, Object[][], int)}
- * {@link JdbcExecutor#seeRowsCountInTableExactlyCustom(String, String, int)}
- * {@link JdbcExecutor#seeRowsCountInTableExactly(String, int)}
- * {@link JdbcExecutor#seeTableIsEmpty(String)}
- * {@link JdbcExecutor#seeTableDoesNotEmpty(String)}
- * {@link JdbcExecutor#seeRecordExistsInTable(String, Object[][])}
- * {@link JdbcExecutor#seeRecordExistsInTable(String, String)}
- *
- * <p><b>Operations with data:</b>
- * {@link JdbcExecutor#insertIntoTable(String, Object[][], Object[][])}
- * {@link JdbcExecutor#insertIntoTable(String, Object[][])}
- * {@link JdbcExecutor#insertIntoTable(String, String)}
- * {@link JdbcExecutor#runScriptFromFile(String)}
- * {@link JdbcExecutor#runScript(String)}
- * {@link JdbcExecutor#truncateTable(String)}
- * {@link JdbcExecutor#truncateTables(String...)}
- * {@link JdbcExecutor#deleteFromTable(String)}
- * {@link JdbcExecutor#deleteFromTable(String, Object[][])}
- * {@link JdbcExecutor#deleteFromTable(String, String)}
- * {@link JdbcExecutor#updateTable(String, Object[][])}
- * {@link JdbcExecutor#updateTable(String, Object[][], Object[][])}
- * {@link JdbcExecutor#deleteFromTable(String, String)}
- *
- *
- * <p><b>For attachments:</b>
- * {@link JdbcExecutor#showDataFromTable(String)}
- * {@link JdbcExecutor#showDataByCondition(String, Object[][])}
- *
  * <p>Supported dbTypes: {@link DbTypes}</p>
  *
  * <p> Await for asserts default: {@link JdbcExecutor#awaitMs}, can be changed globally by: {@link JdbcExecutor#setAwaitMs(int)}, or once for specific assert by {@link JdbcExecutor#withAwaitMs(int)}
@@ -65,7 +36,7 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
     /**
      * default ms await in asserts (configure with {@link #setAwaitMs(int)})
      */
-    private int awaitMs = 2000;
+    private volatile int awaitMs = 2000;
     /**
      * specific ms await in specific assert (configure with {@link #withAwaitMs(int)})
      */
@@ -74,7 +45,7 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
     /**
      * default templates path for insert (dynamically for each database types)
      */
-    private String templatesPath;
+    private volatile String templatesPath;
     private final String dbType;
     private final QueryBuilder qb;
 
@@ -384,7 +355,7 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
 
 
     @Override
-    public void seeTableDoesNotEmpty(String tableName) {
+    public void seeTableIsNotEmpty(String tableName) {
         recordExistsBuilder(tableName, "", null, await());
     }
 

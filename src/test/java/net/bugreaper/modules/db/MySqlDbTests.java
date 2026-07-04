@@ -1,9 +1,11 @@
 package net.bugreaper.modules.db;
 
+import net.bugreaper.core.utils.AllureResultLoader;
 import net.bugreaper.modules.db.exceptions.QueryBuilderException;
 import net.bugreaper.modules.db.exceptions.SqlExecuteException;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.core.StringContains;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -57,6 +59,10 @@ class MySqlDbTests {
         db.insertIntoTable(TEST_TABLE2, template, testArray);
     }
 
+    @BeforeAll
+    static void clean() {
+        AllureResultLoader.cleanResultsDir();
+    }
 
     @BeforeEach
     void cleanTables() {
@@ -630,8 +636,9 @@ class MySqlDbTests {
 
         CompletableFuture<Void> future1 = CompletableFuture.runAsync(() -> db.seeRowsCountInTableExactly(TEST_TABLE, 1));
         CompletableFuture<Void> future2 = CompletableFuture.runAsync(this::pushWithSleep);
+        CompletableFuture<Void> future3 = CompletableFuture.runAsync(() -> db.seeTableIsNotEmpty(TEST_TABLE));
 
-        CompletableFuture.allOf(future1, future2).join();
+        CompletableFuture.allOf(future1, future2, future3).join();
 
     }
 
