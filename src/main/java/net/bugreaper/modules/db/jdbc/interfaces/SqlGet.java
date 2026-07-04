@@ -87,7 +87,7 @@ public interface SqlGet {
      * @param tableName schema_name.table_name
      * @throws AssertionError on assert fail (and adds Allure attachments)
      */
-    void seeTableDoesNotEmpty(String tableName);
+    void seeTableIsNotEmpty(String tableName);
 
 
     /**

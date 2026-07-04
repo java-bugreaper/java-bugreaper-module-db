@@ -1,9 +1,10 @@
 package net.bugreaper.modules.db;
 
+import net.bugreaper.core.utils.AllureResultLoader;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.opentest4j.AssertionFailedError;
 import testcontainers.OracleDbSetup;
 
 
@@ -197,6 +198,10 @@ class OracleDbTests {
                 dbConf2.getConfigSummary());
     }
 
+    @BeforeAll
+    static void clean() {
+        AllureResultLoader.cleanResultsDir();
+    }
 
     @BeforeEach
     void cleanTables() {
@@ -234,8 +239,8 @@ class OracleDbTests {
                 {"NAME", "country"},
         });
 
-        db.seeTableDoesNotEmpty(TEST_TABLE);
-        db.seeTableDoesNotEmpty(TEST_TABLE2);
+        db.seeTableIsNotEmpty(TEST_TABLE);
+        db.seeTableIsNotEmpty(TEST_TABLE2);
 
         db.truncateTables(TEST_TABLE, TEST_TABLE2);
 
@@ -251,7 +256,7 @@ class OracleDbTests {
                 {"PRICE", 175.99},
         });
 
-        Throwable exception = assertThrows(AssertionFailedError.class, () ->
+        Throwable exception = assertThrows(AssertionError.class, () ->
                 db.seeRecordExistsInTable(TEST_TABLE,
                         new Object[][]{
                                 {"ID", 2},
@@ -278,7 +283,7 @@ class OracleDbTests {
         });
 
 
-        Throwable exception = assertThrows(AssertionFailedError.class, () ->
+        Throwable exception = assertThrows(AssertionError.class, () ->
                 db.seeRecordExistsInTable(TEST_TABLE,
                         new Object[][]{
                                 {"ID", 2},

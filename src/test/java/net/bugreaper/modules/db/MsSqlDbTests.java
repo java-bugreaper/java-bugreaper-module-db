@@ -1,13 +1,14 @@
 package net.bugreaper.modules.db;
 
+import net.bugreaper.core.utils.AllureResultLoader;
 import net.bugreaper.modules.db.exceptions.QueryBuilderException;
 import net.bugreaper.modules.db.exceptions.SqlExecuteException;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.core.StringContains;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.opentest4j.AssertionFailedError;
 import testcontainers.MsSqlDbSetup;
 
 import java.util.Objects;
@@ -56,6 +57,11 @@ class MsSqlDbTests {
         db.insertIntoTable(TEST_TABLE2, template, testArray);
     }
 
+
+    @BeforeAll
+    static void clean() {
+        AllureResultLoader.cleanResultsDir();
+    }
 
     @BeforeEach
     void cleanTables() {
@@ -581,7 +587,7 @@ class MsSqlDbTests {
                 {"DEPOSIT", null},
         });
 
-        Throwable exception = assertThrows(AssertionFailedError.class, () ->
+        Throwable exception = assertThrows(AssertionError.class, () ->
                 db.seeRecordExistsInTable(TEST_TABLE,
                         new Object[][]{
                                 {"ID", 1},

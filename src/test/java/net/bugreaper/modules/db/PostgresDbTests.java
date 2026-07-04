@@ -1,29 +1,36 @@
 package net.bugreaper.modules.db;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.zaxxer.hikari.pool.HikariPool;
 import net.bugreaper.core.exceptions.FileReaderException;
+import net.bugreaper.core.utils.AllureAssert;
+import net.bugreaper.core.utils.AllureResultLoader;
 import net.bugreaper.modules.db.exceptions.JdbcExecutorException;
 import net.bugreaper.modules.db.exceptions.QueryBuilderException;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.core.StringContains;
 import org.hamcrest.core.StringStartsWith;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.opentest4j.AssertionFailedError;
+import org.junit.jupiter.api.*;
 import testcontainers.PostgresDbSetup;
 
 import java.math.BigDecimal;
 import java.util.concurrent.CompletableFuture;
 
 import static java.lang.Thread.sleep;
+import static net.bugreaper.core.filereaders.FileReader.readTextFromFile;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SuppressWarnings({"squid:S2699", "java:S5778"})
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS) //To call connection once!
 class PostgresDbTests extends PostgresDbSetup {
+
+    @BeforeAll
+    static void clean() {
+        AllureResultLoader.cleanResultsDir();
+    }
 
     @BeforeEach
     void cleanTables() {
@@ -90,6 +97,7 @@ class PostgresDbTests extends PostgresDbSetup {
     }
 
     @Test
+    @Order(1)
     void templateFileInsertTest() {
 
         db.truncateTable(TEST_TABLE_FOR_TEMPLATE);
@@ -108,6 +116,23 @@ class PostgresDbTests extends PostgresDbSetup {
                                 {"AMOUNT", 10.55},
                                 {"IS_ACTIVE", false},
                         });
+
+
+        db.showDataByCondition
+                (TEST_TABLE_FOR_TEMPLATE,
+                        new Object[][]{
+                                {"ID", 2},
+                        });
+    }
+
+    @Test
+    @Order(2)
+    void templateFileInsertAllureTest() {
+        JsonNode result = AllureResultLoader.loadByTestName("templateFileInsertTest");
+
+        AllureAssert.assertThat(result)
+                .hasStep("(DB)[ASSERT] Records exists in public.temp: where ID=2")
+                .hasAttachment("I see in table public.temp",  readTextFromFile("testdata/allure/attachments/postrges_show.html"));
     }
 
     @Test
@@ -255,7 +280,7 @@ class PostgresDbTests extends PostgresDbSetup {
                 {"IS_ACTIVE", true},
         });
 
-        Throwable exception = assertThrows(AssertionFailedError.class, () ->
+        Throwable exception = assertThrows(AssertionError.class, () ->
                 db.seeTableIsEmpty(TEST_TABLE));
 
         assertEquals("""
@@ -276,7 +301,7 @@ class PostgresDbTests extends PostgresDbSetup {
                 {"PERCENTAGE", "16.00"},
         });
 
-        Throwable exception = assertThrows(AssertionFailedError.class, () ->
+        Throwable exception = assertThrows(AssertionError.class, () ->
                 dbAwait.seeRecordExistsInTable(TEST_TABLE,
                         new Object[][]{
                                 {"ID", 1},
@@ -301,7 +326,7 @@ class PostgresDbTests extends PostgresDbSetup {
     @Test
     void seeRecordExistsInTableEmptyConditionsTest() {
 
-        Throwable exception = assertThrows(AssertionFailedError.class, () ->
+        Throwable exception = assertThrows(AssertionError.class, () ->
                 dbAwait.seeRecordExistsInTableCustom(TEST_TABLE, ""));
 
         assertEquals("""
@@ -317,7 +342,7 @@ class PostgresDbTests extends PostgresDbSetup {
                 {"USERNAME", "Pupkin2"},
         });
 
-        Throwable exception = assertThrows(AssertionFailedError.class, () ->
+        Throwable exception = assertThrows(AssertionError.class, () ->
                 dbAwait.seeRecordExistsInTableCustom(TEST_TABLE, "where ID=15"));
 
         assertEquals("""
