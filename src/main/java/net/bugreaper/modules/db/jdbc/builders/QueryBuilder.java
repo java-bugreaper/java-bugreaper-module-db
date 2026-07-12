@@ -15,6 +15,7 @@
  */
 package net.bugreaper.modules.db.jdbc.builders;
 
+import net.bugreaper.modules.db.enums.DbTypes;
 import net.bugreaper.modules.db.exceptions.QueryBuilderException;
 import net.bugreaper.modules.db.logger.Log;
 
@@ -26,8 +27,9 @@ import static net.bugreaper.modules.db.allurereporter.AllureReporter.attachTable
  * Class with builders
  * from arrays (Object[][]) to sql scripts
  */
-public class QueryBuilder extends QueryConditionsBuilder {
+public class QueryBuilder {
 
+    private final QueryConditionsBuilder qcb;
 
     /**
      * Creates a new {@code QueryBuilder} instance for the specified database type.
@@ -36,9 +38,26 @@ public class QueryBuilder extends QueryConditionsBuilder {
      *
      * @param dbType the database type identifier (e.g., "mariadb", "custom-db");
      */
-    public QueryBuilder(String dbType) {
-        super(dbType);
-        Log.LOGGER.debug("Database type: {}", dbType);
+    public QueryBuilder(DbTypes dbType) {
+        Log.LOGGER.debug("Database type: {}", dbType.value());
+
+        switch (dbType) {
+            case MARIA_DB:
+                this.qcb = new QueryConditionsBuilderMariaDb(dbType);
+                break;
+            case MY_SQL:
+                this.qcb = new QueryConditionsBuilderMysql(dbType);
+                break;
+            case ORACLE_DB:
+                this.qcb = new QueryConditionsBuilderOracle(dbType);
+                break;
+            //postgres, mssql, custom-db
+            default:
+                this.qcb = new QueryConditionsBuilder(dbType);
+                break;
+        }
+
+        Log.LOGGER.debug("Use query builder: {}", qcb);
     }
 
     /**
@@ -61,7 +80,7 @@ public class QueryBuilder extends QueryConditionsBuilder {
                 // 2 elements, with basic operators
                 if (setArray[i].length == 2) {
                     conditions.append(setArray[i][0]);
-                    conditions.append(arrayCondition2Mapper(setArray[i]));
+                    conditions.append(qcb.arrayCondition2Mapper(setArray[i]));
                 } else {
                     throw new QueryBuilderException("ERROR, array length not valid: " + Arrays.toString(setArray[i]));
                 }
@@ -99,15 +118,15 @@ public class QueryBuilder extends QueryConditionsBuilder {
                 // 2 elements, with basic operators
                 if (conditionsArray[i].length == 2) {
                     conditions.append(conditionsArray[i][0]);
-                    conditions.append(arrayCondition2Mapper(conditionsArray[i]));
+                    conditions.append(qcb.arrayCondition2Mapper(conditionsArray[i]));
 
                     // 3 elements, with operator
                 } else if (conditionsArray[i].length == 3) {
-                    conditions.append(arrayCondition3Mapper(conditionsArray[i]));
+                    conditions.append(qcb.arrayCondition3Mapper(conditionsArray[i]));
 
                     // 4 elements, Oracle DATE conditions
                 } else if (conditionsArray[i].length == 4) {
-                    conditions.append(arrayCondition4Mapper(conditionsArray[i]));
+                    conditions.append(qcb.arrayCondition4Mapper(conditionsArray[i]));
                 } else {
                     throw new QueryBuilderException("ERROR, array length not valid: " + Arrays.toString(conditionsArray[i]));
                 }

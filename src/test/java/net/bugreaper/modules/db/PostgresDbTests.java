@@ -27,6 +27,35 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS) //To call connection once!
 class PostgresDbTests extends PostgresDbSetup {
 
+    protected static final PostgreSQL db = getPostgresDb();
+    protected static final PostgreSQL dbAwait = getPostgresDb().setAwaitMs(1000);
+
+    protected static final String TEST_TABLE = "public.users";
+    protected static final String TEST_TABLE2 = "public.users2";
+    protected static final String TEST_TABLE_FOR_RENAME = "public.users3";
+    protected static final String TEST_TABLE_FOR_TEMPLATE = "public.temp";
+
+
+    protected void insertIntoUsers(Object[][] testArray) {
+        final Object[][] template = {
+                {"ID", 100},
+                {"USERNAME", "Pupkin"},
+                {"PASSWORD", "pupKin1992"},
+                {"EMAIL", "pupkin@com.com"},
+                {"STATE", 0},
+                {"DESCRIPTION", "dummy description"},
+                {"ROLES", "manager"},
+                {"DATA", "[]"},
+                {"IS_ACTIVE", false},
+                {"AMOUNT", null},
+                {"PERCENTAGE", null},
+                {"CREATE_DATE", "2021-02-02 10:00:00"},
+                {"UPDATE_DATE", "2021-02-02 10:00:00"},
+        };
+
+        db.insertIntoTable(TEST_TABLE, template, testArray);
+    }
+
     @BeforeAll
     static void clean() {
         AllureResultLoader.cleanResultsDir();
@@ -267,7 +296,7 @@ class PostgresDbTests extends PostgresDbSetup {
                                 1));
 
         assertEquals("""
-                        ERROR, wrong 3 elements operator: <JSON_CONTAINS> supported: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE]""",
+                        ERROR, wrong 3 elements operator: <JSON_CONTAINS> database <postgresql> supported: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE]""",
                 exception.getMessage(),
                 "Exception with JSON in db not supported yet");
     }
@@ -393,7 +422,7 @@ class PostgresDbTests extends PostgresDbSetup {
     @Test
     void configLowAwaitTest() {
 
-        PostgreSQL dbTest = setup.getPostgresDb();
+        PostgreSQL dbTest =getPostgresDb();
 
         Throwable exception = assertThrows(IllegalArgumentException.class, () ->
                 dbTest.setAwaitMs(100));
@@ -407,7 +436,7 @@ class PostgresDbTests extends PostgresDbSetup {
     @Test
     void configEmptyTemplatePathTest() {
 
-        PostgreSQL dbTest = setup.getPostgresDb();
+        PostgreSQL dbTest = getPostgresDb();
 
         Throwable exception = assertThrows(IllegalArgumentException.class, () ->
                 dbTest.setTemplatesDirectory(""));
@@ -421,7 +450,7 @@ class PostgresDbTests extends PostgresDbSetup {
     @Test
     void configNullTemplatePathTest() {
 
-        PostgreSQL dbTest = setup.getPostgresDb();
+        PostgreSQL dbTest = getPostgresDb();
 
         Throwable exception = assertThrows(IllegalArgumentException.class, () ->
                 dbTest.setTemplatesDirectory(null));

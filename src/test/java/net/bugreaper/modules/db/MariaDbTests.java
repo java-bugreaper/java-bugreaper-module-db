@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class MariaDbTests extends MariaDbSetup {
 
-    private static final MariaDb db = new MariaDbSetup().getMariDb();
+    private static final MariaDb db = getMariDb();
     private static final MariaDb dbConf = MariaDb.getInstance();
 
 

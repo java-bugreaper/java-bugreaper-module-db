@@ -1,6 +1,6 @@
 package net.bugreaper.modules.db.jdbc.builders;
 
-import net.bugreaper.modules.db.helpers.Convert;
+import net.bugreaper.modules.db.enums.DbTypes;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -9,10 +9,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class QueryBuilderTest {
 
-    private final String oracle = Convert.convertToDbType(Convert.getOracleDbUrl());
-    private final String maria = Convert.convertToDbType(Convert.getMariaDbUrl());
-    private final String mssql = Convert.convertToDbType(Convert.getMsSqlUrl());
-    private final String mysql = Convert.convertToDbType(Convert.getMySqlUrl());
+    private final DbTypes oracle =DbTypes.ORACLE_DB;
+    private final DbTypes maria = DbTypes.MARIA_DB;
+    private final DbTypes mssql = DbTypes.MS_SQL;
+    private final DbTypes mysql = DbTypes.MY_SQL;
 
     private final QueryBuilder qbm = new QueryBuilder(maria);
 

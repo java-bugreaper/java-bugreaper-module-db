@@ -1,6 +1,6 @@
 package net.bugreaper.modules.db.jdbc;
 
-import net.bugreaper.modules.db.DbTypes;
+import net.bugreaper.modules.db.enums.DbTypes;
 import net.bugreaper.modules.db.helpers.Convert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

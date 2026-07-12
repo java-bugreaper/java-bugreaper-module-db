@@ -1,5 +1,6 @@
 package net.bugreaper.modules.db;
 
+import net.bugreaper.modules.db.enums.DbTypes;
 import net.bugreaper.modules.db.jdbc.JdbcExecutor;
 
 /**
@@ -35,7 +36,7 @@ public class MySQL extends JdbcExecutor<MySQL> {
                 username,
                 passwd,
                 GET_COLUMNS,
-                DbTypes.MY_SQL.value());
+                DbTypes.MY_SQL);
     }
 
     /**
@@ -68,10 +69,10 @@ public class MySQL extends JdbcExecutor<MySQL> {
      *   await: 1000 (optional)
      * </pre>
      *
-     * @see JdbcExecutor#JdbcExecutor(String dbType, String getColumnsQuery) JdbcExecutor
+     * @see JdbcExecutor#JdbcExecutor(DbTypes dbType, String getColumnsQuery) JdbcExecutor
      */
     public MySQL() {
-        super(DbTypes.MY_SQL.value(), GET_COLUMNS);
+        super(DbTypes.MY_SQL, GET_COLUMNS);
     }
 
 }
