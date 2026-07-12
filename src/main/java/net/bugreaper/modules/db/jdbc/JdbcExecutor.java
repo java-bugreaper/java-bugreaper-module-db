@@ -1,7 +1,7 @@
 package net.bugreaper.modules.db.jdbc;
 
 import net.bugreaper.core.config.YamlUtils;
-import net.bugreaper.modules.db.DbTypes;
+import net.bugreaper.modules.db.enums.DbTypes;
 import net.bugreaper.modules.db.jdbc.builders.QueryBuilder;
 import net.bugreaper.modules.db.jdbc.connection.JdbcDirectivesHikari;
 import net.bugreaper.modules.db.jdbc.interfaces.SqlConfig;
@@ -46,25 +46,25 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
      * default templates path for insert (dynamically for each database types)
      */
     private volatile String templatesPath;
-    private final String dbType;
+    private final String dbTypeKey;
     private final QueryBuilder qb;
 
     protected JdbcExecutor(String url,
                            String username,
                            String password,
                            String getColumnsQuery,
-                           String dbType) {
+                           DbTypes dbType) {
 
         this.qb = new QueryBuilder(dbType);
-        this.dbType = dbType;
-        this.templatesPath = String.format("templates/%s/", dbType);
+        this.dbTypeKey = dbType.value();
+        this.templatesPath = String.format("templates/%s/", this.dbTypeKey);
 
         this.url = url;
         this.username = username;
         this.password = password;
 
 
-        jdbc = new JdbcDirectivesHikari(this.url, this.username, this.password, this.dbType);
+        jdbc = new JdbcDirectivesHikari(this.url, this.username, this.password, this.dbTypeKey);
         this.getColumnsQuery = getColumnsQuery;
     }
 
@@ -78,47 +78,47 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
      * <p><b>Custom file:</b> using {@code -DbugreaperEnv=test} loads {@code bugreaper-test.yml}</p>
      *
      * <p><b>Required configuration keys:</b></p>
-     * <p>Supported dbTypes: {@link DbTypes}</p>
+     * <p>Supported dbTypes: values of {@link DbTypes}</p>
      * <ul>
-     *     <li>{@code modules.db.${dbType}.url}</li>
-     *     <li>{@code modules.db.${dbType}.port}</li>
-     *     <li>{@code modules.db.${dbType}.username}</li>
-     *     <li>{@code modules.db.${dbType}.password}</li>
+     *     <li>{@code modules.db.{dbType}.url}</li>
+     *     <li>{@code modules.db.{dbType}.port}</li>
+     *     <li>{@code modules.db.{dbType}.username}</li>
+     *     <li>{@code modules.db.{dbType}.password}</li>
      * </ul>
      *
      * <p><b>Optional configuration keys:</b></p>
      * <ul>
-     *     <li>{@code modules.db.${dbType}.await}</li>
+     *     <li>{@code modules.db.{dbType}.await}</li>
      * </ul>
      *
-     * @param dbType the database type identifier (e.g., "mariadb", "custom-db");
+     * @param dbType the database type identifier values of {@link DbTypes} (e.g., "mariadb", "custom-db");
      * @param getColumnsQuery query to get all columns names from table;
      *
      * <p>Missing required keys will result in configuration errors.
      * Missing optional keys will fall back to predefined defaults.</p>
      */
-    protected JdbcExecutor(String dbType, String getColumnsQuery) {
+    protected JdbcExecutor(DbTypes dbType, String getColumnsQuery) {
 
-        this.dbType = dbType;
+        this.dbTypeKey = dbType.value();
         this.getColumnsQuery = getColumnsQuery;
-        this.templatesPath = String.format("templates/%s/", dbType);
+        this.templatesPath = String.format("templates/%s/", this.dbTypeKey);
 
-        loadFromYaml(dbType);
+        loadFromYaml(this.dbTypeKey);
 
-        jdbc = new JdbcDirectivesHikari(this.url, this.username, this.password, this.dbType);
+        jdbc = new JdbcDirectivesHikari(this.url, this.username, this.password, this.dbTypeKey);
         this.qb = new QueryBuilder(dbType);
     }
 
 
-    private void loadFromYaml(String dbType) {
+    private void loadFromYaml(String dbTypeKey) {
 
         //required config fields
-        this.url = YamlUtils.getStringValueByPath(YML_KEY + dbType + ".url");
-        this.username = YamlUtils.getStringValueByPath(YML_KEY + dbType + ".username");
-        this.password = YamlUtils.getStringValueByPath(YML_KEY + dbType + ".password");
+        this.url = YamlUtils.getStringValueByPath(YML_KEY + dbTypeKey + ".url");
+        this.username = YamlUtils.getStringValueByPath(YML_KEY + dbTypeKey + ".username");
+        this.password = YamlUtils.getStringValueByPath(YML_KEY + dbTypeKey + ".password");
 
         //optional config fields
-        Object awaitVal = YamlUtils.getValueByPath(YML_KEY + dbType + ".await", true);
+        Object awaitVal = YamlUtils.getValueByPath(YML_KEY + dbTypeKey + ".await", true);
         if (awaitVal instanceof Number number) {
             setAwaitMs(number.intValue());
         }
@@ -169,7 +169,7 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
             password=%s
             awaitMs=%d
             templatesPath=%s%n""",
-                this.getClass().getSimpleName(), dbType, url, username, password,
+                this.getClass().getSimpleName(), dbTypeKey, url, username, password,
                 awaitMs, templatesPath);
 
         Log.LOGGER.info(info);

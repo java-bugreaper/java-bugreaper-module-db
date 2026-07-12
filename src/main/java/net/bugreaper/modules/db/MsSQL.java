@@ -1,5 +1,6 @@
 package net.bugreaper.modules.db;
 
+import net.bugreaper.modules.db.enums.DbTypes;
 import net.bugreaper.modules.db.jdbc.JdbcExecutor;
 import io.qameta.allure.Step;
 import org.apache.commons.lang3.StringUtils;
@@ -37,7 +38,7 @@ public class MsSQL extends JdbcExecutor<MsSQL> {
                 username,
                 passwd,
                 GET_COLUMNS,
-                DbTypes.MS_SQL.value());
+                DbTypes.MS_SQL);
     }
 
     /**
@@ -70,10 +71,10 @@ public class MsSQL extends JdbcExecutor<MsSQL> {
      *   await: 1000 (optional)
      * </pre>
      *
-     * @see JdbcExecutor#JdbcExecutor(String dbType, String getColumnsQuery) JdbcExecutor
+     * @see JdbcExecutor#JdbcExecutor(DbTypes dbType, String getColumnsQuery) JdbcExecutor
      */
     public MsSQL() {
-        super(DbTypes.MS_SQL.value(), GET_COLUMNS);
+        super(DbTypes.MS_SQL, GET_COLUMNS);
     }
 
     @Override

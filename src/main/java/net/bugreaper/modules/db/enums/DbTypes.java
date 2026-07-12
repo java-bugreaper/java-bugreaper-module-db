@@ -1,4 +1,4 @@
-package net.bugreaper.modules.db;
+package net.bugreaper.modules.db.enums;
 
 /**
  * Enumeration of supported database types.

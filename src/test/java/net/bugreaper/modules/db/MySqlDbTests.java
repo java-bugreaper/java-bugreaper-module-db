@@ -21,10 +21,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SuppressWarnings({"squid:S2699", "java:S5778"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS) //To call connection once!
-class MySqlDbTests {
+class MySqlDbTests extends MySqlDbSetup {
 
-    private static final MySqlDbSetup setup = MySqlDbSetup.getInstance();
-    private static final MySQL db = setup.getMysqlDb().setTemplatesDirectory("templates/custom/");
+    private static final MySQL db = getMysqlDb().setTemplatesDirectory("templates/custom/");
     private static final MySQL dbConf = MySQL.getInstance();
 
     private static final String TEST_TABLE = "MYSQL_SCHEMA.USERS";

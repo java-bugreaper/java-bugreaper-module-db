@@ -5,44 +5,32 @@ import com.github.dockerjava.api.model.PortBinding;
 import com.github.dockerjava.api.model.Ports;
 import net.bugreaper.modules.db.MySQL;
 import org.testcontainers.mysql.MySQLContainer;
-import org.testcontainers.utility.DockerImageName;
 
 import java.util.Objects;
 
 
 public class MySqlDbSetup {
 
-    static final DockerImageName MARIA_DB = DockerImageName.parse("mysql:8.0.21");
-    MySQLContainer container = new MySQLContainer(MARIA_DB);
-    private static MySqlDbSetup instance;
+    private static final MySQLContainer DB_CONTAINER = new MySQLContainer("mysql:8.0.21")
+            .withUsername("mysql_user")
+            .withPassword("mysql_pass")
+            .withCreateContainerCmdModifier(cmd -> Objects.requireNonNull(cmd.getHostConfig()).withPortBindings(
+                    new PortBinding(Ports.Binding.bindPort(3308),
+                            new ExposedPort(3306))))
+            .withInitScript("dump/mysql_setup.sql")
+            .withDatabaseName("MYSQL_SCHEMA");
 
 
-    public MySqlDbSetup() {
-        container
-                .withUsername("mysql_user")
-                .withPassword("mysql_pass")
-                .withCreateContainerCmdModifier(cmd -> Objects.requireNonNull(cmd.getHostConfig()).withPortBindings(
-                        new PortBinding(Ports.Binding.bindPort(3308),
-                                new ExposedPort(3306))))
-                .withInitScript("dump/mysql_setup.sql")
-                .withDatabaseName("MYSQL_SCHEMA")
-                .start();
+    static {
+        DB_CONTAINER.start();
     }
 
-    public static MySqlDbSetup getInstance() {
-        if (instance == null) {
-            instance = new MySqlDbSetup();
-        }
-
-        return instance;
-    }
-
-    public MySQL getMysqlDb() {
+    public static MySQL getMysqlDb() {
         return new MySQL(
 
                 "jdbc:mysql://"
-                        + container.getHost() + ":"
-                        + container.getMappedPort(3306),
+                        + DB_CONTAINER.getHost() + ":"
+                        + DB_CONTAINER.getMappedPort(3306),
                 "mysql_user",
                 "mysql_pass");
     }

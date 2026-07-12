@@ -1,7 +1,7 @@
 package net.bugreaper.modules.db.jdbc.interfaces;
 
 
-import net.bugreaper.modules.db.DbTypes;
+import net.bugreaper.modules.db.enums.DbTypes;
 import net.bugreaper.modules.db.jdbc.JdbcExecutor;
 
 

@@ -13,7 +13,7 @@ import java.util.Objects;
 
 public class MariaDbSetup {
 
-    protected static final MariaDBContainer DB_CONTAINER =
+    private static final MariaDBContainer DB_CONTAINER =
             new MariaDBContainer("mariadb:11.2")
                     .withUsername("test_user")
                     .withPassword("secret_pass")
@@ -28,7 +28,7 @@ public class MariaDbSetup {
         DB_CONTAINER.start();
     }
 
-    public MariaDb getMariDb() {
+    public static MariaDb getMariDb() {
         return new MariaDb(
 
                 "jdbc:mariadb://"
@@ -38,7 +38,7 @@ public class MariaDbSetup {
                 "secret_pass");
     }
 
-    public CustomDb getCustomDb() {
+    public static CustomDb getCustomDb() {
         return new CustomDb(
 
                 "jdbc:mariadb://"

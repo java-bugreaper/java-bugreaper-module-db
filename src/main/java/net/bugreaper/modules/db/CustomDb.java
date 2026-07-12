@@ -1,5 +1,6 @@
 package net.bugreaper.modules.db;
 
+import net.bugreaper.modules.db.enums.DbTypes;
 import net.bugreaper.modules.db.jdbc.JdbcExecutor;
 
 
@@ -41,7 +42,7 @@ public class CustomDb extends JdbcExecutor<CustomDb> {
                 username,
                 passwd,
                 GET_COLUMNS,
-                DbTypes.MARIA_DB.value());
+                DbTypes.MARIA_DB);
     }
 
     /**
@@ -74,10 +75,10 @@ public class CustomDb extends JdbcExecutor<CustomDb> {
      *   await: 1000 (optional)
      * </pre>
      *
-     * @see JdbcExecutor#JdbcExecutor(String dbType, String getColumnsQuery) JdbcExecutor
+     * @see JdbcExecutor#JdbcExecutor(DbTypes dbType, String getColumnsQuery) JdbcExecutor
      */
     public CustomDb() {
-        super(DbTypes.CUSTOM_DB.value(), GET_COLUMNS);
+        super(DbTypes.CUSTOM_DB, GET_COLUMNS);
     }
 
 

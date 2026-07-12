@@ -1,6 +1,7 @@
 package net.bugreaper.modules.db;
 
 import io.qameta.allure.Step;
+import net.bugreaper.modules.db.enums.DbTypes;
 import net.bugreaper.modules.db.jdbc.JdbcExecutor;
 import org.apache.commons.lang3.StringUtils;
 
@@ -37,7 +38,7 @@ public class PostgreSQL extends JdbcExecutor<PostgreSQL> {
                 username,
                 passwd,
                 GET_COLUMNS,
-                DbTypes.POSTGRE_SQL.value());
+                DbTypes.POSTGRE_SQL);
     }
 
     /**
@@ -70,10 +71,10 @@ public class PostgreSQL extends JdbcExecutor<PostgreSQL> {
      *   await: 1000 (optional)
      * </pre>
      *
-     * @see JdbcExecutor#JdbcExecutor(String dbType, String getColumnsQuery) JdbcExecutor
+     * @see JdbcExecutor#JdbcExecutor(DbTypes dbType, String getColumnsQuery) JdbcExecutor
      */
     public PostgreSQL() {
-        super(DbTypes.POSTGRE_SQL.value(), GET_COLUMNS);
+        super(DbTypes.POSTGRE_SQL, GET_COLUMNS);
     }
 
     /**

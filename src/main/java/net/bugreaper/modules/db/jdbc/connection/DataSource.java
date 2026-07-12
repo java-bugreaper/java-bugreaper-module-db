@@ -2,7 +2,7 @@ package net.bugreaper.modules.db.jdbc.connection;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import net.bugreaper.modules.db.DbTypes;
+import net.bugreaper.modules.db.enums.DbTypes;
 import net.bugreaper.modules.db.logger.Log;
 
 import java.sql.Connection;

@@ -19,10 +19,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SuppressWarnings({"squid:S2699", "java:S5778"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS) //To call connection once!
-class MsSqlDbTests {
+class MsSqlDbTests extends MsSqlDbSetup {
 
-    private static final MsSqlDbSetup setup = MsSqlDbSetup.getInstance();
-    private static final MsSQL db = setup.getMssqlDb();
+    private static final MsSQL db = getMssqlDb();
     private static final MsSQL dbConf = MsSQL.getInstance();
 
     private static final String TEST_TABLE = "test_schema.users";
@@ -317,7 +316,7 @@ class MsSqlDbTests {
                                 1));
 
         assertEquals("""
-                        ERROR, wrong 3 elements operator: <JSON_CONTAINS> supported: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE]""",
+                        ERROR, wrong 3 elements operator: <JSON_CONTAINS> database <sqlserver> supported: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE]""",
                 exception.getMessage(),
                 "Exception with JSON in db not supported yet");
     }

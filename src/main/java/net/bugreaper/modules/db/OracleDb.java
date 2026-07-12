@@ -1,6 +1,7 @@
 package net.bugreaper.modules.db;
 
 import io.qameta.allure.Step;
+import net.bugreaper.modules.db.enums.DbTypes;
 import net.bugreaper.modules.db.jdbc.JdbcExecutor;
 import org.apache.commons.lang3.StringUtils;
 
@@ -43,7 +44,7 @@ public final class OracleDb extends JdbcExecutor<OracleDb> {
                 username,
                 passwd,
                 GET_COLUMNS,
-                DbTypes.ORACLE_DB.value());
+                DbTypes.ORACLE_DB);
     }
 
     /**
@@ -76,10 +77,10 @@ public final class OracleDb extends JdbcExecutor<OracleDb> {
      *   await: 1000 (optional)
      * </pre>
      *
-     * @see JdbcExecutor#JdbcExecutor(String dbType, String getColumnsQuery) JdbcExecutor
+     * @see JdbcExecutor#JdbcExecutor(DbTypes dbType, String getColumnsQuery) JdbcExecutor
      */
     public OracleDb() {
-        super(DbTypes.ORACLE_DB.value(), GET_COLUMNS);
+        super(DbTypes.ORACLE_DB, GET_COLUMNS);
     }
 
     @Override

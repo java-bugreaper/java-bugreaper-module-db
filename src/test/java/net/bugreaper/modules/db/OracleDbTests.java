@@ -15,10 +15,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SuppressWarnings("squid:S2699")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS) //To call connection once!
-class OracleDbTests {
+class OracleDbTests extends OracleDbSetup {
 
-    private static final OracleDbSetup setup = OracleDbSetup.getInstance();
-    private static final OracleDb db = setup.getOracleDb().setAwaitMs(500);
+
+    private static final OracleDb db = getOracleDb().setAwaitMs(500);
     private static final OracleDb dbConf = OracleDb.getInstance(); //For config
 
     private static final String TEST_TABLE = "ORACLE_SCHEMA.GOODS";

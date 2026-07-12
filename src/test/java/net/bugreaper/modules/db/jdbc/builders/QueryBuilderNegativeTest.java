@@ -1,7 +1,7 @@
 package net.bugreaper.modules.db.jdbc.builders;
 
+import net.bugreaper.modules.db.enums.DbTypes;
 import net.bugreaper.modules.db.exceptions.QueryBuilderException;
-import net.bugreaper.modules.db.helpers.Convert;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.core.StringContains;
 import org.junit.jupiter.api.Test;
@@ -11,10 +11,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class QueryBuilderNegativeTest {
 
-    private final String oracle = Convert.convertToDbType(Convert.getOracleDbUrl());
-    private final String maria = Convert.convertToDbType(Convert.getMariaDbUrl());
-    private final String mssql = Convert.convertToDbType(Convert.getMsSqlUrl());
-    private final String mysql = Convert.convertToDbType(Convert.getMySqlUrl());
+    private final DbTypes oracle =DbTypes.ORACLE_DB;
+    private final DbTypes maria = DbTypes.MARIA_DB;
+    private final DbTypes mssql = DbTypes.MS_SQL;
+    private final DbTypes mysql = DbTypes.MY_SQL;
 
     private final QueryBuilder qbm = new QueryBuilder(maria);
 
@@ -105,7 +105,7 @@ class QueryBuilderNegativeTest {
                         {"COLUMN2", "SOME", "2020-05-05"},
                 }));
 
-        assertEquals("ERROR, wrong 3 elements operator: <SOME> supported: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE]",
+        assertEquals("ERROR, wrong 3 elements operator: <SOME> database <sqlserver> supported: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE]",
                 exception.getMessage(),
                 "Exception with 3 elements not basic conditions for not supported DB");
     }

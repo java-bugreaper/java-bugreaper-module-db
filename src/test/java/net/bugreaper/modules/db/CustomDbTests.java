@@ -17,9 +17,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SuppressWarnings({"squid:S2699"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS) //To call connection once!
-class CustomDbTests {
+class CustomDbTests extends MariaDbSetup {
 
-    private static final CustomDb db = new MariaDbSetup().getCustomDb();
+    private static final CustomDb db = getCustomDb();
     private static final CustomDb customDb = CustomDb.getInstance();
 
     private static final String CI = System.getenv("CI");
@@ -102,8 +102,6 @@ class CustomDbTests {
     @Test
     void getDataPassCustomDbTests() {
 
-
-
         customDb.truncateTable(TEST_TABLE_FOR_TEMPLATE);
 
         //for second call
@@ -151,6 +149,6 @@ class CustomDbTests {
 
         MatcherAssert.assertThat(
                 exception.getMessage(),
-                is("ERROR, wrong 3 elements operator: <JSON_CONTAINS> supported: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE]"));
+                is("ERROR, wrong 3 elements operator: <JSON_CONTAINS> database <custom-db> supported: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE]"));
     }
 }
