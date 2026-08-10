@@ -4,13 +4,19 @@ import net.bugreaper.modules.db.enums.DbTypes;
 import net.bugreaper.modules.db.jdbc.JdbcExecutor;
 
 /**
- * Class for interacting with MySQL
+ * MySQL helper that provides a common API for operating with MySQL.
  *
- * <p>For one instance run recommended: {@code MySQL db = MySQL.getInstance()}</p>
+ * <p>It is recommended to use a single instance:
+ * {@code MySQL db = MySQL.getInstance();}
+ * </p>
  *
- * <p>Contains methods for:</p>
- * asserts with await, change data (create, update, clean)<br>
- * more info {@link JdbcExecutor}
+ * <p>Provides:</p>
+ * <ul>
+ *     <li>Assertions with await support</li>
+ *     <li>Data manipulation operations such as create, update, and clean</li>
+ * </ul>
+ *
+ * <p>For more information, see {@link JdbcExecutor}.</p>
  */
 public class MySQL extends JdbcExecutor<MySQL> {
 
@@ -46,6 +52,8 @@ public class MySQL extends JdbcExecutor<MySQL> {
      *
      * @return the singleton instance of {@link MySQL}
      * @see #MySQL() config setup
+     *
+     * @throws IllegalArgumentException if the configuration contains invalid values
      */
     public static synchronized MySQL getInstance() {
         if (instance == null) {

@@ -10,30 +10,33 @@ package net.bugreaper.modules.db.jdbc.interfaces;
 public interface SqlConfig<T extends SqlConfig<T>> {
 
     /**
-     * Configure global await for asserts with await
+     * Configures the global await timeout for assertions that use await.
      *
-     * @param awaitMs ms await
+     * @param awaitMs await timeout in milliseconds
      * @return this instance for method chaining
-     * @throws IllegalArgumentException on invalid setup
+     * @throws IllegalArgumentException if the provided timeout is invalid or less than 200 milliseconds
      */
     T setAwaitMs(int awaitMs);
 
     /**
-     * Configure await for next assert with await (than await rollback to global)
-     * global {@link #setAwaitMs(int)} will be ignored
+     * Sets a custom await timeout for the next assertion.
      *
-     * @param awaitMs ms await
+     * <p>After the operation is completed, the timeout is reset to the global value
+     * configured by {@link #setAwaitMs(int)}.</p>
+     *
+     * @param awaitMs await timeout in milliseconds
      * @return this instance for method chaining
-     * @throws IllegalArgumentException on invalid setup
+     * @throws IllegalArgumentException if the timeout is invalid
      */
     T withAwaitMs(int awaitMs);
 
+
     /**
-     * Configure directory in resources for tables templates
+     * Configures the directory in resources containing tables templates.
      *
-     * @param templatePath path in resources "my_dir/sub_dir/"
+     * @param templatePath path to the templates directory in resources (example: {@code "my_dir/sub_dir/"})
      * @return this instance for method chaining
-     * @throws IllegalArgumentException on invalid setup
+     * @throws IllegalArgumentException if the provided path is invalid
      */
     T setTemplatesDirectory(String templatePath);
 

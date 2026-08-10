@@ -4,35 +4,31 @@ package net.bugreaper.modules.db;
 import net.bugreaper.modules.db.exceptions.JdbcExecutorException;
 import net.bugreaper.modules.db.exceptions.QueryBuilderException;
 import org.hamcrest.MatcherAssert;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import testcontainers.MariaDbSetup;
-
-import java.util.Objects;
+import testcontainers.ClickhouseDb;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static testcontainers.DockerSetup.CI_HOST;
 
 @SuppressWarnings({"squid:S2699"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS) //To call connection once!
-class CustomDbTests extends MariaDbSetup {
+class CustomDbTests extends ClickhouseDb {
 
     private static final CustomDb db = getCustomDb();
     private static final CustomDb customDb = CustomDb.getInstance();
 
-    private static final String CI = System.getenv("CI");
-    private static final String PROPERTY = "bugreaperEnv";
-    private static final String TEST_TABLE_FOR_TEMPLATE = "MARIA_SCHEMA.TEMP";
+    private static final String TEST_TABLE_FOR_TEMPLATE = "MYSCHEMA.TEMP";
 
-    String getCi() {
-        if (Objects.equals(CI, "true")) {
-            return "jdbc:mariadb://docker:3307";
-        } else {
-            return "jdbc:mariadb://localhost:3307";
-        }
+    @AfterAll
+    static void shutDown() {
+        DB_CONTAINER.stop();
     }
+
 
     @Test
     void fullJsonFeatureTest() {
@@ -64,11 +60,6 @@ class CustomDbTests extends MariaDbSetup {
 
     @Test
     void configCustomDbBasicMethodsTest() {
-        if (Objects.equals(CI, "true")) {
-            System.setProperty(PROPERTY, "docker");
-        } else {
-            System.clearProperty(PROPERTY);
-        }
 
         customDb.truncateTable(TEST_TABLE_FOR_TEMPLATE);
 
@@ -90,12 +81,12 @@ class CustomDbTests extends MariaDbSetup {
         Assertions.assertEquals(String.format("""
                         CustomDb:
                             dbType=custom-db
-                            url=%s
-                            username=test_user
-                            password=secret_pass
+                            url=jdbc:clickhouse://%s:8123/MYSCHEMA
+                            username=default
+                            password=password
                             awaitMs=420
                             templatesPath=templates/custom-db/
-                        """, getCi()),
+                        """, CI_HOST),
                 customDb.getConfigSummary());
     }
 
@@ -122,11 +113,11 @@ class CustomDbTests extends MariaDbSetup {
         MatcherAssert.assertThat(
                 exception.getMessage(),
                 is("""
-                        Failed: record/s not found in <MARIA_SCHEMA.TEMP> within 420 milliseconds
+                        Failed: no records found in table 'MYSCHEMA.TEMP' within 420 milliseconds
                         Expected for:
                         [ID]
                         [1]
-                        Actual result(s)
+                        Actual result(s):
                         [2]"""));
 
         Throwable exception2 = assertThrows(JdbcExecutorException.class, () ->

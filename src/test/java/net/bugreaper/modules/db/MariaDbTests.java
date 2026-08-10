@@ -11,12 +11,10 @@ import org.hamcrest.core.StringContains;
 import org.junit.jupiter.api.*;
 import testcontainers.MariaDbSetup;
 
-import java.util.Objects;
-
 import static net.bugreaper.core.filereaders.FileReader.readTextFromFile;
-import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static testcontainers.DockerSetup.CI_HOST;
 
 @SuppressWarnings({"squid:S2699", "java:S5778"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS) //To call connection once!
@@ -36,6 +34,11 @@ class MariaDbTests extends MariaDbSetup {
     @BeforeAll
     static void clean() {
         AllureResultLoader.cleanResultsDir();
+    }
+
+    @AfterAll
+    static void shutDown() {
+        DB_CONTAINER.stop();
     }
 
     @BeforeEach
@@ -95,8 +98,8 @@ class MariaDbTests extends MariaDbSetup {
         JsonNode result = AllureResultLoader.loadByTestName("getDataFromEmptyTable");
 
         AllureAssert.assertThat(result)
-                .hasStep("(DB) Show data from table MARIA_SCHEMA.USERS")
-                .hasAttachment("I see in table MARIA_SCHEMA.USERS",  readTextFromFile("testdata/allure/attachments/maria_show_empty.html"));
+                .hasStep("(DB) Show data from table 'MARIA_SCHEMA.USERS'")
+                .hasAttachment("Table 'MARIA_SCHEMA.USERS' data:", readTextFromFile("testdata/allure/attachments/maria_show_empty.html"));
     }
 
     @Test
@@ -149,19 +152,19 @@ class MariaDbTests extends MariaDbSetup {
         JsonNode result = AllureResultLoader.loadByTestName("fullJsonFeatureTest");
 
         AllureAssert.assertThat(result)
-                .hasStep("(DB) Truncate table MARIA_SCHEMA.TEMP")
-                .hasAttachment("execute sql with", "TRUNCATE TABLE MARIA_SCHEMA.TEMP;")
+                .hasStep("(DB) Truncate table 'MARIA_SCHEMA.TEMP'")
+                .hasAttachment("Execute SQL:", "TRUNCATE TABLE MARIA_SCHEMA.TEMP;")
 
-                .hasStep("(DB) Insert into table MARIA_SCHEMA.TEMP record: [[ID, 1], [AMOUNT, 10.55]]")
-                .hasAttachment("Inserted in table MARIA_SCHEMA.TEMP", readTextFromFile("testdata/allure/attachments/insert1.html"))
-                .hasAttachment("execute sql with", """
+                .hasStep("(DB) Insert into table 'MARIA_SCHEMA.TEMP' record: [[ID, 1], [AMOUNT, 10.55]]")
+                .hasAttachment("Inserted record:", readTextFromFile("testdata/allure/attachments/insert1.html"))
+                .hasAttachment("Execute SQL:", """
                         INSERT INTO MARIA_SCHEMA.TEMP
                         (ID, NAME, AMOUNT, IS_ACTIVE)
                         VALUES (1, 'Maria', 10.55, false);""")
 
-                .hasStep("(DB)[ASSERT] Record/s exists in MARIA_SCHEMA.TEMP where ID=1 AND NAME='Maria' AND AMOUNT=10.55")
-                .hasAttachment("Expected in table MARIA_SCHEMA.TEMP", readTextFromFile("testdata/allure/attachments/assert1.html"))
-                .hasAttachment("execute sql with", """
+                .hasStep("(DB)[ASSERT] Table: 'MARIA_SCHEMA.TEMP' contains EXACTLY <1> record/s where ID=1 AND NAME='Maria' AND AMOUNT=10.55")
+                .hasAttachment("Expected record:", readTextFromFile("testdata/allure/attachments/assert1.html"))
+                .hasAttachment("Execute SQL:", """
                         SELECT COUNT(*) as COUNT_RES FROM MARIA_SCHEMA.TEMP where ID=1 AND NAME='Maria' AND AMOUNT=10.55;""");
     }
 
@@ -224,8 +227,8 @@ class MariaDbTests extends MariaDbSetup {
         JsonNode result = AllureResultLoader.loadByTestName("checkRunScriptAndAssert");
 
         AllureAssert.assertThat(result)
-                .hasStep("(DB) Show data from table MARIA_SCHEMA.USERS")
-                .hasAttachment("I see in table MARIA_SCHEMA.USERS",  readTextFromFile("testdata/allure/attachments/maria_show_all.html"));
+                .hasStep("(DB) Show data from table 'MARIA_SCHEMA.USERS'")
+                .hasAttachment("Table 'MARIA_SCHEMA.USERS' data:", readTextFromFile("testdata/allure/attachments/maria_show_all.html"));
     }
 
     @Test
@@ -452,7 +455,7 @@ class MariaDbTests extends MariaDbSetup {
         db.seeRecordExistsInTable
                 (TEST_TABLE,
                         new Object[][]{
-                                {"ID", 9223372036854775807L },
+                                {"ID", 9223372036854775807L},
                         });
     }
 
@@ -512,10 +515,8 @@ class MariaDbTests extends MariaDbSetup {
                         {"ROLES", "user"},
                 }));
 
-        MatcherAssert.assertThat(
-                "Exception on failed show by condition (record exists assert)",
-                exception.getMessage(),
-                is("No records in MARIA_SCHEMA.USERS by conditions: where ROLES='user'"));
+        assertEquals("Failed: no records found in table 'MARIA_SCHEMA.USERS' where ROLES='user'",
+                exception.getMessage());
     }
 
     @Test
@@ -524,10 +525,8 @@ class MariaDbTests extends MariaDbSetup {
         Throwable exception = assertThrows(AssertionError.class, () ->
                 db.seeRowsCountInTableExactly(TEST_TABLE, 1));
 
-        MatcherAssert.assertThat(
-                "Exception on failed assert count in table(empty table)",
-                exception.getMessage(),
-                is("Failed assert count: ER <1> with AR <0> in MARIA_SCHEMA.USERS within 2 seconds"));
+        assertEquals("Expected EXACTLY <1> records in table 'MARIA_SCHEMA.USERS', but got <0> within 2 seconds",
+                exception.getMessage());
     }
 
     @Test
@@ -541,10 +540,8 @@ class MariaDbTests extends MariaDbSetup {
         Throwable exception = assertThrows(AssertionError.class, () ->
                 db.seeRowsCountInTableExactly(TEST_TABLE, 2));
 
-        MatcherAssert.assertThat(
-                "Exception on failed assert count in table(filled table)",
-                exception.getMessage(),
-                is("Failed assert count: ER <2> with AR <1> in MARIA_SCHEMA.USERS within 2 seconds"));
+        assertEquals("Expected EXACTLY <2> records in table 'MARIA_SCHEMA.USERS', but got <1> within 2 seconds",
+                exception.getMessage());
     }
 
     @Test
@@ -562,10 +559,8 @@ class MariaDbTests extends MariaDbSetup {
         Throwable exception = assertThrows(AssertionError.class, () ->
                 db.withAwaitMs(500).seeRowsCountInTableExactly(TEST_TABLE, 1));
 
-        MatcherAssert.assertThat(
-                "Exception on failed assert count in table(filled table) with custom timeout",
-                exception.getMessage(),
-                is("Failed assert count: ER <1> with AR <2> in MARIA_SCHEMA.USERS within 500 milliseconds"));
+        assertEquals("Expected EXACTLY <1> records in table 'MARIA_SCHEMA.USERS', but got <2> within 500 milliseconds",
+                exception.getMessage());
     }
 
     @Test
@@ -579,15 +574,13 @@ class MariaDbTests extends MariaDbSetup {
                                 },
                                 1));
 
-        MatcherAssert.assertThat(
-                "Exception on failed assert count in table(empty table) with custom timeout",
-                exception.getMessage(),
-                is("""
-                        Failed assert count: ER <1> with AR <0> in MARIA_SCHEMA.USERS within 2 seconds
+        assertEquals("""
+                        Expected EXACTLY <1> records in table 'MARIA_SCHEMA.USERS', but got <0> within 2 seconds
                         Expected for:
                         [ID]
                         [5]
-                        Actual result(s)"""));
+                        Actual result(s):""",
+                exception.getMessage());
     }
 
     @Test
@@ -601,15 +594,14 @@ class MariaDbTests extends MariaDbSetup {
                                 },
                                 1));
 
-        MatcherAssert.assertThat(
-                "Exception on failed assert count in table(empty table) with custom timeout",
-                exception.getMessage(),
-                is("""
-                        Failed assert count: ER <1> with AR <0> in MARIA_SCHEMA.USERS within 600 milliseconds
+        assertEquals("""
+                        Expected EXACTLY <1> records in table 'MARIA_SCHEMA.USERS', but got <0> within 600 milliseconds
                         Expected for:
                         [ID]
                         [4]
-                        Actual result(s)"""));
+                        Actual result(s):""",
+                exception.getMessage(),
+                "Exception on failed assert count in table(empty table) with custom timeout");
     }
 
     @Test
@@ -622,12 +614,10 @@ class MariaDbTests extends MariaDbSetup {
                 db.withAwaitMs(500).seeRowsCountInTableExactlyCustom(TEST_TABLE, "where ID >7 AND DEPOSIT is null",
                         1));
 
-        MatcherAssert.assertThat(
-                "Exception on failed assert count in table(empty table) with custom condition & timeout",
-                exception.getMessage(),
-                is("""
-                        Failed assert count: ER <1> with AR <0> in MARIA_SCHEMA.USERS within 500 milliseconds
-                        where ID >7 AND DEPOSIT is null"""));
+        assertEquals("""
+                        Expected EXACTLY <1> records in table 'MARIA_SCHEMA.USERS', but got <0> within 500 milliseconds
+                        where ID >7 AND DEPOSIT is null""",
+                exception.getMessage());
     }
 
     @Test
@@ -641,15 +631,14 @@ class MariaDbTests extends MariaDbSetup {
                                 },
                                 1));
 
-        MatcherAssert.assertThat(
-                "Exception on failed assert count in table(empty table)",
-                exception.getMessage(),
-                is("""
-                        Failed assert count: ER <1> with AR <0> in MARIA_SCHEMA.USERS within 2 seconds
+        assertEquals("""
+                        Expected EXACTLY <1> records in table 'MARIA_SCHEMA.USERS', but got <0> within 2 seconds
                         Expected for:
                         [ID]
                         [(>=)5]
-                        Actual result(s)"""));
+                        Actual result(s):""",
+                exception.getMessage(),
+                "Exception on failed assert count in table(empty table)");
     }
 
     @Test
@@ -673,17 +662,17 @@ class MariaDbTests extends MariaDbSetup {
                                 },
                                 1));
 
-        MatcherAssert.assertThat(
-                "Exception on failed assert count in table(empty table)",
-                exception.getMessage(),
-                is("""
-                        Failed assert count: ER <1> with AR <0> in MARIA_SCHEMA.USERS within 2 seconds
+
+        assertEquals("""
+                        Expected EXACTLY <1> records in table 'MARIA_SCHEMA.USERS', but got <0> within 2 seconds
                         Expected for:
                         [ID, USERNAME]
                         [5, Stas]
-                        Actual result(s)
+                        Actual result(s):
                         [1, Alex]
-                        [2, Max]"""));
+                        [2, Max]""",
+                exception.getMessage(),
+                "Exception on failed assert count in table(empty table)");
     }
 
     @Test
@@ -692,8 +681,8 @@ class MariaDbTests extends MariaDbSetup {
         JsonNode result = AllureResultLoader.loadByTestName("checkConditionExceptionOnFilledTable");
 
         AllureAssert.assertThat(result)
-                .hasStep("(DB)[ASSERT] Count records in MARIA_SCHEMA.USERS where ID='5' AND USERNAME='Stas' EQUAL 1")
-                .hasAttachment("I see in table MARIA_SCHEMA.USERS", readTextFromFile("testdata/allure/attachments/failed1.html"));
+                .hasStep("(DB)[ASSERT] Table: 'MARIA_SCHEMA.USERS' contains EXACTLY <1> record/s where ID='5' AND USERNAME='Stas'")
+                .hasAttachment("Table 'MARIA_SCHEMA.USERS' data:", readTextFromFile("testdata/allure/attachments/failed1.html"));
     }
 
     @Test
@@ -716,17 +705,16 @@ class MariaDbTests extends MariaDbSetup {
                                         {"USERNAME", "Stas"},
                                 }));
 
-        MatcherAssert.assertThat(
-                "Exception on failed assert count in table(empty table)",
-                exception.getMessage(),
-                is("""
-                        Failed: record/s not found in <MARIA_SCHEMA.USERS> within 2 seconds
+        assertEquals("""
+                        Failed: no records found in table 'MARIA_SCHEMA.USERS' within 2 seconds
                         Expected for:
                         [ID, USERNAME]
                         [5, Stas]
-                        Actual result(s)
+                        Actual result(s):
                         [1, Alex]
-                        [2, Max]"""));
+                        [2, Max]""",
+                exception.getMessage(),
+                "Exception on failed assert exists in table(empty table)");
     }
 
     @Test
@@ -735,8 +723,8 @@ class MariaDbTests extends MariaDbSetup {
         JsonNode result = AllureResultLoader.loadByTestName("checkConditionExceptionExistsOnFilledTable");
 
         AllureAssert.assertThat(result)
-                .hasStep("(DB)[ASSERT] Record/s exists in MARIA_SCHEMA.USERS where ID='5' AND USERNAME='Stas'")
-                .hasAttachment("I see in table MARIA_SCHEMA.USERS", readTextFromFile("testdata/allure/attachments/failed1.html"));
+                .hasStep("(DB)[ASSERT] Table 'MARIA_SCHEMA.USERS' contains records where ID='5' AND USERNAME='Stas'")
+                .hasAttachment("Table 'MARIA_SCHEMA.USERS' data:", readTextFromFile("testdata/allure/attachments/failed1.html"));
     }
 
     @Test
@@ -784,31 +772,17 @@ class MariaDbTests extends MariaDbSetup {
                 StringContains.containsString("You have an error in your SQL syntax"));
     }
 
-    private static final String CI = System.getenv("CI");
-    private static final String PROPERTY = "bugreaperEnv";
-
-    String getCi(){
-        if(Objects.equals(CI, "true")){
-            return "jdbc:mariadb://docker:3307";
-        }else {
-            return  "jdbc:mariadb://localhost:3307";
-        }
-    }
 
     @Test
     void configAllFieldsTest() {
-        if(Objects.equals(CI, "true")){
-            System.setProperty(PROPERTY, "docker");
-        }else {
-            System.clearProperty(PROPERTY);
-        }
+
 
         dbConf.truncateTable(TEST_TABLE_FOR_TEMPLATE);
 
         dbConf.insertIntoTable(TEST_TABLE_FOR_TEMPLATE,
-            new Object[][]{
-                    {"ID", 2},
-        });
+                new Object[][]{
+                        {"ID", 2},
+                });
 
         //for second call
         MariaDb dbConf2 = MariaDb.getInstance();
@@ -826,12 +800,12 @@ class MariaDbTests extends MariaDbSetup {
         Assertions.assertEquals(String.format("""
                         MariaDb:
                             dbType=mariadb
-                            url=%s
+                            url=jdbc:mariadb://%s:3307
                             username=test_user
                             password=secret_pass
                             awaitMs=510
                             templatesPath=templates/mariadb/
-                        """, getCi()),
+                        """, CI_HOST),
                 dbConf2.getConfigSummary());
     }
 

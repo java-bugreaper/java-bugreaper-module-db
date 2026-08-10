@@ -48,9 +48,9 @@ repositories {
 }
 
 dependencies {
-    api 'net.bugreaper:core:1.4.1'
+    api 'net.bugreaper:core:1.4.3'
 
-    api 'com.zaxxer:HikariCP:5.1.0'
+    api 'com.zaxxer:HikariCP:7.1.0'
 
     testImplementation 'org.apiguardian:apiguardian-api:1.1.2'
 
@@ -69,6 +69,9 @@ dependencies {
     testImplementation 'com.microsoft.sqlserver:mssql-jdbc:12.4.2.jre11'
     testImplementation "org.testcontainers:testcontainers-mssqlserver:2.0.5"
 
+    testImplementation "com.clickhouse:clickhouse-jdbc:0.9.7"
+    testImplementation "org.testcontainers:testcontainers-clickhouse:2.0.5"
+
 }
 
 test {
@@ -79,7 +82,7 @@ test {
 
     testLogging {
         events("PASSED", "FAILED", "SKIPPED")
-//        showStandardStreams = true
+        showStandardStreams = true
         exceptionFormat = "full"
     }
 

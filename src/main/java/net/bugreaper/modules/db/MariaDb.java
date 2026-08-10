@@ -5,13 +5,19 @@ import net.bugreaper.modules.db.jdbc.JdbcExecutor;
 
 
 /**
- * Class for interacting with MariaDB
+ * MariaDb helper that provides a common API for operating with MariaDb.
  *
- * <p>For one instance run recommended: {@code MariaDb db = MariaDb.getInstance()}</p>
+ * <p>It is recommended to use a single instance:
+ * {@code MariaDb db = MariaDb.getInstance();}
+ * </p>
  *
- * <p>Contains methods for:</p>
- * asserts with await, change data (create, update, clean)<br>
- * more info {@link JdbcExecutor}
+ * <p>Provides:</p>
+ * <ul>
+ *     <li>Assertions with await support</li>
+ *     <li>Data manipulation operations such as create, update, and clean</li>
+ * </ul>
+ *
+ * <p>For more information, see {@link JdbcExecutor}.</p>
  */
 public class MariaDb extends JdbcExecutor<MariaDb> {
 
@@ -45,8 +51,10 @@ public class MariaDb extends JdbcExecutor<MariaDb> {
      * <p>
      * This implementation is thread-safe using method-level synchronization.
      *
-     * @return the singleton instance of {@link MariaDb}
+     * @return the shared instance of {@link MariaDb}
      * @see #MariaDb() config setup
+     *
+     * @throws IllegalArgumentException if the configuration contains invalid values
      */
     public static synchronized MariaDb getInstance() {
         if (instance == null) {
@@ -57,7 +65,7 @@ public class MariaDb extends JdbcExecutor<MariaDb> {
     }
 
     /**
-     * Constructs MariaDB client configuration.
+     * Constructs a MariaDB client using YAML configuration.
      *
      * <p>Loads configuration values from a YAML file.</p>
      * Example:

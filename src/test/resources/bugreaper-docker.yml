@@ -1,9 +1,9 @@
 modules:
   db:
     custom-db:
-      url: 'jdbc:mariadb://docker:3307'
-      username: test_user
-      password: secret_pass
+      url: 'jdbc:clickhouse://docker:8123/MYSCHEMA'
+      username: default
+      password: password
       await: 420 # optional
     mariadb:
       url: 'jdbc:mariadb://docker:3307'
@@ -16,9 +16,9 @@ modules:
       password: mysql_pass
       #await: 600 # optional
     postgresql:
-      url: 'jdbc:postgresql://localhost:5434/public'
-      username: test_user
-      password: test_pass
+      url: 'jdbc:postgresql://docker:5432/public?options=-c%20timezone=Europe/Kyiv'
+      username: postgres
+      password: postgres
       await: 200 # optional
     sqlserver:
       url: 'jdbc:sqlserver://docker:1435;encrypt=false'

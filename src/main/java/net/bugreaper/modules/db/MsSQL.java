@@ -6,13 +6,19 @@ import io.qameta.allure.Step;
 import org.apache.commons.lang3.StringUtils;
 
 /**
- * Class for interacting with MsSql
+ * MsSQL helper that provides a common API for operating with MsSQL.
  *
- * <p>For one instance run recommended: {@code MsSQL db = MsSQL.getInstance()}</p>
+ * <p>It is recommended to use a single instance:
+ * {@code MsSQL db = MsSQL.getInstance();}
+ * </p>
  *
- * <p>Contains methods for:</p>
- * asserts with await, change data (create, update, clean)<br>
- * more info {@link JdbcExecutor}
+ * <p>Provides:</p>
+ * <ul>
+ *     <li>Assertions with await support</li>
+ *     <li>Data manipulation operations such as create, update, and clean</li>
+ * </ul>
+ *
+ * <p>For more information, see {@link JdbcExecutor}.</p>
  */
 public class MsSQL extends JdbcExecutor<MsSQL> {
 
@@ -42,12 +48,14 @@ public class MsSQL extends JdbcExecutor<MsSQL> {
     }
 
     /**
-     * Returns the singleton instance of {@link MsSQL} with config builder {@link #MsSQL()}.
+     * Returns the instance of {@link MsSQL} with config builder {@link #MsSQL()}.
      * <p>
      * This implementation is thread-safe using method-level synchronization.
      *
-     * @return the singleton instance of {@link MsSQL}
+     * @return the shared instance of {@link MsSQL}
      * @see #MsSQL() config setup
+     *
+     * @throws IllegalArgumentException if the configuration contains invalid values
      */
     public static synchronized MsSQL getInstance() {
         if (instance == null) {
@@ -58,7 +66,7 @@ public class MsSQL extends JdbcExecutor<MsSQL> {
     }
 
     /**
-     * Constructs MsSQL client configuration.
+     * Constructs a MsSQL client using YAML configuration.
      *
      * <p>Loads configuration values from a YAML file.</p>
      * Example:
@@ -78,13 +86,13 @@ public class MsSQL extends JdbcExecutor<MsSQL> {
     }
 
     @Override
-    @Step("Rename table {tableName}")
+    @Step("(DB) Rename table '{tableName}'")
     public void renameTable(String tableName) {
         jdbc.sqlExecute("EXEC sp_rename '" + tableName + "', '" + StringUtils.substringAfter(tableName, ".") + "_X_'");
     }
 
     @Override
-    @Step("Rollback table {tableName}")
+    @Step("(DB) Rollback renamed table '{tableName}'")
     public void rollbackTable(String tableName) {
         jdbc.sqlExecute("EXEC sp_rename '" + tableName + "_X_', '" + StringUtils.substringAfter(tableName, ".") + "'");
     }

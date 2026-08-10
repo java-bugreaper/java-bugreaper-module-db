@@ -11,13 +11,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import testcontainers.MySqlDbSetup;
 
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 import static java.lang.Thread.sleep;
-import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static testcontainers.DockerSetup.CI_HOST;
 
 @SuppressWarnings({"squid:S2699", "java:S5778"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS) //To call connection once!
@@ -408,10 +407,8 @@ class MySqlDbTests extends MySqlDbSetup {
                         {"ROLES", "user"},
                 }));
 
-        MatcherAssert.assertThat(
-                "Exception on failed show by condition (record exists assert)",
-                exception.getMessage(),
-                is("No records in MYSQL_SCHEMA.USERS by conditions: where ROLES='user'"));
+        assertEquals("Failed: no records found in table 'MYSQL_SCHEMA.USERS' where ROLES='user'",
+                exception.getMessage());
     }
 
     @Test
@@ -420,10 +417,8 @@ class MySqlDbTests extends MySqlDbSetup {
         Throwable exception = assertThrows(AssertionError.class, () ->
                 db.seeRowsCountInTableExactly(TEST_TABLE, 1));
 
-        MatcherAssert.assertThat(
-                "Exception on failed assert count in table(empty table)",
-                exception.getMessage(),
-                is("Failed assert count: ER <1> with AR <0> in MYSQL_SCHEMA.USERS within 2 seconds"));
+        assertEquals("Expected EXACTLY <1> records in table 'MYSQL_SCHEMA.USERS', but got <0> within 2 seconds",
+                exception.getMessage());
     }
 
     @Test
@@ -437,10 +432,8 @@ class MySqlDbTests extends MySqlDbSetup {
         Throwable exception = assertThrows(AssertionError.class, () ->
                 db.seeRowsCountInTableExactly(TEST_TABLE, 2));
 
-        MatcherAssert.assertThat(
-                "Exception on failed assert count in table(filled table)",
-                exception.getMessage(),
-                is("Failed assert count: ER <2> with AR <1> in MYSQL_SCHEMA.USERS within 2 seconds"));
+        assertEquals("Expected EXACTLY <2> records in table 'MYSQL_SCHEMA.USERS', but got <1> within 2 seconds",
+                exception.getMessage());
     }
 
     @Test
@@ -458,10 +451,8 @@ class MySqlDbTests extends MySqlDbSetup {
         Throwable exception = assertThrows(AssertionError.class, () ->
                 db.withAwaitMs(500).seeRowsCountInTableExactly(TEST_TABLE, 1));
 
-        MatcherAssert.assertThat(
-                "Exception on failed assert count in table(filled table) with custom timeout",
-                exception.getMessage(),
-                is("Failed assert count: ER <1> with AR <2> in MYSQL_SCHEMA.USERS within 500 milliseconds"));
+        assertEquals("Expected EXACTLY <1> records in table 'MYSQL_SCHEMA.USERS', but got <2> within 500 milliseconds",
+                exception.getMessage());
     }
 
     @Test
@@ -475,15 +466,13 @@ class MySqlDbTests extends MySqlDbSetup {
                                 },
                                 1));
 
-        MatcherAssert.assertThat(
-                "Exception on failed assert count in table(empty table) with custom timeout",
-                exception.getMessage(),
-                is("""
-                        Failed assert count: ER <1> with AR <0> in MYSQL_SCHEMA.USERS within 2 seconds
+        assertEquals("""
+                        Expected EXACTLY <1> records in table 'MYSQL_SCHEMA.USERS', but got <0> within 2 seconds
                         Expected for:
                         [ID]
                         [5]
-                        Actual result(s)"""));
+                        Actual result(s):""",
+                exception.getMessage());
     }
 
     @Test
@@ -497,15 +486,13 @@ class MySqlDbTests extends MySqlDbSetup {
                                 },
                                 1));
 
-        MatcherAssert.assertThat(
-                "Exception on failed assert count in table(empty table) with custom timeout",
-                exception.getMessage(),
-                is("""
-                        Failed assert count: ER <1> with AR <0> in MYSQL_SCHEMA.USERS within 600 milliseconds
+        assertEquals("""
+                        Expected EXACTLY <1> records in table 'MYSQL_SCHEMA.USERS', but got <0> within 600 milliseconds
                         Expected for:
                         [ID]
                         [4]
-                        Actual result(s)"""));
+                        Actual result(s):""",
+                exception.getMessage());
     }
 
     @Test
@@ -518,12 +505,10 @@ class MySqlDbTests extends MySqlDbSetup {
                 db.withAwaitMs(500).seeRowsCountInTableExactlyCustom(TEST_TABLE, "where ID >7 AND DEPOSIT is null",
                         1));
 
-        MatcherAssert.assertThat(
-                "Exception on failed assert count in table(empty table) with custom condition & timeout",
-                exception.getMessage(),
-                is("""
-                        Failed assert count: ER <1> with AR <0> in MYSQL_SCHEMA.USERS within 500 milliseconds
-                        where ID >7 AND DEPOSIT is null"""));
+        assertEquals("""
+                        Expected EXACTLY <1> records in table 'MYSQL_SCHEMA.USERS', but got <0> within 500 milliseconds
+                        where ID >7 AND DEPOSIT is null""",
+                exception.getMessage());
     }
 
     @Test
@@ -537,15 +522,13 @@ class MySqlDbTests extends MySqlDbSetup {
                                 },
                                 1));
 
-        MatcherAssert.assertThat(
-                "Exception on failed assert count in table(empty table)",
-                exception.getMessage(),
-                is("""
-                        Failed assert count: ER <1> with AR <0> in MYSQL_SCHEMA.USERS within 2 seconds
+        assertEquals("""
+                        Expected EXACTLY <1> records in table 'MYSQL_SCHEMA.USERS', but got <0> within 2 seconds
                         Expected for:
                         [ID]
                         [(>=)5]
-                        Actual result(s)"""));
+                        Actual result(s):""",
+                exception.getMessage());
     }
 
     @Test
@@ -571,17 +554,15 @@ class MySqlDbTests extends MySqlDbSetup {
                                 },
                                 1));
 
-        MatcherAssert.assertThat(
-                "Exception on failed assert count in table(empty table)",
-                exception.getMessage(),
-                is("""
-                        Failed assert count: ER <1> with AR <0> in MYSQL_SCHEMA.USERS within 2 seconds
+        assertEquals("""
+                        Expected EXACTLY <1> records in table 'MYSQL_SCHEMA.USERS', but got <0> within 2 seconds
                         Expected for:
                         [ID, USERNAME, IS_ACTIVE]
                         [5, Stas, true]
-                        Actual result(s)
+                        Actual result(s):
                         [1, Alex, false]
-                        [2, Max, true]"""));
+                        [2, Max, true]""",
+                exception.getMessage());
     }
 
     @Test
@@ -655,24 +636,8 @@ class MySqlDbTests extends MySqlDbSetup {
         });
     }
 
-    private static final String CI = System.getenv("CI");
-    private static final String PROPERTY = "bugreaperEnv";
-
-    String getCi(){
-        if(Objects.equals(CI, "true")){
-            return "jdbc:mysql://docker:3308";
-        }else {
-            return  "jdbc:mysql://localhost:3308";
-        }
-    }
-
     @Test
     void configRequiredFieldsTest() {
-        if(Objects.equals(CI, "true")){
-            System.setProperty(PROPERTY, "docker");
-        }else {
-            System.clearProperty(PROPERTY);
-        }
 
         dbConf.truncateTable(TEST_TABLE_FOR_TEMPLATE);
 
@@ -697,12 +662,12 @@ class MySqlDbTests extends MySqlDbSetup {
         assertEquals(String.format("""
                         MySQL:
                             dbType=mysql
-                            url=%s
+                            url=jdbc:mysql://%s:3308
                             username=mysql_user
                             password=mysql_pass
                             awaitMs=2000
                             templatesPath=templates/mysql/
-                        """, getCi()),
+                        """, CI_HOST),
                 dbConf2.getConfigSummary());
     }
 

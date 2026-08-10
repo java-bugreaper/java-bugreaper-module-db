@@ -18,9 +18,9 @@ import java.util.concurrent.CompletableFuture;
 
 import static java.lang.Thread.sleep;
 import static net.bugreaper.core.filereaders.FileReader.readTextFromFile;
-import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static testcontainers.DockerSetup.CI_HOST;
 
 @SuppressWarnings({"squid:S2699", "java:S5778"})
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -28,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class PostgresDbTests extends PostgresDbSetup {
 
     protected static final PostgreSQL db = getPostgresDb();
+    protected static final PostgreSQL dbConf = PostgreSQL.getInstance();
     protected static final PostgreSQL dbAwait = getPostgresDb().setAwaitMs(1000);
 
     protected static final String TEST_TABLE = "public.users";
@@ -61,6 +62,12 @@ class PostgresDbTests extends PostgresDbSetup {
         AllureResultLoader.cleanResultsDir();
     }
 
+    @AfterAll
+    static void shutDown() {
+        DB_CONTAINER.stop();
+    }
+
+
     @BeforeEach
     void cleanTables() {
         db.truncateTable(TEST_TABLE);
@@ -81,7 +88,7 @@ class PostgresDbTests extends PostgresDbSetup {
         MatcherAssert.assertThat(
                 "Exception on failed when wrong case (may be in postgres) given to sql request",
                 exception.getMessage(),
-                StringStartsWith.startsWith("No columns for allure in result after:"));
+                StringStartsWith.startsWith("No columns for allure attachment in result after:"));
     }
 
     @Test
@@ -160,8 +167,8 @@ class PostgresDbTests extends PostgresDbSetup {
         JsonNode result = AllureResultLoader.loadByTestName("templateFileInsertTest");
 
         AllureAssert.assertThat(result)
-                .hasStep("(DB)[ASSERT] Records exists in public.temp: where ID=2")
-                .hasAttachment("I see in table public.temp",  readTextFromFile("testdata/allure/attachments/postrges_show.html"));
+                .hasStep("(DB) Show data from table 'public.temp' where ID=2")
+                .hasAttachment("Table 'public.temp' data:",  readTextFromFile("testdata/allure/attachments/postrges_show.html"));
     }
 
     @Test
@@ -246,28 +253,27 @@ class PostgresDbTests extends PostgresDbSetup {
                                 },
                                 1));
 
-        MatcherAssert.assertThat(
-                "Exception on failed assert count in table(empty table) with custom timeout",
-                exception.getMessage(),
-                is("""
-                        Failed assert count: ER <1> with AR <0> in public.users within 600 milliseconds
+        assertEquals("""
+                        Expected EXACTLY <1> records in table 'public.users', but got <0> within 600 milliseconds
                         Expected for:
                         [ID]
                         [4]
-                        Actual result(s)"""));
+                        Actual result(s):""",
+                exception.getMessage());
     }
 
     @Test
     void runFromFile() {
-        db.truncateTable(TEST_TABLE2);
 
-        db.runScriptFromFile("dump/test_script_postgres.sql");
+        dbConf.truncateTable(TEST_TABLE2);
 
-        db.showDataByCondition(TEST_TABLE2, new Object[][]{
+        dbConf.runScriptFromFile("dump/test_script_postgres.sql");
+
+        dbConf.showDataByCondition(TEST_TABLE2, new Object[][]{
                 {"USERNAME", "Alex1"},
         });
 
-        db.showDataByCondition(TEST_TABLE2, new Object[][]{
+        dbConf.showDataByCondition(TEST_TABLE2, new Object[][]{
                 {"USERNAME", "Anna2"},
         });
     }
@@ -313,7 +319,7 @@ class PostgresDbTests extends PostgresDbSetup {
                 db.seeTableIsEmpty(TEST_TABLE));
 
         assertEquals("""
-                        Failed assert count: ER <0> with AR <1> in public.users within 2 seconds""",
+                        Expected EXACTLY <0> records in table 'public.users', but got <1> within 2 seconds""",
                 exception.getMessage(),
                 "Exception on seeTableIsEmpty");
 
@@ -342,11 +348,11 @@ class PostgresDbTests extends PostgresDbSetup {
                         }));
 
         assertEquals("""
-                        Failed: record/s not found in <public.users> within 1 second
+                        Failed: no records found in table 'public.users' within 1 second
                         Expected for:
                         [ID, USERNAME, IS_ACTIVE, DESCRIPTION, AMOUNT, PERCENTAGE]
                         [1, Pupkin2, false, descr, 15.55, 16.99]
-                        Actual result(s)
+                        Actual result(s):
                         [222, Pupkin2, false, null, 15.00, 16.000]""",
                 exception.getMessage(),
                 "Exception on seeRecordExistsInTable");
@@ -359,7 +365,7 @@ class PostgresDbTests extends PostgresDbSetup {
                 dbAwait.seeRecordExistsInTableCustom(TEST_TABLE, ""));
 
         assertEquals("""
-                        Failed: record/s not found in public.users within 1 second""",
+                        Failed: no records found in in table 'public.users' within 1 second""",
                 exception.getMessage(),
                 "Exception on seeRecordExistsInTable with empty conditions");
     }
@@ -375,7 +381,7 @@ class PostgresDbTests extends PostgresDbSetup {
                 dbAwait.seeRecordExistsInTableCustom(TEST_TABLE, "where ID=15"));
 
         assertEquals("""
-                        Failed: record/s not found in public.users within 1 second
+                        Failed: no records found in table 'public.users' within 1 second
                         where ID=15""",
                 exception.getMessage(),
                 "Exception on seeRecordExistsInTable with string conditions");
@@ -470,22 +476,40 @@ class PostgresDbTests extends PostgresDbSetup {
                                 {"ID", 2},
                         }));
 
-        MatcherAssert.assertThat(
-                "No template file in resources",
-                exception.getMessage(),
-                StringContains.containsString("File not exist in resources: templates/postgresql/NOT_EXISTS.TABLE.json"));
+        assertEquals(
+                "File does not exist in resources: templates/postgresql/NOT_EXISTS.TABLE.json",
+                exception.getMessage());
 
     }
 
     @Test
     void wrongConfigConnect() {
 
-        Throwable exception = assertThrows(HikariPool.PoolInitializationException.class, PostgreSQL::new);
+        Throwable exception = assertThrows(HikariPool.PoolInitializationException.class, () ->
+                new PostgreSQL("jdbc:postgresql://localhost:5434/public", "test", "test"));
 
         MatcherAssert.assertThat(
                 exception.getMessage(),
                 StringContains.containsString("Connection to localhost:5434 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections"));
 
+    }
+
+
+    @Test
+    void configAllFieldsTest() {
+
+        PostgreSQL dbConf2 = PostgreSQL.getInstance();
+
+        Assertions.assertEquals(String.format("""
+                        PostgreSQL:
+                            dbType=postgresql
+                            url=jdbc:postgresql://%s:5432/public?options=-c%%20timezone=Europe/Kyiv
+                            username=postgres
+                            password=postgres
+                            awaitMs=200
+                            templatesPath=templates/postgresql/
+                        """, CI_HOST),
+                dbConf2.getConfigSummary());
     }
 
 }

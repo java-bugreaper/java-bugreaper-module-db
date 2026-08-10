@@ -33,7 +33,7 @@ public class QueryConditionsBuilderOracle extends QueryConditionsBuilder{
      * Used for Oracle Date\DateTime select conditions
      *
      * @param conditionsArray array with conditions:
-     *                        Oracle(Date\DateTime) {column, operator, date, enum}
+     *                        Oracle(Date\DateTime) {column, operator, date, oracle-enum}
      *                        <p>
      *                        Oracle:
      *                        <p>{"COLUMN NAME", ">= ", "2020-01-01", "DATE"} will build: COLUMN NAME" >= TO_DATE('2022-01-01’, 'YYYY-MM-DD')

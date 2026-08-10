@@ -5,17 +5,12 @@ import net.bugreaper.modules.db.exceptions.QueryBuilderException;
 import net.bugreaper.modules.db.exceptions.SqlExecuteException;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.core.StringContains;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.*;
 import testcontainers.MsSqlDbSetup;
 
-import java.util.Objects;
-
-import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static testcontainers.DockerSetup.CI_HOST;
 
 @SuppressWarnings({"squid:S2699", "java:S5778"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS) //To call connection once!
@@ -60,6 +55,11 @@ class MsSqlDbTests extends MsSqlDbSetup {
     @BeforeAll
     static void clean() {
         AllureResultLoader.cleanResultsDir();
+    }
+
+    @AfterAll
+    static void shutDown() {
+        DB_CONTAINER.stop();
     }
 
     @BeforeEach
@@ -345,10 +345,8 @@ class MsSqlDbTests extends MsSqlDbSetup {
                         {"ROLES", "user"},
                 }));
 
-        MatcherAssert.assertThat(
-                "Exception on failed show by condition (record exists assert)",
-                exception.getMessage(),
-                is("No records in test_schema.users by conditions: where ROLES='user'"));
+        assertEquals("Failed: no records found in table 'test_schema.users' where ROLES='user'",
+                exception.getMessage());
     }
 
     @Test
@@ -357,10 +355,9 @@ class MsSqlDbTests extends MsSqlDbSetup {
         Throwable exception = assertThrows(AssertionError.class, () ->
                 db.seeRowsCountInTableExactly(TEST_TABLE, 1));
 
-        MatcherAssert.assertThat(
-                "Exception on failed assert count in table(empty table)",
-                exception.getMessage(),
-                is("Failed assert count: ER <1> with AR <0> in test_schema.users within 2 seconds"));
+        assertEquals("Expected EXACTLY <1> records in table 'test_schema.users', but got <0> within 2 seconds",
+                exception.getMessage());
+
     }
 
     @Test
@@ -374,10 +371,8 @@ class MsSqlDbTests extends MsSqlDbSetup {
         Throwable exception = assertThrows(AssertionError.class, () ->
                 db.seeRowsCountInTableExactly(TEST_TABLE, 2));
 
-        MatcherAssert.assertThat(
-                "Exception on failed assert count in table(filled table)",
-                exception.getMessage(),
-                is("Failed assert count: ER <2> with AR <1> in test_schema.users within 2 seconds"));
+        assertEquals("Expected EXACTLY <2> records in table 'test_schema.users', but got <1> within 2 seconds",
+                exception.getMessage());
     }
 
     @Test
@@ -395,10 +390,9 @@ class MsSqlDbTests extends MsSqlDbSetup {
         Throwable exception = assertThrows(AssertionError.class, () ->
                 db.withAwaitMs(500).seeRowsCountInTableExactly(TEST_TABLE, 1));
 
-        MatcherAssert.assertThat(
-                "Exception on failed assert count in table(filled table) with custom timeout",
-                exception.getMessage(),
-                is("Failed assert count: ER <1> with AR <2> in test_schema.users within 500 milliseconds"));
+        assertEquals("""
+                        Expected EXACTLY <1> records in table 'test_schema.users', but got <2> within 500 milliseconds""",
+                exception.getMessage());
     }
 
     @Test
@@ -412,15 +406,13 @@ class MsSqlDbTests extends MsSqlDbSetup {
                                 },
                                 1));
 
-        MatcherAssert.assertThat(
-                "Exception on failed assert count in table(empty table) with custom timeout",
-                exception.getMessage(),
-                is("""
-                        Failed assert count: ER <1> with AR <0> in test_schema.users within 2 seconds
+        assertEquals("""
+                        Expected EXACTLY <1> records in table 'test_schema.users', but got <0> within 2 seconds
                         Expected for:
                         [ID]
                         [5]
-                        Actual result(s)"""));
+                        Actual result(s):""",
+                exception.getMessage());
     }
 
     @Test
@@ -434,15 +426,13 @@ class MsSqlDbTests extends MsSqlDbSetup {
                                 },
                                 1));
 
-        MatcherAssert.assertThat(
-                "Exception on failed assert count in table(empty table) with custom timeout",
-                exception.getMessage(),
-                is("""
-                        Failed assert count: ER <1> with AR <0> in test_schema.users within 600 milliseconds
+        assertEquals("""
+                        Expected EXACTLY <1> records in table 'test_schema.users', but got <0> within 600 milliseconds
                         Expected for:
                         [ID]
                         [4]
-                        Actual result(s)"""));
+                        Actual result(s):""",
+                exception.getMessage());
     }
 
     @Test
@@ -455,23 +445,19 @@ class MsSqlDbTests extends MsSqlDbSetup {
                 db.withAwaitMs(500).seeRowsCountInTableExactlyCustom(TEST_TABLE, "where ID >7 AND DEPOSIT is null",
                         1));
 
-        MatcherAssert.assertThat(
-                "Exception on failed assert count in table(empty table) with custom condition & timeout",
-                exception.getMessage(),
-                is("""
-                        Failed assert count: ER <1> with AR <0> in test_schema.users within 500 milliseconds
-                        where ID >7 AND DEPOSIT is null"""));
+        assertEquals("""
+                        Expected EXACTLY <1> records in table 'test_schema.users', but got <0> within 500 milliseconds
+                        where ID >7 AND DEPOSIT is null""",
+                exception.getMessage());
 
         Throwable exception2 = assertThrows(AssertionError.class, () ->
                 db.seeRowsCountInTableExactlyCustom(TEST_TABLE, "where ID >7 AND DEPOSIT is null",
                         1));
 
-        MatcherAssert.assertThat(
-                "Exception on failed assert count in table(empty table) with custom condition & timeout",
-                exception2.getMessage(),
-                is("""
-                        Failed assert count: ER <1> with AR <0> in test_schema.users within 2 seconds
-                        where ID >7 AND DEPOSIT is null"""));
+        assertEquals("""
+                        Expected EXACTLY <1> records in table 'test_schema.users', but got <0> within 2 seconds
+                        where ID >7 AND DEPOSIT is null""",
+                exception2.getMessage());
     }
 
     @Test
@@ -485,15 +471,13 @@ class MsSqlDbTests extends MsSqlDbSetup {
                                 },
                                 1));
 
-        MatcherAssert.assertThat(
-                "Exception on failed assert count in table(empty table)",
-                exception.getMessage(),
-                is("""
-                        Failed assert count: ER <1> with AR <0> in test_schema.users within 2 seconds
+        assertEquals("""
+                        Expected EXACTLY <1> records in table 'test_schema.users', but got <0> within 2 seconds
                         Expected for:
                         [ID]
                         [(>=)5]
-                        Actual result(s)"""));
+                        Actual result(s):""",
+                exception.getMessage());
     }
 
     @Test
@@ -519,17 +503,15 @@ class MsSqlDbTests extends MsSqlDbSetup {
                                 },
                                 1));
 
-        MatcherAssert.assertThat(
-                "Exception on failed assert count in table(empty table)",
-                exception.getMessage(),
-                is("""
-                        Failed assert count: ER <1> with AR <0> in test_schema.users within 2 seconds
+        assertEquals("""
+                        Expected EXACTLY <1> records in table 'test_schema.users', but got <0> within 2 seconds
                         Expected for:
                         [ID, USERNAME, IS_ACTIVE]
                         [5, Stas, 1]
-                        Actual result(s)
+                        Actual result(s):
                         [1, Alex, false]
-                        [2, Max, true]"""));
+                        [2, Max, true]""",
+                exception.getMessage());
     }
 
     @Test
@@ -596,36 +578,21 @@ class MsSqlDbTests extends MsSqlDbSetup {
                         }));
 
         assertEquals("""
-                        Failed: record/s not found in <test_schema.users> within 2 seconds
+                        Failed: no records found in table 'test_schema.users' within 2 seconds
                         Expected for:
                         [ID, USERNAME, IS_ACTIVE, DEPOSIT]
                         [1, Pupkin2, 0, 777]
-                        Actual result(s)
+                        Actual result(s):
                         [222, Pupkin2, false, null]""",
                 exception.getMessage(),
                 "Exception on seeRecordExistsInTable");
     }
 
-    private static final String CI = System.getenv("CI");
-    private static final String PROPERTY = "bugreaperEnv";
+
     private static final String TEST_TABLE_FOR_TEMPLATE = "test_schema.temp";
-
-
-    String getCi() {
-        if (Objects.equals(CI, "true")) {
-            return "jdbc:sqlserver://docker:1435;encrypt=false";
-        } else {
-            return "jdbc:sqlserver://localhost:1435;encrypt=false";
-        }
-    }
 
     @Test
     void configAllFieldsTest() {
-        if (Objects.equals(CI, "true")) {
-            System.setProperty(PROPERTY, "docker");
-        } else {
-            System.clearProperty(PROPERTY);
-        }
 
         dbConf.truncateTable(TEST_TABLE_FOR_TEMPLATE);
 
@@ -633,7 +600,6 @@ class MsSqlDbTests extends MsSqlDbSetup {
                 new Object[][]{
                         {"ID", 2},
                 });
-
 
         //for second call
         MsSQL dbConf2 = MsSQL.getInstance();
@@ -650,12 +616,12 @@ class MsSqlDbTests extends MsSqlDbSetup {
         assertEquals(String.format("""
                         MsSQL:
                             dbType=sqlserver
-                            url=%s
+                            url=jdbc:sqlserver://%s:1435;encrypt=false
                             username=sa
                             password=YourStrong(!)Password
                             awaitMs=250
                             templatesPath=templates/sqlserver/
-                        """, getCi()),
+                        """, CI_HOST),
                 dbConf2.getConfigSummary());
     }
 }

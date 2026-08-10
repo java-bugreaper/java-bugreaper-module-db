@@ -36,7 +36,7 @@ public class DataSource {
 
     private HikariConfig getHikariConfig(String dbUrl, String username, String passwd, String dbType) {
         HikariConfig config = new HikariConfig();
-        config.setPoolName(username + System.currentTimeMillis());
+        config.setPoolName(dbType + "_" + System.currentTimeMillis());
 
         config.setJdbcUrl(dbUrl);
         config.setUsername(username);

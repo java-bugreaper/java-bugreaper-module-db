@@ -154,7 +154,7 @@ public class QueryBuilder {
 
         // template mapping
         final Object[][] valuesArray = templateMapper(templateArray, providedArray);
-        attachTableForDb("Inserted in table " + tableName, valuesArray);
+        attachTableForDb("Inserted record:", valuesArray);
 
         StringJoiner columns = new StringJoiner(", ", "(", ")");
         StringJoiner values = new StringJoiner(", ", "(", ")");
