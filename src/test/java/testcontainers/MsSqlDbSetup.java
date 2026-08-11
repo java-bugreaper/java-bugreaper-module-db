@@ -9,11 +9,18 @@ import org.testcontainers.mssqlserver.MSSQLServerContainer;
 
 import java.util.Optional;
 
+import static testcontainers.DockerSetup.printVersion;
+import static testcontainers.DockerSetup.resolveDockerImage;
+
 
 public class MsSqlDbSetup {
 
-    //"mcr.microsoft.com/mssql/server:2022-CU20-ubuntu-22.04" 2025+ support JSON
-    private static final MSSQLServerContainer DB_CONTAINER = new MSSQLServerContainer("mcr.microsoft.com/mssql/server:2025-RC1-ubuntu-24.04")
+    private static final String STABLE_VERSION = "mcr.microsoft.com/mssql/server:2022-CU26-ubuntu-22.04";
+    private static final String LATEST_VERSION = "mcr.microsoft.com/mssql/server:2025-CU7-ubuntu-22.04"; // 2025+ support JSON
+
+    private static final String DOCKER_IMAGE = resolveDockerImage(STABLE_VERSION, LATEST_VERSION);
+
+    public static final MSSQLServerContainer DB_CONTAINER = new MSSQLServerContainer(DOCKER_IMAGE)
             .acceptLicense()
             .withPassword("YourStrong(!)Password")
             .withExposedPorts(1433)
@@ -30,10 +37,20 @@ public class MsSqlDbSetup {
 
                 cmd.withHostConfig(hc);
             })
-            .withInitScript("dump/mssql_setup.sql");
+            .withInitScript(getDumpVersion());
 
     static {
+        printVersion(DOCKER_IMAGE);
         DB_CONTAINER.start();
+    }
+
+    static String getDumpVersion() {
+        String dockerVersion = System.getProperty("dockerTestVersion");
+
+        if ("latest".equalsIgnoreCase(dockerVersion)) {
+            return "dump/mssql_setup.sql"; //2025+ support JSONS
+        }
+        return "dump/mssql_setup_nojson.sql";
     }
 
     public static MsSQL getMssqlDb() {

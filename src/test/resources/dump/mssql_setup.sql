@@ -1,10 +1,4 @@
-DROP TABLE IF EXISTS test_schema.drivers;
-DROP SCHEMA IF EXISTS test_schema;
-
-IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'Test')
-  BEGIN
-    EXEC ('CREATE SCHEMA test_schema;');
-  END;
+CREATE SCHEMA test_schema;
 
 
 CREATE TABLE test_schema.users (

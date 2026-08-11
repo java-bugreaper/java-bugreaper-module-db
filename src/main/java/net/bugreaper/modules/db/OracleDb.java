@@ -7,13 +7,19 @@ import org.apache.commons.lang3.StringUtils;
 
 
 /**
- * Class for interacting with OracleDb
+ * OracleDb helper that provides a common API for operating with OracleDb.
  *
- * <p>For one instance run recommended: {@code Kafka OracleDb db = OracleDb.getInstance()}</p>
+ * <p>It is recommended to use a single instance:
+ * {@code OracleDb db = OracleDb.getInstance();}
+ * </p>
  *
- * <p>Contains methods for:</p>
- * asserts with await, change data (create, update, clean)<br>
- * more info {@link JdbcExecutor}
+ * <p>Provides:</p>
+ * <ul>
+ *     <li>Assertions with await support</li>
+ *     <li>Data manipulation operations such as create, update, and clean</li>
+ * </ul>
+ *
+ * <p>For more information, see {@link JdbcExecutor}.</p>
  */
 public final class OracleDb extends JdbcExecutor<OracleDb> {
 
@@ -48,12 +54,14 @@ public final class OracleDb extends JdbcExecutor<OracleDb> {
     }
 
     /**
-     * Returns the singleton instance of {@link OracleDb} with config builder {@link #OracleDb()}.
+     * Returns the instance of {@link OracleDb} with config builder {@link #OracleDb()}.
      * <p>
      * This implementation is thread-safe using method-level synchronization.
      *
-     * @return the singleton instance of {@link OracleDb}
+     * @return the shared instance of {@link OracleDb}
      * @see #OracleDb() config setup
+     *
+     * @throws IllegalArgumentException if the configuration contains invalid values
      */
     public static synchronized OracleDb getInstance() {
         if (instance == null) {
@@ -64,7 +72,7 @@ public final class OracleDb extends JdbcExecutor<OracleDb> {
     }
 
     /**
-     * Constructs OracleDb client configuration.
+     * Constructs an OracleDb client using YAML configuration.
      *
      * <p>Loads configuration values from a YAML file.</p>
      * Example:
@@ -84,13 +92,13 @@ public final class OracleDb extends JdbcExecutor<OracleDb> {
     }
 
     @Override
-    @Step("Rename table {tableName}")
+    @Step("(DB) Rename table '{tableName}'")
     public void renameTable(String tableName) {
         jdbc.sqlExecute("ALTER TABLE " + tableName + " RENAME TO " + StringUtils.substringAfter(tableName, ".") + "_X_");
     }
 
     @Override
-    @Step("Rollback table {tableName}")
+    @Step("(DB) Rollback renamed table '{tableName}'")
     public void rollbackTable(String tableName) {
         jdbc.sqlExecute("ALTER TABLE " + tableName + "_X_ RENAME TO " + StringUtils.substringAfter(tableName, "."));
     }

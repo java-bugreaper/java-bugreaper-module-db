@@ -22,19 +22,20 @@ public interface SqlPost {
     /**
      * Merge arrays with data for insert into table
      * <p><b>Wrap this method with table name and template to provide only providedArray</b>
+     * 
+     * <p>example:
+     * <pre>
+     * tableName: "schema.table1"
+     * templateArray {{"id", 2}, {"name", "Alex"}, {"age", 21}, {"fee", "33.05"}}
+     * providedArray {{"name", "Nikita"}, {"fee", null}}
      *
-     * <p>
-     * example:<br>
-     * tableName: "schema.table1"<br>
-     * templateArray {{"id", 2}, {"name", "Alex"}, {"age", 21}, {"fee", "33.05"}}<br>
-     * providedArray {{"name", "Nikita"}, {"fee", null}}<br>
-     *
-     * result:<br>
-     * INSERT INTO schema.table1<br>
-     * (id, name, age, fee)<br>
+     * result:
+     * INSERT INTO schema.table1
+     * (id, name, age, fee)
      * VALUES(2, 'Nikita', 21, null)
+     * </pre>
      *
-     * @param tableName     schema_name.table_name
+     * @param tableName     table name in the format {@code schema_name.table_name}
      * @param templateArray Object[][] with template {{"column1", "value1"},...}
      * @param providedArray Object[][] with test data for merge {{"column1", "test_value1"},...}<br>
      * <b>NOTE:</b> for oracleDb dateTime insert supported 3 elements {"CREATE_DATE", "2020-01-01 10:00:00", "TIMESTAMP"}<br>
@@ -72,7 +73,7 @@ public interface SqlPost {
      * <b>NOTE:</b> for oracleDb dateTime insert supported 3 elements in json {"CREATE_DATE:TIMESTAMP", "2020-01-01 10:00:00"}<br>
      *                      CREATE_DATE = TO_DATE('2020-01-01 10:00:00', 'YYYY-MM-DD HH24:MI:SS'),<br>
      *
-     * @param tableName     schema_name.table_name
+     * @param tableName     table name in the format {@code schema_name.table_name}
      * @param providedArray Object[][] with test data for merge {{"column1", "test_value1"},...}<br>
      * <b>NOTE:</b> for oracleDb dateTime insert supported 3 elements {"CREATE_DATE", "2020-01-01 10:00:00", "TIMESTAMP"}<br>
      *                      CREATE_DATE = TO_DATE('2020-01-01 10:00:00', 'YYYY-MM-DD HH24:MI:SS'),
@@ -108,7 +109,7 @@ public interface SqlPost {
      * (id, name, age, fee)<br>
      * VALUES(2, 'Nikita', 21, null)<br>
      *
-     * @param tableName     schema_name.table_name
+     * @param tableName     table name in the format {@code schema_name.table_name}
      * @param providedJson String with json to merge """{"column1": "test_value1", ...}"""<br>
      * <b>NOTE:</b> for oracleDb dateTime insert supported 3 elements in json {"CREATE_DATE:TIMESTAMP", "2020-01-01 10:00:00"}<br>
      *                      CREATE_DATE = TO_DATE('2020-01-01 10:00:00', 'YYYY-MM-DD HH24:MI:SS'),<br>
@@ -116,73 +117,75 @@ public interface SqlPost {
     void insertIntoTable(String tableName, String providedJson);
 
     /**
-     * Execute sql script from file
-     * used for init db on test startUp
+     * Executes an SQL script from a file.
      *
-     * @param path path to file in resources
+     * <p>Used to initialize the database at test startup or in other cases.</p>
+     *
+     * @param path path to the file in test resources
      */
     void runScriptFromFile(String path);
 
     /**
-     * Execute sql script manual
-     * used for manual scripts (not recommended)
+     * Executes the specified SQL script manually.
      *
-     * @param script hardcode SQL script
+     * <p>Used for manual scripts and not recommended for regular test operations.</p>
+     *
+     * @param script hardcoded SQL script
      */
     void runScript(String script);
 
     /**
-     * Truncate(clean) table
+     * Truncates the table.
      *
-     * @param tableName schema_name.table_name
+     * @param tableName table name in the format {@code schema_name.table_name}
      */
     void truncateTable(String tableName);
 
     /**
-     * Truncate(clean) tables
+     * Truncates the tables.
      *
      * @param tablesNames list of tables
      */
     void truncateTables(String... tablesNames);
 
     /**
-     * Delete all records in table
+     * Deletes all records from the table.
      *
-     * @param tableName schema_name.table_name
+     * @param tableName table name in the format {@code schema_name.table_name}
      */
     void deleteFromTable(String tableName);
 
     /**
-     * Delete from table by conditions
+     * Deletes all records from the table matching the specified conditions (in an Object[][] array).
      *
-     * @param tableName       schema_name.table_name
+     * @param tableName       table name in the format {@code schema_name.table_name}
      * @param conditionsArray Object[][] {{"column1", "value1"},...}
      */
     void deleteFromTable(String tableName,
                          Object[][] conditionsArray);
 
     /**
-     * Delete from table by conditions
+     * Deletes all records from the table matching the specified conditions (hardcoded SQL condition string).
      *
-     * @param tableName  schema_name.table_name
+     * @param tableName  table name in the format {@code schema_name.table_name}
      * @param conditions String "where id=1"
      */
     void deleteFromTable(String tableName,
                          String conditions);
 
     /**
-     * Update all records in table
+     * Updates all records in the table.
      *
-     * @param tableName schema_name.table_name
-     * @param setArray  Object[][] {{"column1", "value1"},...}
+     * @param tableName table name in the format {@code schema_name.table_name}
+     * @param setArray  values to update in the format {@code {{"column1", "value1"}, ...}}
      */
     void updateTable(String tableName,
                      Object[][] setArray);
 
     /**
-     * Update records in table by conditions
+     * Updates all records in the table matching the specified conditions (in an Object[][] array).
      *
-     * @param tableName       schema_name.table_name
+     * @param tableName       table name in the format {@code schema_name.table_name}
      * @param setArray        Object[][] {{"column1", "value1"},...}
      * @param conditionsArray Object[][] {{"column1", "value1"},...}
      */
@@ -191,26 +194,27 @@ public interface SqlPost {
                      Object[][] conditionsArray);
 
     /**
-     * Update records in table by conditions
+     * Updates all records in the table matching the specified conditions (hardcoded SQL condition string).
      *
-     * @param tableName  schema_name.table_name
+     * @param tableName  table name in the format {@code schema_name.table_name}
      * @param conditions String "SET USERNAME='Alex' where ID=5"
      */
     void updateTable(String tableName,
                      String conditions);
 
     /**
-     * Rename table(add suffix "_X_")
-     * <p><b>Note:</b> After test rollback with {@link #rollbackTable}.
+     * Renames the specified table by adding the {@code "_X_"} suffix.
      *
-     * @param tableName  schema_name.table_name
+     * <p><b>Note:</b> Roll back the table name after the test using {@link #rollbackTable}.</p>
+     *
+     * @param tableName table name in the format {@code schema_name.table_name}
      */
     void renameTable(String tableName);
 
     /**
-     * Rollback table(remove suffix "_X_") after {@link #renameTable}
+     * Rolls back the table name by removing the {@code "_X_"} suffix added by {@link #renameTable}.
      *
-     * @param tableName  schema_name.table_name
+     * @param tableName table name in the format {@code schema_name.table_name}
      */
     void rollbackTable(String tableName);
 

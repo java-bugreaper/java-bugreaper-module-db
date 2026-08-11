@@ -6,13 +6,19 @@ import net.bugreaper.modules.db.jdbc.JdbcExecutor;
 import org.apache.commons.lang3.StringUtils;
 
 /**
- * Class for interacting with PostgreSQL
+ * PostgreSQL helper that provides a common API for operating with PostgreSQL.
  *
- * <p>For one instance run recommended: {@code PostgreSQL db = PostgreSQL.getInstance()}</p>
+ * <p>It is recommended to use a single instance:
+ * {@code PostgreSQL db = PostgreSQL.getInstance();}
+ * </p>
  *
- * <p>Contains methods for:</p>
- * asserts with await, change data (create, update, clean)<br>
- * more info {@link JdbcExecutor}
+ * <p>Provides:</p>
+ * <ul>
+ *     <li>Assertions with await support</li>
+ *     <li>Data manipulation operations such as create, update, and clean</li>
+ * </ul>
+ *
+ * <p>For more information, see {@link JdbcExecutor}.</p>
  */
 public class PostgreSQL extends JdbcExecutor<PostgreSQL> {
 
@@ -42,12 +48,14 @@ public class PostgreSQL extends JdbcExecutor<PostgreSQL> {
     }
 
     /**
-     * Returns the singleton instance of {@link PostgreSQL} with config builder {@link #PostgreSQL()}.
+     * Returns the instance of {@link PostgreSQL} with config builder {@link #PostgreSQL()}.
      * <p>
      * This implementation is thread-safe using method-level synchronization.
      *
-     * @return the singleton instance of {@link PostgreSQL}
+     * @return the shared instance of {@link PostgreSQL}
      * @see #PostgreSQL() config setup
+     *
+     * @throws IllegalArgumentException if the configuration contains invalid values
      */
     public static synchronized PostgreSQL getInstance() {
         if (instance == null) {
@@ -58,7 +66,7 @@ public class PostgreSQL extends JdbcExecutor<PostgreSQL> {
     }
 
     /**
-     * Constructs OracleDb client configuration.
+     * Constructs a PostgreSQL client using YAML configuration.
      *
      * <p>Loads configuration values from a YAML file.</p>
      * Example:
@@ -82,19 +90,19 @@ public class PostgreSQL extends JdbcExecutor<PostgreSQL> {
      *
      * @param tableName schema_name.table_name
      */
-    @Step("Truncate table {tableName} CASCADE")
+    @Step("(DB) Truncate table '{tableName}' CASCADE")
     public void truncateTableCascade(String tableName) {
         jdbc.sqlExecute("TRUNCATE TABLE " + tableName + " CASCADE");
     }
 
     @Override
-    @Step("Rename table {tableName}")
+    @Step("(DB) Rename table '{tableName}'")
     public void renameTable(String tableName) {
         jdbc.sqlExecute("ALTER TABLE " + StringUtils.substringAfter(tableName, ".") + " RENAME TO " + StringUtils.substringAfter(tableName, ".") + "_X_");
     }
 
     @Override
-    @Step("Rollback table {tableName}")
+    @Step("(DB) Rollback renamed table '{tableName}'")
     public void rollbackTable(String tableName) {
         jdbc.sqlExecute("ALTER TABLE " + StringUtils.substringAfter(tableName, ".") + "_X_ RENAME TO " + StringUtils.substringAfter(tableName, "."));
     }

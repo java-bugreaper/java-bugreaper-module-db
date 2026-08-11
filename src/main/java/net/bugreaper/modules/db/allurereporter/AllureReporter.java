@@ -20,7 +20,7 @@ public class AllureReporter {
      * @param query sql query
      */
     public static void executeQueryReporter(String query) {
-        Allure.addAttachment("execute sql with", TYPE_TEXT, query + ";");
+        Allure.addAttachment("Execute SQL:", TYPE_TEXT, query + ";");
     }
 
 

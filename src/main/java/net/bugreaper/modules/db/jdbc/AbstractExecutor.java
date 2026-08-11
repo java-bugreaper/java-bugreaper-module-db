@@ -43,7 +43,7 @@ abstract class AbstractExecutor {
     protected AbstractExecutor() {
     }
 
-    @Step("(DB)[ASSERT] Count records in {tableName} {conditions} EQUAL {expectedCount}")
+    @Step("(DB)[ASSERT] Table: '{tableName}' contains EXACTLY <{expectedCount}> record/s {conditions}")
     protected void assertCountInTableBuilder(String tableName,
                                              String conditions,
                                              @Param(mode = HIDDEN) Object[][] conditionsArray,
@@ -53,9 +53,9 @@ abstract class AbstractExecutor {
         var query = MessageFormat.format("SELECT COUNT(*) as {0} FROM {1} {2}",
                 COUNT, tableName, conditions);
 
-        AllureReporter.attachTableForDb("Expected in table " + tableName, conditionsArray);
+        AllureReporter.attachTableForDb("Expected record:", conditionsArray);
 
-        Allure.addAttachment("execute sql with", "text/plain", query + ";");
+        Allure.addAttachment("Execute SQL:", "text/plain", query + ";");
 
         try {
             await().with()
@@ -71,19 +71,21 @@ abstract class AbstractExecutor {
 
                 var extendLog = extendedLogBuilder(tableName, conditionsArray);
 
-                throw new AssertionError(MessageFormat.format("Failed assert count: ER <{0}> with AR <{1}> in {2} within {3}\n{4}",
-                        expectedCount, jdbc.getSqlResultForCount(query, COUNT), tableName, formatMilliseconds(awaitMs), extendLog));
+                throw new AssertionError(
+                        "Expected EXACTLY <%s> records in table '%s', but got <%s> within %s%n%s"
+                                .formatted(expectedCount, tableName, jdbc.getSqlResultForCount(query, COUNT), formatMilliseconds(awaitMs), extendLog));
             } else if (!Objects.equals(conditions, "")) {
-                throw new AssertionError(MessageFormat.format("Failed assert count: ER <{0}> with AR <{1}> in {2} within {3}\n{4}",
-                        expectedCount, jdbc.getSqlResultForCount(query, COUNT), tableName, formatMilliseconds(awaitMs), conditions));
+                throw new AssertionError(
+                        "Expected EXACTLY <%s> records in table '%s', but got <%s> within %s%n%s"
+                                .formatted(expectedCount, tableName, jdbc.getSqlResultForCount(query, COUNT), formatMilliseconds(awaitMs), conditions));
             }
-
-            throw new AssertionError(MessageFormat.format("Failed assert count: ER <{0}> with AR <{1}> in {2} within {3}",
-                    expectedCount, jdbc.getSqlResultForCount(query, COUNT), tableName, formatMilliseconds(awaitMs)));
+            throw new AssertionError(
+                    "Expected EXACTLY <%s> records in table '%s', but got <%s> within %s"
+                            .formatted(expectedCount, tableName, jdbc.getSqlResultForCount(query, COUNT), formatMilliseconds(awaitMs)));
         }
     }
 
-    @Step("(DB)[ASSERT] Record/s exists in {tableName} {conditions}")
+    @Step("(DB)[ASSERT] Table '{tableName}' contains records {conditions}")
     protected void recordExistsBuilder(String tableName,
                                        String conditions,
                                        @Param(mode = HIDDEN) Object[][] conditionsArray,
@@ -92,9 +94,9 @@ abstract class AbstractExecutor {
         var query = MessageFormat.format("SELECT COUNT(*) as {0} FROM {1} {2}",
                 COUNT, tableName, conditions);
 
-        AllureReporter.attachTableForDb("Expected in table " + tableName, conditionsArray);
+        AllureReporter.attachTableForDb("Expected record:", conditionsArray);
 
-        Allure.addAttachment("execute sql with", "text/plain", query + ";");
+        Allure.addAttachment("Execute SQL:", "text/plain", query + ";");
 
         try {
             await().with()
@@ -108,25 +110,26 @@ abstract class AbstractExecutor {
 
                 var extendLog = extendedLogBuilder(tableName, conditionsArray);
 
-                throw new AssertionError(MessageFormat.format("Failed: record/s not found in <{0}> within {1}\n{2}",
-                        tableName, formatMilliseconds(awaitMs), extendLog));
+                throw new AssertionError(
+                        "Failed: no records found in table '%s' within %s%n%s"
+                                .formatted(tableName, formatMilliseconds(awaitMs), extendLog));
             } else if (!Objects.equals(conditions, "")) {
-                throw new AssertionError(MessageFormat.format("Failed: record/s not found in {0} within {1}\n{2}",
-                        tableName, formatMilliseconds(awaitMs), conditions));
+                throw new AssertionError(
+                        "Failed: no records found in table '%s' within %s%n%s"
+                                .formatted(tableName, formatMilliseconds(awaitMs), conditions));
             }
-
-            throw new AssertionError(MessageFormat.format("Failed: record/s not found in {0} within {1}",
-                    tableName, formatMilliseconds(awaitMs)));
+            throw new AssertionError(
+                    "Failed: no records found in in table '%s' within %s"
+                            .formatted(tableName, formatMilliseconds(awaitMs)));
         }
     }
 
     /**
-     * Create console log for visualise difference
-     * between AR and ER
+     * Creates a console log to visualize the difference between AR and ER.
      *
-     * @param tableName       name of table with schema
-     * @param conditionsArray Object[][] with conditions {{"ID", "1"}, {"NAME", "Alex"}}
-     * @return string with exception (columns from test with ER and all rows from table ordered by columns)
+     * @param tableName       table name in the format {@code schema_name.table_name}
+     * @param conditionsArray conditions in Object[][] format {@code {{"ID", "1"}, {"NAME", "Alex"}} }
+     * @return string containing the exception details, including all table records ordered by the testing columns
      */
     private String extendedLogBuilder(String tableName, Object[][] conditionsArray) {
 
@@ -174,7 +177,7 @@ abstract class AbstractExecutor {
 
         //  Create Log
         return "Expected for:\n" + Arrays.toString(columnsName) + "\n" + expectFor +
-                "\nActual result(s)" + dataRows;
+                "\nActual result(s):" + dataRows;
     }
 
 
@@ -183,7 +186,7 @@ abstract class AbstractExecutor {
 
         if (columnsArray.length == 0) {
             throw new JdbcExecutorException(
-                    MessageFormat.format("No columns for allure in result after:\n{0}", columnRequest(tableName)
+                    MessageFormat.format("No columns for allure attachment in result after:\n{0}", columnRequest(tableName)
                     ));
         }
 
@@ -196,7 +199,7 @@ abstract class AbstractExecutor {
         String[] columnsArray = getTableColumns(tableName);
 
         if (columnsArray.length == 0 && log.isWarnEnabled()) {
-            log.warn("No columns for allure in result after:\n{}", columnRequest(tableName));
+            log.warn("No columns for allure attachment in result after:\n{}", columnRequest(tableName));
         } else {
 
             Object[] resultArray = jdbc.getSqlResultList(SELECT_ALL + tableName, columnsArray).toArray(Object[]::new);
@@ -204,7 +207,7 @@ abstract class AbstractExecutor {
         }
     }
 
-    @Step("(DB)[ASSERT] Records exists in {tableName}: {conditions}")
+    @Step("(DB) Show data from table '{tableName}' {conditions}")
     protected void seeInDbByCondMethod(String tableName, String conditions) {
 
         String[] columnsArray = getTableColumns(tableName);
@@ -212,16 +215,17 @@ abstract class AbstractExecutor {
 
         if (resultArray.length == 0) {
             showDataFromTableMethod(tableName);
-            throw new AssertionError("No records in " + tableName + " by conditions: " + conditions);
+            throw new AssertionError("Failed: no records found in table '%s' %s".formatted(tableName, conditions));
         }
 
         reportHtmlTableAllBuilder(tableName, columnsArray, resultArray);
     }
 
     /**
-     * Get array with table column list
-     * @param tableName table name
-     * @return  Strings... with columns names
+     * Returns the list of columns in the table.
+     *
+     * @param tableName table name in the format {@code schema_name.table_name}
+     * @return array containing column names
      */
     protected String[] getTableColumns(String tableName) {
 

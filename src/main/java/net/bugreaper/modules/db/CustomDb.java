@@ -5,9 +5,11 @@ import net.bugreaper.modules.db.jdbc.JdbcExecutor;
 
 
 /**
- * Class for interacting with custom DB (that not supported by default)
+ * CustomDb helper that provides a common API for operating with SQL-database that is not yet fully supported.
  *
- * <p>For one instance run recommended: {@code CustomDb db = CustomDb.getInstance()}</p>
+ * <p>It is recommended to use a single instance:
+ * {@code CustomDb db = CustomDb.getInstance();}
+ * </p>
  *
  * Supports only basic features:
  * <ul>
@@ -17,9 +19,13 @@ import net.bugreaper.modules.db.jdbc.JdbcExecutor;
  *   <li>Specific conditions(JSON_*, REGEX) not supported (only basic conditions)</li>
  * </ul>
  *
- * <p>Contains methods for:</p>
- * asserts with await, change data (create, update, clean)<br>
- * more info {@link JdbcExecutor}
+ * <p>Provides:</p>
+ * <ul>
+ *     <li>Assertions with await support</li>
+ *     <li>Data manipulation operations such as create, update, and clean</li>
+ * </ul>
+ *
+ * <p>For more information, see {@link JdbcExecutor}.</p>
  */
 public class CustomDb extends JdbcExecutor<CustomDb> {
 
@@ -42,16 +48,18 @@ public class CustomDb extends JdbcExecutor<CustomDb> {
                 username,
                 passwd,
                 GET_COLUMNS,
-                DbTypes.MARIA_DB);
+                DbTypes.CUSTOM_DB);
     }
 
     /**
-     * Returns the singleton instance of {@link CustomDb} with config builder {@link #CustomDb()}.
+     * Returns the instance of {@link CustomDb} with config builder {@link #CustomDb()}.
      * <p>
      * This implementation is thread-safe using method-level synchronization.
      *
-     * @return the singleton instance of {@link CustomDb}
+     * @return the shared instance of {@link CustomDb}
      * @see #CustomDb() config setup
+     *
+     * @throws IllegalArgumentException if the configuration contains invalid values
      */
     public static synchronized CustomDb getInstance() {
         if (instance == null) {
@@ -62,7 +70,7 @@ public class CustomDb extends JdbcExecutor<CustomDb> {
     }
 
     /**
-     * Constructs custom database (that not yet supported) client configuration.
+     * Constructs a CustomDb client for a database that is not yet fully supported, using YAML configuration.
      *
      * <p>Loads configuration values from a YAML file.</p>
      * Example:

@@ -253,11 +253,10 @@ class QueryBuilderNegativeTest {
                                                 {"id": 2, "text": "test",}"""},
                 }));
 
-        MatcherAssert.assertThat(
-                "Exception with wrong JSON in db assert (WITH COMA)",
-                exception.getMessage(),
-                StringContains.containsString("Invalid strict JSON/JSONArray:"));
-
+        assertEquals("""
+                        Invalid JSON or JSON array format (strict):
+                        {"id": 2, "text": "test",}""",
+                exception.getMessage());
     }
 
     @Test

@@ -29,7 +29,6 @@ import static net.bugreaper.modules.db.mapper.JsonToArrayMapper.jsonToObjectArra
 public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractExecutor implements SqlPost, SqlGet, SqlConfig<T> {
 
 
-
     private static final String YML_KEY = "modules.db.";
     private static final String DELETE_FROM = "DELETE FROM %s %s";
 
@@ -91,11 +90,11 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
      *     <li>{@code modules.db.{dbType}.await}</li>
      * </ul>
      *
-     * @param dbType the database type identifier values of {@link DbTypes} (e.g., "mariadb", "custom-db");
+     * @param dbType          the database type identifier values of {@link DbTypes} (e.g., "mariadb", "custom-db");
      * @param getColumnsQuery query to get all columns names from table;
      *
-     * <p>Missing required keys will result in configuration errors.
-     * Missing optional keys will fall back to predefined defaults.</p>
+     *                        <p>Missing required keys will result in configuration errors.
+     *                        Missing optional keys will fall back to predefined defaults.</p>
      */
     protected JdbcExecutor(DbTypes dbType, String getColumnsQuery) {
 
@@ -162,13 +161,13 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
     @Override
     public String getConfigSummary() {
         String info = String.format("""
-        %s:
-            dbType=%s
-            url=%s
-            username=%s
-            password=%s
-            awaitMs=%d
-            templatesPath=%s%n""",
+                        %s:
+                            dbType=%s
+                            url=%s
+                            username=%s
+                            password=%s
+                            awaitMs=%d
+                            templatesPath=%s%n""",
                 this.getClass().getSimpleName(), dbTypeKey, url, username, password,
                 awaitMs, templatesPath);
 
@@ -182,7 +181,7 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
                                 Object[][] templateArray,
                                 Object[][] providedArray) {
 
-        Allure.step("(DB) Insert into table " + tableName + " record: " + Arrays.deepToString(providedArray),
+        Allure.step("(DB) Insert into table '%s' record: %s".formatted(tableName, Arrays.deepToString(providedArray)),
                 (Allure.ThrowableContextRunnableVoid<Allure.StepContext>) step ->
                         jdbc.sqlExecute(qb.sqlInsertBuilder(tableName, templateArray, providedArray))
         );
@@ -203,7 +202,7 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
                 providedArray);
     }
 
-   @Override
+    @Override
     public void insertIntoTable(String tableName,
                                 String providedJson) {
 
@@ -213,7 +212,7 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
     }
 
     @Override
-    @Step("(DB) run script from file {path}")
+    @Step("(DB) Run script from file '{path}'")
     public void runScriptFromFile(String path) {
 
         attachFromFileNoStep(path, path);
@@ -224,13 +223,13 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
     }
 
     @Override
-    @Step("(DB) {script}")
+    @Step("(DB) Run SQL script: {script}")
     public void runScript(String script) {
         jdbc.sqlExecute(script);
     }
 
     @Override
-    @Step("(DB) Truncate table {tableName}")
+    @Step("(DB) Truncate table '{tableName}'")
     public void truncateTable(String tableName) {
         jdbc.sqlExecute("TRUNCATE TABLE " + tableName);
     }
@@ -247,35 +246,36 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
     @Override
     public void updateTable(String tableName, Object[][] setArray) {
 
-        Allure.step("(DB)UPDATE " + tableName + " " + Arrays.deepToString(setArray), (Allure.ThrowableContextRunnableVoid<Allure.StepContext>) step ->
-                jdbc.sqlExecute(String.format("UPDATE %s %s", tableName, qb.sqlSetBuilder(setArray)))
+        Allure.step("(DB) UPDATE table '%s' SET: %s".formatted(tableName, Arrays.deepToString(setArray)),
+                (Allure.ThrowableContextRunnableVoid<Allure.StepContext>) step ->
+                        jdbc.sqlExecute(String.format("UPDATE %s %s", tableName, qb.sqlSetBuilder(setArray)))
         );
     }
 
     @Override
     public void updateTable(String tableName, Object[][] setArray, Object[][] conditionsArray) {
 
-        Allure.step("(DB)UPDATE " + tableName + " " + Arrays.deepToString(setArray),
+        Allure.step("(DB) UPDATE table '%s' SET: %s WHERE: %s".formatted(tableName, Arrays.deepToString(setArray), Arrays.deepToString(conditionsArray)),
                 (Allure.ThrowableContextRunnableVoid<Allure.StepContext>) step ->
                         jdbc.sqlExecute(String.format("UPDATE %s %s %s", tableName, qb.sqlSetBuilder(setArray), qb.sqlConditionBuilder(conditionsArray)))
         );
     }
 
     @Override
-    @Step("(DB) Delete from {tableName} {conditions}")
+    @Step("(DB) Delete from table '{tableName}' {conditions}")
     public void updateTable(String tableName, String conditions) {
         jdbc.sqlExecute(String.format("UPDATE %s %s", tableName, conditions));
     }
 
     @Override
-    @Step("(DB) Delete from {tableName}")
+    @Step("(DB) Delete from table '{tableName}'")
     public void deleteFromTable(String tableName) {
         jdbc.sqlExecute("DELETE FROM " + tableName);
     }
 
     @Override
     public void deleteFromTable(String tableName, Object[][] conditionsArray) {
-        Allure.step("(DB) Delete from " + tableName + " " + Arrays.deepToString(conditionsArray),
+        Allure.step("(DB) Delete from table '%s' WHERE: %s".formatted(tableName, Arrays.deepToString(conditionsArray)),
                 (Allure.ThrowableContextRunnableVoid<Allure.StepContext>) step ->
                         jdbc.sqlExecute(String.format(DELETE_FROM,
                                 tableName, qb.sqlConditionBuilder(conditionsArray)))
@@ -283,19 +283,19 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
     }
 
     @Override
-    @Step("(DB) Delete from {tableName} {conditions}")
+    @Step("(DB) Delete from table '{tableName}' {conditions}")
     public void deleteFromTable(String tableName, String conditions) {
         jdbc.sqlExecute(String.format(DELETE_FROM, tableName, conditions));
     }
 
     @Override
-    @Step("(DB) Rename table {tableName}")
+    @Step("(DB) Rename table '{tableName}'")
     public void renameTable(String tableName) {
         jdbc.sqlExecute("RENAME TABLE " + tableName + " TO " + tableName + "_X_");
     }
 
     @Override
-    @Step("(DB) Rollback renamed table {tableName}")
+    @Step("(DB) Rollback renamed table '{tableName}'")
     public void rollbackTable(String tableName) {
         jdbc.sqlExecute("RENAME TABLE " + tableName + "_X_ TO " + tableName);
     }
@@ -365,14 +365,14 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
     }
 
 
-    @Step("(DB) Show data from table {tableName}")
+    @Step("(DB) Show data from table '{tableName}'")
     public void showDataFromTable(String tableName) {
         showDataFromTableMethod(tableName);
     }
 
 
-    private int await(){
-        if (specificAwaitMs.get() != 0 ) {
+    private int await() {
+        if (specificAwaitMs.get() != 0) {
             int result = specificAwaitMs.get();
             specificAwaitMs.remove();
             return result;

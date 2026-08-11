@@ -1,17 +1,12 @@
 package net.bugreaper.modules.db;
 
 import net.bugreaper.core.utils.AllureResultLoader;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.*;
 import testcontainers.OracleDbSetup;
-
-
-import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static testcontainers.DockerSetup.CI_HOST;
 
 @SuppressWarnings("squid:S2699")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS) //To call connection once!
@@ -25,6 +20,22 @@ class OracleDbTests extends OracleDbSetup {
     private static final String TEST_TABLE2 = "ORACLE_SCHEMA_2.COUNTRIES";
     private static final String TEST_FOR_RENAME = "ORACLE_SCHEMA.USERS";
     private static final String TEST_FOR_TEMPLATE = "ORACLE_SCHEMA.TEMP";
+
+
+    @BeforeAll
+    static void clean() {
+        AllureResultLoader.cleanResultsDir();
+    }
+
+    @AfterAll
+    static void shutDown() {
+        DB_CONTAINER.stop();
+    }
+
+    @BeforeEach
+    void cleanTables() {
+        db.truncateTable(TEST_TABLE);
+    }
 
 
     public void insertIntoGoods(Object[][] testArray) {
@@ -72,29 +83,18 @@ class OracleDbTests extends OracleDbSetup {
                         });
     }
 
-    private static final String CI = System.getenv("CI");
-    private static final String PROPERTY = "bugreaperEnv";
-
-    String getCi(){
-        if(Objects.equals(CI, "true")){
-            return "jdbc:oracle:thin:@docker:1521/xepdb1";
-        }else {
-            return  "jdbc:oracle:thin:@localhost:1521/xepdb1";
-        }
-    }
-
     @Test
     void getConfigSummaryTest() {
 
         assertEquals(String.format("""
                         OracleDb:
                             dbType=oracle
-                            url=%s
+                            url=jdbc:oracle:thin:@%s:1521/xepdb1
                             username=ADMIN
                             password=ADMIN
                             awaitMs=500
                             templatesPath=templates/oracle/
-                        """, getCi()),
+                        """, CI_HOST),
                 db.getConfigSummary());
     }
 
@@ -157,13 +157,6 @@ class OracleDbTests extends OracleDbSetup {
 
     @Test
     void configAllFieldsTest() {
-        if(Objects.equals(CI, "true")){
-            System.setProperty(PROPERTY, "docker");
-        }else {
-            System.clearProperty(PROPERTY);
-        }
-
-
 
         dbConf.truncateTable(TEST_FOR_TEMPLATE);
 
@@ -189,23 +182,13 @@ class OracleDbTests extends OracleDbSetup {
         assertEquals(String.format("""
                         OracleDb:
                             dbType=oracle
-                            url=%s
+                            url=jdbc:oracle:thin:@%s:1521/xepdb1
                             username=ADMIN
                             password=ADMIN
                             awaitMs=300
                             templatesPath=templates/oracle/
-                        """, getCi()),
+                        """, CI_HOST),
                 dbConf2.getConfigSummary());
-    }
-
-    @BeforeAll
-    static void clean() {
-        AllureResultLoader.cleanResultsDir();
-    }
-
-    @BeforeEach
-    void cleanTables() {
-        db.truncateTable(TEST_TABLE);
     }
 
     @Test
@@ -265,11 +248,11 @@ class OracleDbTests extends OracleDbSetup {
                         }));
 
         assertEquals("""
-                        Failed: record/s not found in <ORACLE_SCHEMA.GOODS> within 500 milliseconds
+                        Failed: no records found in table 'ORACLE_SCHEMA.GOODS' within 500 milliseconds
                         Expected for:
                         [ID, NAME, PRICE]
                         [2, good2, 175]
-                        Actual result(s)
+                        Actual result(s):
                         [1, good1, 175.99]""",
                 exception.getMessage(),
                 "Exception on seeRecordExistsInTable");
@@ -291,11 +274,11 @@ class OracleDbTests extends OracleDbSetup {
                         }));
 
         assertEquals("""
-                        Failed: record/s not found in <ORACLE_SCHEMA.GOODS> within 500 milliseconds
+                        Failed: no records found in table 'ORACLE_SCHEMA.GOODS' within 500 milliseconds
                         Expected for:
                         [ID, CREATE_DATE]
                         [2, (=)2020-02-02 15:15:15]
-                        Actual result(s)
+                        Actual result(s):
                         [2, 2020-01-01 10:00:00.0]""",
                 exception.getMessage(),
                 "Exception on seeRecordExistsInTable");

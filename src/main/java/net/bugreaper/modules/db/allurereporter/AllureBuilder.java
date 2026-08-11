@@ -103,7 +103,7 @@ public class AllureBuilder {
         // Allure attachment
         var attachment = reportHtmlBuilder(columns, dataRows);
 
-        createHtmlAllureAttachment("I see in table " + tableName, attachment);
+        createHtmlAllureAttachment("Table '%s' data:".formatted(tableName), attachment);
 
         return attachment;
     }

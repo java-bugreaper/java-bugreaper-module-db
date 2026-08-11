@@ -1,0 +1,10 @@
+-- # create databases
+CREATE DATABASE IF NOT EXISTS MYSCHEMA;
+
+CREATE TABLE MYSCHEMA.TEMP (
+	ID UInt32,
+    NAME String,
+	AMOUNT Decimal64(4),
+	IS_ACTIVE Bool
+)
+ENGINE = Log;
