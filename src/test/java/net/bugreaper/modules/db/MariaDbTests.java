@@ -43,6 +43,7 @@ class MariaDbTests extends MariaDbSetup {
 
     @BeforeEach
     void setup() {
+        db.truncateTable(TEST_TABLE);
         logWatcher = new LogWatcher("bugreaper-module-db", Level.DEBUG);
     }
 
@@ -78,12 +79,6 @@ class MariaDbTests extends MariaDbSetup {
         };
 
         db.insertIntoTable(TEST_TABLE2, template, testArray);
-    }
-
-
-    @BeforeEach
-    void cleanTables() {
-        db.truncateTable(TEST_TABLE);
     }
 
     @Test
@@ -400,13 +395,12 @@ class MariaDbTests extends MariaDbSetup {
     }
 
     @Test
-    void createRecordJsonCheckCountAndData() {
-        var data = """
-                [{"id":1,"text":"test"}, {"id":2,"text":"test2"}]""";
+    void createRecordJsonContainsTest() {
 
         insertIntoUsers(new Object[][]{
                 {"ID", "1"},
-                {"DATA", data},
+                {"DATA", """
+                [{"id":1,"text":"test"}, {"id":2,"text":"test2"}]"""},
         });
         db.seeRowsCountInTableExactly(TEST_TABLE, 1);
         db.seeRowsCountInTableExactly
@@ -415,18 +409,29 @@ class MariaDbTests extends MariaDbSetup {
                                 {"ID", "1"},
                                 {"DATA", "JSON_CONTAINS", """
                                                     [{"id":1}]"""},
-                                {"ROLES", "manager"},
                         },
                         1);
+    }
+
+    @Test
+    void createRecordJsonEqualsTest() {
+
+        insertIntoUsers(new Object[][]{
+                {"ID", "1"},
+                {"DATA", """
+                [{"id":1,"text":"test"}, {"id":2,"text":"test2"}]"""},
+        });
+        db.seeRowsCountInTableExactly(TEST_TABLE, 1);
 
         db.seeRowsCountInTableExactly
                 (TEST_TABLE,
                         new Object[][]{
                                 {"ID", "1"},
-                                {"DATA", "JSON_EQUALS", data},
-                                {"ROLES", "manager"},
+                                {"DATA", "JSON_EQUALS", """
+                                    [{"id":1,"text":"test"}, {"text":"test2", "id":2}]"""},
                         },
                         1);
+
     }
 
     @Test
@@ -804,9 +809,89 @@ class MariaDbTests extends MariaDbSetup {
                             username=test_user
                             password=secret_pass
                             awaitMs=510
+                            awaitPollInterval=200
                             templatesPath=templates/mariadb/
+                            enableEnchantedReport=true
                         """, CI_HOST),
                 dbConf2.getConfigSummary());
+    }
+
+    // off enchanted report
+
+    @Test
+    @Order(11)
+    void checkConditionExceptionWithDisabledEnchantedReport() {
+
+        MariaDb dbNoEnch = getMariDb().setEnchantedReport(false).setAwaitMs(200);
+
+        insertIntoUsers(new Object[][]{
+                {"ID", "1"},
+                {"USERNAME", "Alex"},
+        });
+        insertIntoUsers(new Object[][]{
+                {"ID", "2"},
+                {"USERNAME", "Max"},
+        });
+
+        Throwable exception = assertThrows(AssertionError.class, () ->
+                dbNoEnch.seeRowsCountInTableExactly
+                        (TEST_TABLE,
+                                new Object[][]{
+                                        {"ID", "5"},
+                                        {"USERNAME", "Stas"},
+                                },
+                                1));
+
+
+        assertEquals("""
+                        Expected EXACTLY <1> records in table 'MARIA_SCHEMA.USERS', but got <0> within 200 milliseconds
+                        Expected for:
+                        [ID, USERNAME]
+                        [5, Stas]
+                        Actual result(s):
+                        enableEnchantedReport disabled: actual result was not requested.""",
+                exception.getMessage());
+
+
+        Throwable exception2 = assertThrows(AssertionError.class, () ->
+                dbNoEnch.seeRecordExistsInTable
+                        (TEST_TABLE,
+                                new Object[][]{
+                                        {"ID", "5"},
+                                        {"USERNAME", "Stas"},
+                                }));
+
+        assertEquals("""
+                        Failed: no records found in table 'MARIA_SCHEMA.USERS' within 200 milliseconds
+                        Expected for:
+                        [ID, USERNAME]
+                        [5, Stas]
+                        Actual result(s):
+                        enableEnchantedReport disabled: actual result was not requested.""",
+                exception2.getMessage());
+    }
+
+    @Test
+    @Order(12)
+    void checkConditionExceptionWithDisabledEnchantedReportAllureAssert() {
+        JsonNode result = AllureResultLoader.loadByTestName("checkConditionExceptionWithDisabledEnchantedReport");
+
+        Throwable exception = assertThrows(AssertionError.class, () ->
+                AllureAssert.assertThat(result)
+                        .hasStep("(DB)[ASSERT] Table: 'MARIA_SCHEMA.USERS' contains EXACTLY <1> record/s where ID='5' AND USERNAME='Stas'")
+                        .hasAttachment("Table 'MARIA_SCHEMA.USERS' data:"));
+
+        assertEquals("Attachment not found: Table 'MARIA_SCHEMA.USERS' data: ==> expected: <true> but was: <false>",
+                exception.getMessage());
+
+
+        Throwable exception2 = assertThrows(AssertionError.class, () ->
+                AllureAssert.assertThat(result)
+                        .hasStep("(DB)[ASSERT] Table 'MARIA_SCHEMA.USERS' contains records where ID='5' AND USERNAME='Stas'")
+                        .hasAttachment("Table 'MARIA_SCHEMA.USERS' data:"));
+
+        assertEquals("Attachment not found: Table 'MARIA_SCHEMA.USERS' data: ==> expected: <true> but was: <false>",
+                exception2.getMessage());
     }
 
 }

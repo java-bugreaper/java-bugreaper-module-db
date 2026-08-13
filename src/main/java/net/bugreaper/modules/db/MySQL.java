@@ -70,17 +70,20 @@ public class MySQL extends JdbcExecutor<MySQL> {
      * Example:
      * <p>{@code MySQL db = new MySQL();}</p>
      * <pre>
-     * mysql:
-     *   url: 'jdbc:mysql://localhost:3308'
-     *   username: user
-     *   password: pass
-     *   await: 1000 (optional)
+     * modules:
+     *   db:
+     *     mysql:
+     *       url: 'jdbc:mysql://localhost:3308'
+     *       username: user
+     *       password: pass
+     *       await: 1000 (optional)
+     *       enchanted-report: true # (optional)
      * </pre>
      *
-     * @see JdbcExecutor#JdbcExecutor(DbTypes dbType, String getColumnsQuery) JdbcExecutor
+     * @see JdbcExecutor#JdbcExecutor(DbTypes dbType, String getColumnsQuery, String suffix) JdbcExecutor
      */
     public MySQL() {
-        super(DbTypes.MY_SQL, GET_COLUMNS);
+        super(DbTypes.MY_SQL, GET_COLUMNS, "");
     }
 
 }

@@ -45,6 +45,7 @@ class OracleDbTests extends OracleDbSetup {
                 {"CATEGORY_ID", "1"},
                 {"NAME", "dummy_category"},
                 {"PRICE", "175"},
+                {"DATA", "{}"},
                 {"CREATE_DATE", "2020-01-01 10:00:00", "TIMESTAMP"},
                 {"UPDATE_DATE", "2020-01-01 11:00:00", "TIMESTAMP"},
         };
@@ -83,6 +84,44 @@ class OracleDbTests extends OracleDbSetup {
                         });
     }
 
+
+    @Test
+    void checkRegex() {
+        db.insertIntoTable(TEST_FOR_TEMPLATE,
+                new Object[][]{
+                        {"ID", 7134},
+                });
+
+        db.seeRecordExistsInTable
+                (TEST_FOR_TEMPLATE,
+                        new Object[][]{
+                                {"ID", "REGEX_MATCH", "[0-9]{4}"},
+                        });
+    }
+
+
+    @Test
+    void createRecordJsonEqualsTest() {
+
+        insertIntoGoods(
+                new Object[][]{
+                        {"ID", "1"},
+                        {"DATA", """
+                [{"id":1,"text":"test"}, {"id":2,"text":"test2"}]"""},
+                });
+
+        db.seeRowsCountInTableExactly(TEST_TABLE, 1);
+
+        db.seeRowsCountInTableExactly
+                (TEST_TABLE,
+                        new Object[][]{
+                                {"ID", "1"},
+                                {"DATA", "JSON_EQUALS", """
+                                    [{"text":"test", "id":1}, {"text":"test2", "id":2}]"""},
+                        },
+                        1);
+    }
+
     @Test
     void getConfigSummaryTest() {
 
@@ -93,7 +132,9 @@ class OracleDbTests extends OracleDbSetup {
                             username=ADMIN
                             password=ADMIN
                             awaitMs=500
+                            awaitPollInterval=100
                             templatesPath=templates/oracle/
+                            enableEnchantedReport=true
                         """, CI_HOST),
                 db.getConfigSummary());
     }
@@ -186,7 +227,9 @@ class OracleDbTests extends OracleDbSetup {
                             username=ADMIN
                             password=ADMIN
                             awaitMs=300
+                            awaitPollInterval=100
                             templatesPath=templates/oracle/
+                            enableEnchantedReport=true
                         """, CI_HOST),
                 dbConf2.getConfigSummary());
     }
@@ -264,7 +307,6 @@ class OracleDbTests extends OracleDbSetup {
                 {"ID", 2},
                 {"CREATE_DATE", "2020-01-01 10:00:00", "TIMESTAMP"},
         });
-
 
         Throwable exception = assertThrows(AssertionError.class, () ->
                 db.seeRecordExistsInTable(TEST_TABLE,

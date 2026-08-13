@@ -48,7 +48,7 @@ public class MsSqlDbSetup {
         String dockerVersion = System.getProperty("dockerTestVersion");
 
         if ("latest".equalsIgnoreCase(dockerVersion)) {
-            return "dump/mssql_setup.sql"; //2025+ support JSONS
+            return "dump/mssql_setup.sql"; //2025+ support JSONS and REGEX
         }
         return "dump/mssql_setup_nojson.sql";
     }

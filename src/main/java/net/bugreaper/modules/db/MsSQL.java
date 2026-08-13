@@ -72,17 +72,20 @@ public class MsSQL extends JdbcExecutor<MsSQL> {
      * Example:
      * <p>{@code MsSQL db = new MsSQL();}</p>
      * <pre>
-     * sqlserver:
-     *   url: 'jdbc:sqlserver://localhost:1435;encrypt=false'
-     *   username: user
-     *   password: pass
-     *   await: 1000 (optional)
+     * modules:
+     *   db:
+     *     sqlserver:
+     *       url: 'jdbc:sqlserver://localhost:1435;encrypt=false'
+     *       username: user
+     *       password: pass
+     *       await: 1000 (optional)
+     *       enchanted-report: true # (optional)
      * </pre>
      *
-     * @see JdbcExecutor#JdbcExecutor(DbTypes dbType, String getColumnsQuery) JdbcExecutor
+     * @see JdbcExecutor#JdbcExecutor(DbTypes dbType, String getColumnsQuery, String suffix) JdbcExecutor
      */
     public MsSQL() {
-        super(DbTypes.MS_SQL, GET_COLUMNS);
+        super(DbTypes.MS_SQL, GET_COLUMNS, "");
     }
 
     @Override

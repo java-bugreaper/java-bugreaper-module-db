@@ -5,11 +5,26 @@ modules:
       username: default
       password: password
       await: 420 # optional
+      enchanted-report: true # optional
+    custom-db-2:
+      url: 'jdbc:clickhouse://localhost:8123/MYSCHEMA'
+      username: default
+      password: password
+      await: 200 # optional
+      enchanted-report: false # optional
+    custom-db-3:
+      url: 'jdbc:clickhouse://localhost:8123/MYSCHEMA'
+      username: default
+      password: password
+      await: 400 # optional
+      enchanted-report: true # optional
     mariadb:
       url: 'jdbc:mariadb://localhost:3307'
       username: test_user
       password: secret_pass
       await: 510 # optional
+      await-poll-interval: 200 # optional
+      enchanted-report: true # optional
     mysql:
       url: 'jdbc:mysql://localhost:3308'
       username: mysql_user
@@ -25,6 +40,7 @@ modules:
       username: sa
       password: YourStrong(!)Password
       await: 250 # optional
+      await-poll-interval: 70 # optional
     oracle:
       url: 'jdbc:oracle:thin:@localhost:1521/xepdb1'
       username: ADMIN

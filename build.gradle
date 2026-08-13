@@ -8,7 +8,7 @@ plugins {
 }
 
 
-description = 'BugReaper module for interaction with Databases'
+description = 'Is part of the BugReaper JAVA test helper framework that simplifies SQL Databases interaction in automated tests.'
 
 group = 'net.bugreaper'
 version = properties["VERSION_NAME"].toString()
@@ -48,7 +48,7 @@ repositories {
 }
 
 dependencies {
-    api 'net.bugreaper:core:1.4.3'
+    api 'net.bugreaper:core:1.4.4'
 
     api 'com.zaxxer:HikariCP:7.1.0'
 

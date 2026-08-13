@@ -19,7 +19,6 @@ import net.bugreaper.modules.db.enums.DbTypes;
 import net.bugreaper.modules.db.exceptions.QueryBuilderException;
 import net.bugreaper.modules.db.logger.Log;
 
-import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.List;
 
@@ -29,14 +28,18 @@ public class QueryConditionsBuilder {
     protected final String dbTypeKey;
 
     protected static final List<String> BASIC_CONDITIONS = Arrays.asList("=", "!=", "<>", ">", ">=", "<", "<=", "IS", "IS NOT", "LIKE");
+    protected static final String REGEX_CONDITION = "REGEX_MATCH";
+    protected static final String JSON_CONTAINS = "JSON_CONTAINS";
+    protected static final String JSON_EQUALS = "JSON_EQUALS"; //mysql not support JSON_EQUALS
+
 
     public QueryConditionsBuilder(DbTypes dbType) {
         this.dbTypeKey = dbType.value();
     }
 
     protected StringBuilder arrayCondition4Mapper(Object[] conditionsArray) {
-            Log.LOGGER.error("Query build failed for db: {} \narray {}", dbTypeKey, conditionsArray);
-            throw new QueryBuilderException("4 elements not supported for database: " + dbTypeKey);
+        Log.LOGGER.error("Query build failed for db: {} \narray {}", dbTypeKey, conditionsArray);
+        throw new QueryBuilderException("ERROR: 4 elements not supported for database: " + dbTypeKey);
     }
 
     protected StringBuilder arrayCondition3Mapper(Object[] conditionsArray) {
@@ -48,8 +51,8 @@ public class QueryConditionsBuilder {
 
         // specific conditions not supported
         else {
-            throw new QueryBuilderException(MessageFormat.format("ERROR, wrong 3 elements operator: <{0}> database <{1}> supported: {2}",
-                    conditionsArray[1], dbTypeKey, BASIC_CONDITIONS));
+            throw new QueryBuilderException("ERROR: wrong 3 elements operator '%s' for database '%s' supported basic: %s"
+                    .formatted(conditionsArray[1], dbTypeKey, BASIC_CONDITIONS));
         }
     }
 
@@ -94,6 +97,15 @@ public class QueryConditionsBuilder {
         }
         return "'" + value + "'";
     }
+
+    protected QueryBuilderException error3Elements(Object[] conditionsArray) {
+        Log.LOGGER.error("Query build failed for database: {} \nprovided array: {}\n supported operators basic: {} or specific: {}, {}, {}",
+                dbTypeKey, conditionsArray, BASIC_CONDITIONS, JSON_EQUALS, JSON_CONTAINS, REGEX_CONDITION);
+
+        throw new QueryBuilderException("ERROR: wrong 3 elements operator '%s' for database '%s' supported basic %s or specific %s, %s, %s"
+                .formatted(conditionsArray[1], dbTypeKey, BASIC_CONDITIONS, JSON_EQUALS, JSON_CONTAINS, REGEX_CONDITION));
+    }
+
 
     @Override
     public String toString() {

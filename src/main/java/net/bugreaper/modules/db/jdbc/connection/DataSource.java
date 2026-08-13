@@ -45,7 +45,14 @@ public class DataSource {
         config.setConnectionTimeout(1000);
 
         if(Objects.equals(dbType, DbTypes.ORACLE_DB.value())) {
+
             config.addDataSourceProperty("oracle.jdbc.timezoneAsRegion", "false");
+
+            //to fix ORA-18722 (on select * cant parse json data)
+            config.addDataSourceProperty(
+                    "oracle.jdbc.jsonDefaultGetObjectType",
+                    "java.lang.String"
+            );
         }
 
         return config;

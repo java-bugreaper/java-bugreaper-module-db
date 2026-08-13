@@ -32,7 +32,7 @@ public interface SqlGet {
      * @param tableName       table name in the format {@code schema_name.table_name}
      * @param conditionsArray conditions in Object[][] format
      *                        support up to 2 options after field (column, condition, date, oracle-enum)<br>
-     *                        {@code {"COLUMN NAME", ">= ", "2020-01-01", "DATE"}} for oracle<br>
+     *                        {@code {"COLUMN NAME", ">=", "2020-01-01", "DATE"}} for oracle<br>
      * @param expectedCount   expected rows count
      * @throws AssertionError        if the assertion fails (and adds Allure attachments)
      * @throws QueryBuilderException if failed to convert Object[][]
@@ -137,7 +137,7 @@ public interface SqlGet {
      * @param tableName       table name in the format {@code schema_name.table_name}
      * @param conditionsArray conditions in Object[][] format
      *                        support up to 2 options after field (column, condition, date, oracle-enum)<br>
-     *                        {@code {"COLUMN NAME", ">= ", "2020-01-01", "DATE"}} for oracle<br>
+     *                        {@code {"COLUMN NAME", ">=", "2020-01-01", "DATE"}} for oracle<br>
      * @throws AssertionError if the assertion fails (and adds Allure attachments)
      */
     void seeRecordExistsInTable(String tableName,

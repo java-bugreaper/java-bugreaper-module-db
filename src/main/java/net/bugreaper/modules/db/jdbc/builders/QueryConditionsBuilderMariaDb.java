@@ -16,19 +16,12 @@
 package net.bugreaper.modules.db.jdbc.builders;
 
 import net.bugreaper.modules.db.enums.DbTypes;
-import net.bugreaper.modules.db.exceptions.QueryBuilderException;
-import net.bugreaper.modules.db.logger.Log;
 
-import java.text.MessageFormat;
-import java.util.List;
 
 import static net.bugreaper.core.assertions.JsonAsserts.assertValidJson;
 
 
-public class QueryConditionsBuilderMariaDb extends QueryConditionsBuilder{
-
-    private static final String REGEX_CONDITION = "REGEX_MATCH";
-    private static final List<String> JSON_CONDITIONS = List.of("JSON_CONTAINS", "JSON_EQUALS");
+public class QueryConditionsBuilderMariaDb extends QueryConditionsBuilder {
 
     public QueryConditionsBuilderMariaDb(DbTypes dbType) {
         super(dbType);
@@ -53,7 +46,7 @@ public class QueryConditionsBuilderMariaDb extends QueryConditionsBuilder{
 
         StringBuilder conditions = new StringBuilder();
 
-        if(JSON_CONDITIONS.contains(conditionsArray[1])) {
+        if (JSON_EQUALS.equals(conditionsArray[1]) || JSON_CONTAINS.equals(conditionsArray[1])) {
 
             // check JSON/JSONArray
             assertValidJson((String) conditionsArray[2]);
@@ -67,13 +60,9 @@ public class QueryConditionsBuilderMariaDb extends QueryConditionsBuilder{
                     .append(conditionsArray[0]).append(" RLIKE ").append("'").append(conditionsArray[2]).append("'");
 
         } else {
-
-            Log.LOGGER.error("Query build failed for db: {} \narray {}\n use basic: {} or specific: {}, {}",
-                    dbTypeKey, conditionsArray, BASIC_CONDITIONS, JSON_CONDITIONS, REGEX_CONDITION);
-
-            throw new QueryBuilderException(MessageFormat.format("ERROR, wrong 3 elements operator for {0} mapper: <{1}> supported: {2} or {3}, {4}",
-                    dbTypeKey, conditionsArray[1], BASIC_CONDITIONS, JSON_CONDITIONS, REGEX_CONDITION));
+            throw error3Elements(conditionsArray);
         }
+
     }
 
 }

@@ -3,6 +3,9 @@ package net.bugreaper.modules.db;
 import net.bugreaper.modules.db.enums.DbTypes;
 import net.bugreaper.modules.db.jdbc.JdbcExecutor;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 
 /**
  * CustomDb helper that provides a common API for operating with SQL-database that is not yet fully supported.
@@ -30,6 +33,7 @@ import net.bugreaper.modules.db.jdbc.JdbcExecutor;
 public class CustomDb extends JdbcExecutor<CustomDb> {
 
     private static CustomDb instance;
+    private static final Map<String, CustomDb> INSTANCES = new ConcurrentHashMap<>();
 
     private static final String GET_COLUMNS = "Get all data for allure not supported for CustomDb";
 
@@ -70,24 +74,70 @@ public class CustomDb extends JdbcExecutor<CustomDb> {
     }
 
     /**
+     * Returns a unique {@link CustomDb} helper instance for the specified suffix using YAML configuration.
+     *
+     * <p>This method implements the Multiton pattern. A separate singleton
+     * instance is created for each CustomDb. Subsequent calls with the
+     * same suffix return the already created instance.</p>
+     *
+     * @return unique {@link CustomDb} instance associated with the specified
+     *         Redis data type
+     * @see #CustomDb(String) config setup
+     *
+     * @throws IllegalArgumentException if the configuration contains invalid values
+     */
+    public static CustomDb getInstance(String suffix) {
+        return INSTANCES.computeIfAbsent(
+                suffix,
+                CustomDb::new
+        );
+    }
+
+
+    /**
      * Constructs a CustomDb client for a database that is not yet fully supported, using YAML configuration.
      *
      * <p>Loads configuration values from a YAML file.</p>
      * Example:
      * <p>{@code CustomDb db = new CustomDb();}</p>
      * <pre>
-     * custom-db: # reserved type
-     *   url: 'jdbc:mysql://localhost:3308'
-     *   username: user
-     *   password: pass
-     *   await: 1000 (optional)
+     * modules:
+     *   db:
+     *     custom-db: # reserved type
+     *       url: 'jdbc:mysql://localhost:3308'
+     *       username: user
+     *       password: pass
+     *       await: 1000 (optional)
+     *       enchanted-report: true # (optional)
      * </pre>
      *
-     * @see JdbcExecutor#JdbcExecutor(DbTypes dbType, String getColumnsQuery) JdbcExecutor
+     * @see JdbcExecutor#JdbcExecutor(DbTypes dbType, String getColumnsQuery, String suffix) JdbcExecutor
      */
     public CustomDb() {
-        super(DbTypes.CUSTOM_DB, GET_COLUMNS);
+        super(DbTypes.CUSTOM_DB, GET_COLUMNS, "");
     }
 
-
+    /**
+     * Constructs a CustomDb client for a database that is not yet fully supported, using YAML configuration.
+     *
+     * <p>Loads configuration values from a YAML file.</p>
+     * Example:
+     * <p>{@code CustomDb db = new CustomDb("-mydb");}</p>
+     * <pre>
+     * modules:
+     *   db:
+     *     custom-db-mydb: # reserved type
+     *       url: 'jdbc:mysql://localhost:3308'
+     *       username: user
+     *       password: pass
+     *       await: 1000 (optional)
+     *       enchanted-report: true # (optional)
+     * </pre>
+     *
+     * @param suffix concatenation of CustomDb client (example CustomDb("-mydb") keys will be "modules.db.custom-db<b>-mydb</b>")
+     * @see JdbcExecutor#JdbcExecutor(DbTypes dbType, String getColumnsQuery, String suffix) JdbcExecutor
+     */
+    public CustomDb(String suffix) {
+        super(DbTypes.CUSTOM_DB, GET_COLUMNS, suffix);
+    }
 }

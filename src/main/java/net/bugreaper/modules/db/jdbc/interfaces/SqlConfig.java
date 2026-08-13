@@ -41,6 +41,17 @@ public interface SqlConfig<T extends SqlConfig<T>> {
     T setTemplatesDirectory(String templatePath);
 
     /**
+     * Enables or disables enhanced reporting.
+     *
+     * <p>When enabled, full table data is attached to Allure,
+     * and actual column values are included in data assertion exceptions.</p>
+     *
+     * @param enableEnchantedReport {@code true} to enable, {@code false} to disable
+     * @return this instance for method chaining
+     */
+    T setEnchantedReport(boolean enableEnchantedReport);
+
+    /**
      * Returns a human-readable summary of the current SQL configuration.
      * <p>
      * The returned string typically includes all configuration values such as

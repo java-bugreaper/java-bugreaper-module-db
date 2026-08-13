@@ -16,18 +16,12 @@
 package net.bugreaper.modules.db.jdbc.builders;
 
 import net.bugreaper.modules.db.enums.DbTypes;
-import net.bugreaper.modules.db.exceptions.QueryBuilderException;
-import net.bugreaper.modules.db.logger.Log;
-
-import java.text.MessageFormat;
 
 import static net.bugreaper.core.assertions.JsonAsserts.assertValidJson;
 
 
-public class QueryConditionsBuilderMysql extends QueryConditionsBuilder{
+public class QueryConditionsBuilderMysql extends QueryConditionsBuilder {
 
-    private static final String REGEX_CONDITION = "REGEX_MATCH";
-    private static final String JSON_CONDITIONS = "JSON_CONTAINS"; //mysql not support JSON_EQUALS
 
     public QueryConditionsBuilderMysql(DbTypes dbType) {
         super(dbType);
@@ -52,7 +46,15 @@ public class QueryConditionsBuilderMysql extends QueryConditionsBuilder{
 
         StringBuilder conditions = new StringBuilder();
 
-        if(JSON_CONDITIONS.equals(conditionsArray[1])) {
+        if (JSON_EQUALS.equals(conditionsArray[1])) {
+
+            // check JSON/JSONArray
+            assertValidJson((String) conditionsArray[2]);
+
+            return conditions // like varchar but the key order does not matter
+                    .append("%s = CAST('%s' AS JSON)".formatted(conditionsArray[0], conditionsArray[2]));
+
+        } else if (JSON_CONTAINS.equals(conditionsArray[1])) {
 
             // check JSON/JSONArray
             assertValidJson((String) conditionsArray[2]);
@@ -66,12 +68,7 @@ public class QueryConditionsBuilderMysql extends QueryConditionsBuilder{
                     .append(conditionsArray[0]).append(" RLIKE ").append("'").append(conditionsArray[2]).append("'");
 
         } else {
-
-            Log.LOGGER.error("Query build failed for db: {} \narray {}\n use basic: {} or specific: {}, {}",
-                    dbTypeKey, conditionsArray, BASIC_CONDITIONS, JSON_CONDITIONS, REGEX_CONDITION);
-
-            throw new QueryBuilderException(MessageFormat.format("ERROR, wrong 3 elements operator for {0} mapper: <{1}> supported: {2} or {3}, {4}",
-                    dbTypeKey, conditionsArray[1], BASIC_CONDITIONS, JSON_CONDITIONS, REGEX_CONDITION));
+            throw error3Elements(conditionsArray);
         }
     }
 

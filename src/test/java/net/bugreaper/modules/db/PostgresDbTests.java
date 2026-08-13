@@ -6,7 +6,6 @@ import net.bugreaper.core.exceptions.FileReaderException;
 import net.bugreaper.core.utils.AllureAssert;
 import net.bugreaper.core.utils.AllureResultLoader;
 import net.bugreaper.modules.db.exceptions.JdbcExecutorException;
-import net.bugreaper.modules.db.exceptions.QueryBuilderException;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.core.StringContains;
 import org.hamcrest.core.StringStartsWith;
@@ -47,6 +46,7 @@ class PostgresDbTests extends PostgresDbSetup {
                 {"DESCRIPTION", "dummy description"},
                 {"ROLES", "manager"},
                 {"DATA", "[]"},
+                {"DATAB", "[]"},
                 {"IS_ACTIVE", false},
                 {"AMOUNT", null},
                 {"PERCENTAGE", null},
@@ -278,9 +278,23 @@ class PostgresDbTests extends PostgresDbSetup {
         });
     }
 
+    @Test
+    void checkRegex() {
+        insertIntoUsers(
+                new Object[][]{
+                        {"ID", 100},
+                        {"PASSWORD", "4533"},
+                });
+
+        db.seeRecordExistsInTable
+                (TEST_TABLE,
+                        new Object[][]{
+                                {"PASSWORD", "REGEX_MATCH", "[0-9]{4}"},
+                        });
+    }
 
     @Test
-    void createRecordJsonCheckCountAndData() {
+    void createRecordJsonContainsTest() {
         var data = """
                 [{"id":1,"text":"test"}, {"id":2,"text":"test2"}]""";
 
@@ -290,21 +304,92 @@ class PostgresDbTests extends PostgresDbSetup {
         });
         db.seeRowsCountInTableExactly(TEST_TABLE, 1);
 
-        Throwable exception = assertThrows(QueryBuilderException.class, () ->
-                db.seeRowsCountInTableExactly
-                        (TEST_TABLE,
-                                new Object[][]{
-                                        {"ID", "1"},
-                                        {"DATA", "JSON_CONTAINS", """
-                                                    [{"id":1}]"""},
-                                        {"ROLES", "manager"},
-                                },
-                                1));
+        db.seeRecordExistsInTable(
+                TEST_TABLE,
+                new Object[][]{
+                        {"ID", "1"},
+                        {"DATA", "JSON_CONTAINS", """
+                                            [{"id":1}]"""},
+                });
+    }
 
-        assertEquals("""
-                        ERROR, wrong 3 elements operator: <JSON_CONTAINS> database <postgresql> supported: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE]""",
-                exception.getMessage(),
-                "Exception with JSON in db not supported yet");
+    @Test
+    void createRecordJsonBContainsTest() {
+        var data = """
+                [{"id":1,"text":"test"}, {"id":2,"text":"test2"}]""";
+
+        insertIntoUsers(new Object[][]{
+                {"ID", "1"},
+                {"DATAB", data},
+        });
+        db.seeRowsCountInTableExactly(TEST_TABLE, 1);
+
+        db.seeRecordExistsInTable(
+                TEST_TABLE,
+                new Object[][]{
+                        {"ID", "1"},
+                        {"DATAB", "JSON_CONTAINS", """
+                                            [{"id":1}]"""},
+                });
+    }
+
+    @Test
+    void createRecordJsonEqualsTest() {
+        var data = """
+                {"id":1,"text":"test"}""";
+
+        insertIntoUsers(new Object[][]{
+                {"ID", "1"},
+                {"DATA", data},
+        });
+        db.seeRowsCountInTableExactly(TEST_TABLE, 1);
+
+        db.seeRecordExistsInTable(
+                TEST_TABLE,
+                        new Object[][]{
+                                {"ID", "1"},
+                                {"DATA", "JSON_EQUALS", """
+                                            {"text":"test", "id":1}"""},
+                        });
+    }
+
+    @Test
+    void createRecordJsonBEqualsTest() {
+        var data = """
+                {"id":1,"text":"test"}""";
+
+        insertIntoUsers(new Object[][]{
+                {"ID", "1"},
+                {"DATAB", data},
+        });
+        db.seeRowsCountInTableExactly(TEST_TABLE, 1);
+
+        db.seeRecordExistsInTable(
+                TEST_TABLE,
+                new Object[][]{
+                        {"ID", "1"},
+                        {"DATAB", "JSON_EQUALS", """
+                                            {"text":"test", "id":1}"""},
+                });
+    }
+
+    @Test
+    void createRecordJsonEquals2Test() {
+
+        insertIntoUsers(new Object[][]{
+                {"ID", "1"},
+                {"DATA", """
+                [{"id":1,"text":"test"}, {"id":2,"text":"test2"}]"""},
+        });
+        db.seeRowsCountInTableExactly(TEST_TABLE, 1);
+
+        db.seeRecordExistsInTable
+                (TEST_TABLE,
+                        new Object[][]{
+                                {"ID", "1"},
+                                {"DATA", "JSON_EQUALS", """
+                                    [{"id":1,"text":"test"}, {"text":"test2", "id":2}]"""},
+                        });
     }
 
     @Test
@@ -507,7 +592,9 @@ class PostgresDbTests extends PostgresDbSetup {
                             username=postgres
                             password=postgres
                             awaitMs=200
+                            awaitPollInterval=100
                             templatesPath=templates/postgresql/
+                            enableEnchantedReport=true
                         """, CI_HOST),
                 dbConf2.getConfigSummary());
     }

@@ -72,17 +72,20 @@ public class PostgreSQL extends JdbcExecutor<PostgreSQL> {
      * Example:
      * <p>{@code PostgreSQL db = new PostgreSQL();}</p>
      * <pre>
-     * postgresql:
-     *   url: 'jdbc:postgresql://localhost:5434/public'
-     *   username: user
-     *   password: pass
-     *   await: 1000 (optional)
+     * modules:
+     *   db:
+     *     postgresql:
+     *       url: 'jdbc:postgresql://localhost:5434/public'
+     *       username: user
+     *       password: pass
+     *       await: 1000 (optional)
+     *       enchanted-report: true # (optional)
      * </pre>
      *
-     * @see JdbcExecutor#JdbcExecutor(DbTypes dbType, String getColumnsQuery) JdbcExecutor
+     * @see JdbcExecutor#JdbcExecutor(DbTypes dbType, String getColumnsQuery, String suffix) JdbcExecutor
      */
     public PostgreSQL() {
-        super(DbTypes.POSTGRE_SQL, GET_COLUMNS);
+        super(DbTypes.POSTGRE_SQL, GET_COLUMNS, "");
     }
 
     /**
