@@ -33,18 +33,21 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
     private static final String DELETE_FROM = "DELETE FROM %s %s";
 
     /**
-     * default ms await in asserts (configure with {@link #setAwaitMs(int)})
+     * Default await timeout for tests, in milliseconds. (configure with {@link #setAwaitMs(int)})
      */
     private volatile int awaitMs = 2000;
+
+
     /**
-     * specific ms await in specific assert (configure with {@link #withAwaitMs(int)})
+     * Specific ms await in specific assert (configure with {@link #withAwaitMs(int)})
      */
     private final ThreadLocal<Integer> specificAwaitMs = ThreadLocal.withInitial(() -> 0);
 
     /**
-     * default templates path for insert (dynamically for each database types)
+     * Default templates path for insert (dynamically for each database types)
      */
     private volatile String templatesPath;
+
     private final String dbTypeKey;
     private final QueryBuilder qb;
 
@@ -88,6 +91,7 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
      * <p><b>Optional configuration keys:</b></p>
      * <ul>
      *     <li>{@code modules.db.{dbType}.await}</li>
+     *     <li>{@code modules.db.{dbType}.enchanted-report}</li>
      * </ul>
      *
      * @param dbType          the database type identifier values of {@link DbTypes} (e.g., "mariadb", "custom-db");
@@ -95,10 +99,11 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
      *
      *                        <p>Missing required keys will result in configuration errors.
      *                        Missing optional keys will fall back to predefined defaults.</p>
+     * @param suffix          used only for Multiton;
      */
-    protected JdbcExecutor(DbTypes dbType, String getColumnsQuery) {
+    protected JdbcExecutor(DbTypes dbType, String getColumnsQuery, String suffix) {
 
-        this.dbTypeKey = dbType.value();
+        this.dbTypeKey = dbType.value() + suffix;
         this.getColumnsQuery = getColumnsQuery;
         this.templatesPath = String.format("templates/%s/", this.dbTypeKey);
 
@@ -120,6 +125,14 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
         Object awaitVal = YamlUtils.getValueByPath(YML_KEY + dbTypeKey + ".await", true);
         if (awaitVal instanceof Number number) {
             setAwaitMs(number.intValue());
+        }
+        Object awaitPollIntervalVal = YamlUtils.getValueByPath(YML_KEY + dbTypeKey + ".await-poll-interval", true);
+        if (awaitPollIntervalVal instanceof Number number) {
+            this.awaitPollInterval = number.intValue();
+        }
+        Object enchantedReportVal = YamlUtils.getValueByPath(YML_KEY + dbTypeKey + ".enchanted-report", true);
+        if (enchantedReportVal instanceof Boolean logging) {
+            setEnchantedReport(logging);
         }
     }
 
@@ -157,6 +170,12 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
         return self();
     }
 
+    @Override
+    public T setEnchantedReport(boolean enableEnchantedReport) {
+        this.enableEnchantedReport = enableEnchantedReport;
+        return self();
+    }
+
     // getters
     @Override
     public String getConfigSummary() {
@@ -167,9 +186,11 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
                             username=%s
                             password=%s
                             awaitMs=%d
-                            templatesPath=%s%n""",
+                            awaitPollInterval=%d
+                            templatesPath=%s
+                            enableEnchantedReport=%b%n""",
                 this.getClass().getSimpleName(), dbTypeKey, url, username, password,
-                awaitMs, templatesPath);
+                awaitMs, awaitPollInterval, templatesPath, enableEnchantedReport);
 
         Log.LOGGER.info(info);
         return info;

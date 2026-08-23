@@ -85,7 +85,9 @@ class CustomDbTests extends ClickhouseDb {
                             username=default
                             password=password
                             awaitMs=420
+                            awaitPollInterval=100
                             templatesPath=templates/custom-db/
+                            enableEnchantedReport=true
                         """, CI_HOST),
                 customDb.getConfigSummary());
     }
@@ -140,6 +142,65 @@ class CustomDbTests extends ClickhouseDb {
 
         MatcherAssert.assertThat(
                 exception.getMessage(),
-                is("ERROR, wrong 3 elements operator: <JSON_CONTAINS> database <custom-db> supported: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE]"));
+                is("ERROR: wrong 3 elements operator 'JSON_CONTAINS' for database 'custom-db' supported basic: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE]"));
     }
+
+    //  Mutliton
+
+    @Test
+    void customDbMultiton2Test() {
+
+        CustomDb customDb2 = CustomDb.getInstance("-2");
+        CustomDb customDb2Same = CustomDb.getInstance("-2");
+
+        customDb2.truncateTable(TEST_TABLE_FOR_TEMPLATE);
+
+        customDb2Same.insertIntoTable(TEST_TABLE_FOR_TEMPLATE,
+                new Object[][]{
+                        {"ID", 2},
+                });
+
+        customDb2Same.seeRecordExistsInTable
+                (TEST_TABLE_FOR_TEMPLATE,
+                        new Object[][]{
+                                {"ID", 2},
+                                {"NAME", "Maria"},
+                                {"AMOUNT", 999.99},
+                                {"IS_ACTIVE", false},
+                        });
+
+
+        Assertions.assertEquals(String.format("""
+                        CustomDb:
+                            dbType=custom-db-2
+                            url=jdbc:clickhouse://%s:8123/MYSCHEMA
+                            username=default
+                            password=password
+                            awaitMs=200
+                            awaitPollInterval=100
+                            templatesPath=templates/custom-db-2/
+                            enableEnchantedReport=false
+                        """, CI_HOST),
+                customDb2Same.getConfigSummary());
+    }
+
+    @Test
+    void customDbMultiton3Test() {
+
+        CustomDb customDb3 = CustomDb.getInstance("-3");
+
+        Assertions.assertEquals(String.format("""
+                        CustomDb:
+                            dbType=custom-db-3
+                            url=jdbc:clickhouse://%s:8123/MYSCHEMA
+                            username=default
+                            password=password
+                            awaitMs=400
+                            awaitPollInterval=100
+                            templatesPath=templates/custom-db-3/
+                            enableEnchantedReport=true
+                        """, CI_HOST),
+                customDb3.getConfigSummary());
+    }
+
 }

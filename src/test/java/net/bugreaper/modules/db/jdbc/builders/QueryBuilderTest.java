@@ -13,6 +13,7 @@ class QueryBuilderTest {
     private final DbTypes maria = DbTypes.MARIA_DB;
     private final DbTypes mssql = DbTypes.MS_SQL;
     private final DbTypes mysql = DbTypes.MY_SQL;
+    private final DbTypes postgreSql = DbTypes.POSTGRE_SQL;
 
     private final QueryBuilder qbm = new QueryBuilder(maria);
 
@@ -145,32 +146,7 @@ class QueryBuilderTest {
         );
     }
 
-    @Test
-    void testBuildConditionsMariaJsonContains() {
-        QueryBuilder qb = new QueryBuilder(maria);
 
-        assertEquals(
-                "where JSON_CONTAINS(DATA, '{\"id\": 15}')",
-                qb.sqlConditionBuilder(new Object[][]{
-                        {"DATA", "JSON_CONTAINS", """
-                                                  {"id": 15}"""},
-                }),
-                "Create condition with mariaDb type JSON_CONTAINS"
-        );
-    }
-
-    @Test
-    void testBuildConditionsMariaRegexContains() {
-        QueryBuilder qb = new QueryBuilder(maria);
-
-        assertEquals(
-                "where DATA RLIKE '[0-9]{4}'",
-                qb.sqlConditionBuilder(new Object[][]{
-                        {"DATA", "REGEX_MATCH", "[0-9]{4}"},
-                }),
-                "Create condition with mariaDb type REGEX_MATCH"
-        );
-    }
 
 
     @Test
@@ -314,6 +290,170 @@ class QueryBuilderTest {
                         {"COLUMN3", "3"}
                 }),
                 "Create SET with all types of values"
+        );
+    }
+
+    // REGEX
+
+    @Test
+    void testBuildConditionsMariaRegexContains() {
+        QueryBuilder qb = new QueryBuilder(maria);
+
+        assertEquals(
+                "where DATA RLIKE '[0-9]{4}'",
+                qb.sqlConditionBuilder(new Object[][]{
+                        {"DATA", "REGEX_MATCH", "[0-9]{4}"},
+                })
+        );
+    }
+
+    @Test
+    void testBuildConditionsMssqlRegexContains() {
+        QueryBuilder qb = new QueryBuilder(mssql);
+
+        assertEquals(
+                "where REGEXP_LIKE(DATA, '[0-9]{4}')",
+                qb.sqlConditionBuilder(new Object[][]{
+                        {"DATA", "REGEX_MATCH", "[0-9]{4}"},
+                })
+        );
+    }
+
+    @Test
+    void testBuildConditionsMysqlRegexContains() {
+        QueryBuilder qb = new QueryBuilder(mysql);
+
+        assertEquals(
+                "where DATA RLIKE '[0-9]{4}'",
+                qb.sqlConditionBuilder(new Object[][]{
+                        {"DATA", "REGEX_MATCH", "[0-9]{4}"},
+                })
+        );
+    }
+
+
+    @Test
+    void testBuildConditionsOracleRegexContains() {
+        QueryBuilder qb = new QueryBuilder(oracle);
+
+        assertEquals(
+                "where REGEXP_LIKE(DATA, '[0-9]{4}')",
+                qb.sqlConditionBuilder(new Object[][]{
+                        {"DATA", "REGEX_MATCH", "[0-9]{4}"},
+                })
+        );
+    }
+
+    @Test
+    void testBuildConditionsPostgresRegexContains() {
+        QueryBuilder qb = new QueryBuilder(postgreSql);
+
+        assertEquals(
+                "where DATA ~ '[0-9]{4}'",
+                qb.sqlConditionBuilder(new Object[][]{
+                        {"DATA", "REGEX_MATCH", "[0-9]{4}"},
+                })
+        );
+    }
+
+    // JSONS
+
+
+    @Test
+    void testBuildConditionsMariaJsonContains() {
+        QueryBuilder qb = new QueryBuilder(maria);
+
+        assertEquals(
+                """
+                where JSON_CONTAINS(DATA, '{"id": 15}')""",
+                qb.sqlConditionBuilder(new Object[][]{
+                        {"DATA", "JSON_CONTAINS", """
+                                                  {"id": 15}"""},
+                })
+        );
+    }
+
+    @Test
+    void testBuildConditionsMariaJsonEquals() {
+        QueryBuilder qb = new QueryBuilder(maria);
+
+        assertEquals(
+                """
+                where JSON_EQUALS(DATA, '{"id": 15}')""",
+                qb.sqlConditionBuilder(new Object[][]{
+                        {"DATA", "JSON_EQUALS", """
+                                                  {"id": 15}"""},
+                })
+        );
+    }
+
+    @Test
+    void testBuildConditionsMysqlJsonContains() {
+        QueryBuilder qb = new QueryBuilder(mysql);
+
+        assertEquals(
+                """
+                where JSON_CONTAINS(DATA, '{"id": 15}')""",
+                qb.sqlConditionBuilder(new Object[][]{
+                        {"DATA", "JSON_CONTAINS", """
+                                                  {"id": 15}"""},
+                })
+        );
+    }
+
+    @Test
+    void testBuildConditionsMysqlJsonEquals() {
+        QueryBuilder qb = new QueryBuilder(mysql);
+
+        assertEquals(
+                """
+                where DATA = CAST('{"id": 15}' AS JSON)""",
+                qb.sqlConditionBuilder(new Object[][]{
+                        {"DATA", "JSON_EQUALS", """
+                                                  {"id": 15}"""},
+                })
+        );
+    }
+
+    @Test
+    void testBuildConditionsOracleJsonEquals() {
+        QueryBuilder qb = new QueryBuilder(oracle);
+
+        assertEquals(
+                """
+                where JSON_EQUAL(DATA, '{"id": 15}')""",
+                qb.sqlConditionBuilder(new Object[][]{
+                        {"DATA", "JSON_EQUALS", """
+                                                  {"id": 15}"""},
+                })
+        );
+    }
+
+    @Test
+    void testBuildConditionsPostgresJsonContains() {
+        QueryBuilder qb = new QueryBuilder(postgreSql);
+
+        assertEquals(
+                """
+                where DATA::jsonb @> '{"id": 15}'::jsonb""",
+                qb.sqlConditionBuilder(new Object[][]{
+                        {"DATA", "JSON_CONTAINS", """
+                                                  {"id": 15}"""},
+                })
+        );
+    }
+
+    @Test
+    void testBuildConditionsPostgresJsonEquals() {
+        QueryBuilder qb = new QueryBuilder(postgreSql);
+
+        assertEquals(
+                """
+                where DATA::jsonb = '{"id": 15}'::jsonb""",
+                qb.sqlConditionBuilder(new Object[][]{
+                        {"DATA", "JSON_EQUALS", """
+                                                  {"id": 15}"""},
+                })
         );
     }
 

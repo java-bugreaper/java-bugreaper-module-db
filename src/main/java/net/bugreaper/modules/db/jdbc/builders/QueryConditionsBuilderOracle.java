@@ -21,12 +21,59 @@ import net.bugreaper.modules.db.logger.Log;
 
 import java.util.Objects;
 
+import static net.bugreaper.core.assertions.JsonAsserts.assertValidJson;
 
-public class QueryConditionsBuilderOracle extends QueryConditionsBuilder{
 
+public class QueryConditionsBuilderOracle extends QueryConditionsBuilder {
+
+
+    //JSON_CONTAINS not supported (only by JSON_VALUE)
 
     public QueryConditionsBuilderOracle(DbTypes dbType) {
         super(dbType);
+    }
+
+    @Override
+    protected StringBuilder arrayCondition3Mapper(Object[] conditionsArray) {
+
+        // basic conditions
+        if (BASIC_CONDITIONS.contains(conditionsArray[1].toString().toUpperCase())) {
+            return basicConditionBuild(conditionsArray);
+        }
+
+        // specific conditions
+        else {
+            return arrayOrcle3Mapper(conditionsArray);
+        }
+    }
+
+
+    private StringBuilder arrayOrcle3Mapper(Object[] conditionsArray) {
+
+        StringBuilder conditions = new StringBuilder();
+
+        if (JSON_EQUALS.equals(conditionsArray[1])) {
+
+            // check JSON/JSONArray
+            assertValidJson((String) conditionsArray[2]);
+
+            return conditions
+                    .append("JSON_EQUAL(%s, '%s')".formatted(conditionsArray[0], conditionsArray[2]));
+
+
+        } else if (REGEX_CONDITION.equals(conditionsArray[1])) {
+            //for REGEX conditions
+            return conditions
+                    .append(("REGEXP_LIKE(%s, '%s')".formatted(conditionsArray[0], conditionsArray[2])));
+
+        } else {
+
+            Log.LOGGER.error("Query build failed for database: {} \nprovided array: {}\n supported operators basic: {} or specific: {}, {}",
+                    dbTypeKey, conditionsArray, BASIC_CONDITIONS, JSON_EQUALS, REGEX_CONDITION);
+
+            throw new QueryBuilderException("ERROR: wrong 3 elements operator '%s' for database '%s' supported basic %s or specific %s, %s"
+                    .formatted(conditionsArray[1], dbTypeKey, BASIC_CONDITIONS, JSON_EQUALS, REGEX_CONDITION));
+        }
     }
 
     /**
@@ -36,7 +83,7 @@ public class QueryConditionsBuilderOracle extends QueryConditionsBuilder{
      *                        Oracle(Date\DateTime) {column, operator, date, oracle-enum}
      *                        <p>
      *                        Oracle:
-     *                        <p>{"COLUMN NAME", ">= ", "2020-01-01", "DATE"} will build: COLUMN NAME" >= TO_DATE('2022-01-01’, 'YYYY-MM-DD')
+     *                        <p>{"COLUMN NAME", ">=", "2020-01-01", "DATE"} will build: COLUMN NAME" >= TO_DATE('2022-01-01’, 'YYYY-MM-DD')
      *                        <p>{"COLUMN NAME", "=", "2022-01-01 10:10:22", "TIMESTAMP"} will build: COLUMN NAME = TO_DATE('2022-01-01 10:10:22’, 'YYYY-MM-DD HH24:MI:SS')
      * @return StringBuilder with condition part of query
      */
@@ -54,7 +101,7 @@ public class QueryConditionsBuilderOracle extends QueryConditionsBuilder{
             return conditions.append(" ").append(conditionsArray[1]).append(" TO_DATE('").append(conditionsArray[3]).append("', 'YYYY-MM-DD HH24:MI:SS')");
         } else {
             Log.LOGGER.error("Query build failed for db: {} \narray {}", dbTypeKey, conditionsArray);
-            throw new QueryBuilderException("ERROR, wrong 4 elements option for Oracle mapper: <" + conditionsArray[2] + "> supported: " +
+            throw new QueryBuilderException("ERROR: wrong 4 elements option for Oracle mapper: '" + conditionsArray[2] + "' supported: " +
                     oracleDateEnum + " or " + oracleDateTimeEnum);
         }
     }

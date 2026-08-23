@@ -6,6 +6,7 @@ import net.bugreaper.modules.db.exceptions.SqlExecuteException;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.core.StringContains;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import testcontainers.MsSqlDbSetup;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -277,6 +278,21 @@ class MsSqlDbTests extends MsSqlDbSetup {
         db.seeRowsCountInTableExactlyCustom(TEST_TABLE, "where ID >=1 AND DEPOSIT is null", 1);
     }
 
+    @Test
+    @EnabledIfSystemProperty(named = "dockerTestVersion", matches = "latest")
+    void checkRegex() {
+        insertIntoUsers(
+                new Object[][]{
+                        {"ID", 7677},
+                        {"PASSWORD", "7134"},
+                });
+
+        db.seeRecordExistsInTable
+                (TEST_TABLE,
+                        new Object[][]{
+                                {"PASSWORD", "REGEX_MATCH", "[0-9]{4}"},
+                        });
+    }
 
     @Test
     void runFromFile() {
@@ -316,7 +332,7 @@ class MsSqlDbTests extends MsSqlDbSetup {
                                 1));
 
         assertEquals("""
-                        ERROR, wrong 3 elements operator: <JSON_CONTAINS> database <sqlserver> supported: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE]""",
+                        ERROR: wrong 3 elements operator 'JSON_CONTAINS' for database 'sqlserver' supported basic [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE] or specific REGEX_MATCH""",
                 exception.getMessage(),
                 "Exception with JSON in db not supported yet");
     }
@@ -620,7 +636,9 @@ class MsSqlDbTests extends MsSqlDbSetup {
                             username=sa
                             password=YourStrong(!)Password
                             awaitMs=250
+                            awaitPollInterval=70
                             templatesPath=templates/sqlserver/
+                            enableEnchantedReport=true
                         """, CI_HOST),
                 dbConf2.getConfigSummary());
     }

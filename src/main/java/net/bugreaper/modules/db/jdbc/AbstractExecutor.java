@@ -19,10 +19,9 @@ import java.util.Objects;
 
 import static net.bugreaper.core.assertions.Asserts.assertStrings;
 import static net.bugreaper.core.mappers.StringMappers.formatMilliseconds;
+import static net.bugreaper.core.utils.AwaitUtils.awaitCustom;
 import static net.bugreaper.modules.db.allurereporter.AllureBuilder.reportHtmlTableAllBuilder;
 import static io.qameta.allure.model.Parameter.Mode.HIDDEN;
-import static java.time.Duration.ofMillis;
-import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 @SuppressWarnings("squid:S5960")
@@ -40,6 +39,17 @@ abstract class AbstractExecutor {
     protected static final String COUNT = "COUNT_RES";
 
 
+    /**
+     * Default await polling interval in milliseconds for tests.
+     */
+    protected volatile int awaitPollInterval = 100;
+
+    /**
+     * Enables enhanced reporting with full table data attached to Allure
+     * and actual column values included in assertion exceptions.
+     */
+    protected volatile boolean enableEnchantedReport = true;
+
     protected AbstractExecutor() {
     }
 
@@ -48,7 +58,7 @@ abstract class AbstractExecutor {
                                              String conditions,
                                              @Param(mode = HIDDEN) Object[][] conditionsArray,
                                              String expectedCount,
-                                             @Param(mode = HIDDEN) int awaitMs) {
+                                             @Param(mode = HIDDEN) int providedAwaitMs) {
 
         var query = MessageFormat.format("SELECT COUNT(*) as {0} FROM {1} {2}",
                 COUNT, tableName, conditions);
@@ -58,30 +68,29 @@ abstract class AbstractExecutor {
         Allure.addAttachment("Execute SQL:", "text/plain", query + ";");
 
         try {
-            await().with()
-                    .pollDelay(ofMillis(0)).atMost(ofMillis(awaitMs)).untilAsserted(() ->
-                            assertStrings(
-                                    jdbc.getSqlResultForCount(query, COUNT),
-                                    expectedCount));
+            awaitCustom(providedAwaitMs, awaitPollInterval).untilAsserted(() ->
+                    assertStrings(
+                            jdbc.getSqlResultForCount(query, COUNT),
+                            expectedCount));
         } catch (ConditionTimeoutException ex) {
 
-            showDataFromTableNoExceptionMethod(tableName);
+            reportAllDataInTable(tableName, enableEnchantedReport);
 
             if (conditionsArray != null) {
 
-                var extendLog = extendedLogBuilder(tableName, conditionsArray);
+                var extendLog = extendedLogBuilder(tableName, conditionsArray, enableEnchantedReport);
 
                 throw new AssertionError(
                         "Expected EXACTLY <%s> records in table '%s', but got <%s> within %s%n%s"
-                                .formatted(expectedCount, tableName, jdbc.getSqlResultForCount(query, COUNT), formatMilliseconds(awaitMs), extendLog));
+                                .formatted(expectedCount, tableName, jdbc.getSqlResultForCount(query, COUNT), formatMilliseconds(providedAwaitMs), extendLog));
             } else if (!Objects.equals(conditions, "")) {
                 throw new AssertionError(
                         "Expected EXACTLY <%s> records in table '%s', but got <%s> within %s%n%s"
-                                .formatted(expectedCount, tableName, jdbc.getSqlResultForCount(query, COUNT), formatMilliseconds(awaitMs), conditions));
+                                .formatted(expectedCount, tableName, jdbc.getSqlResultForCount(query, COUNT), formatMilliseconds(providedAwaitMs), conditions));
             }
             throw new AssertionError(
                     "Expected EXACTLY <%s> records in table '%s', but got <%s> within %s"
-                            .formatted(expectedCount, tableName, jdbc.getSqlResultForCount(query, COUNT), formatMilliseconds(awaitMs)));
+                            .formatted(expectedCount, tableName, jdbc.getSqlResultForCount(query, COUNT), formatMilliseconds(providedAwaitMs)));
         }
     }
 
@@ -89,7 +98,7 @@ abstract class AbstractExecutor {
     protected void recordExistsBuilder(String tableName,
                                        String conditions,
                                        @Param(mode = HIDDEN) Object[][] conditionsArray,
-                                       @Param(mode = HIDDEN) int awaitMs) {
+                                       @Param(mode = HIDDEN) int providedAwaitMs) {
 
         var query = MessageFormat.format("SELECT COUNT(*) as {0} FROM {1} {2}",
                 COUNT, tableName, conditions);
@@ -99,28 +108,34 @@ abstract class AbstractExecutor {
         Allure.addAttachment("Execute SQL:", "text/plain", query + ";");
 
         try {
-            await().with()
-                    .pollDelay(ofMillis(0)).atMost(ofMillis(awaitMs)).untilAsserted(() ->
-                            assertNotEquals(0, Integer.parseInt(jdbc.getSqlResultForCount(query, COUNT))));
+            awaitCustom(providedAwaitMs, awaitPollInterval).untilAsserted(() ->
+                    assertNotEquals(0, Integer.parseInt(jdbc.getSqlResultForCount(query, COUNT))));
         } catch (ConditionTimeoutException ex) {
 
-            showDataFromTableNoExceptionMethod(tableName);
+            reportAllDataInTable(tableName, enableEnchantedReport);
 
             if (conditionsArray != null) {
 
-                var extendLog = extendedLogBuilder(tableName, conditionsArray);
+                var extendLog = extendedLogBuilder(tableName, conditionsArray, enableEnchantedReport);
 
                 throw new AssertionError(
                         "Failed: no records found in table '%s' within %s%n%s"
-                                .formatted(tableName, formatMilliseconds(awaitMs), extendLog));
+                                .formatted(tableName, formatMilliseconds(providedAwaitMs), extendLog));
             } else if (!Objects.equals(conditions, "")) {
                 throw new AssertionError(
                         "Failed: no records found in table '%s' within %s%n%s"
-                                .formatted(tableName, formatMilliseconds(awaitMs), conditions));
+                                .formatted(tableName, formatMilliseconds(providedAwaitMs), conditions));
             }
             throw new AssertionError(
                     "Failed: no records found in in table '%s' within %s"
-                            .formatted(tableName, formatMilliseconds(awaitMs)));
+                            .formatted(tableName, formatMilliseconds(providedAwaitMs)));
+        }
+    }
+
+
+    private void reportAllDataInTable(String tableName, boolean enable) {
+        if(enable) {
+            showDataFromTableNoExceptionMethod(tableName);
         }
     }
 
@@ -129,9 +144,10 @@ abstract class AbstractExecutor {
      *
      * @param tableName       table name in the format {@code schema_name.table_name}
      * @param conditionsArray conditions in Object[][] format {@code {{"ID", "1"}, {"NAME", "Alex"}} }
+     * @param actualEnable whether to include the actual result
      * @return string containing the exception details, including all table records ordered by the testing columns
      */
-    private String extendedLogBuilder(String tableName, Object[][] conditionsArray) {
+    private String extendedLogBuilder(String tableName, Object[][] conditionsArray, boolean actualEnable) {
 
         //  Create lists with columns names & expected columns data
         String[] columnsName = new String[conditionsArray.length];
@@ -157,22 +173,29 @@ abstract class AbstractExecutor {
 
         }
 
-        //  Get result for columns in test
-        List<Object> resultArray = jdbc.getSqlResultList(SELECT_ALL + tableName, columnsName);
-
-        //  Separate result by columns & rows
-        final int COLUMN_NUMBER = expectFor.size();
-
         StringBuilder dataRows = new StringBuilder();
-        final int ROWS = resultArray.size() / COLUMN_NUMBER;
 
-        for (int r = 0; r < ROWS; r++) {
-            dataRows.append("\n[");
-            for (int i = COLUMN_NUMBER * r; i < COLUMN_NUMBER * (r + 1); i++) {
-                dataRows.append(resultArray.get(i)).append(", ");
+        if (actualEnable) {
+
+            //  Get result for columns in test
+            List<Object> resultArray = jdbc.getSqlResultList(SELECT_ALL + tableName, columnsName);
+
+            //  Separate result by columns & rows
+            final int COLUMN_NUMBER = expectFor.size();
+
+
+            final int ROWS = resultArray.size() / COLUMN_NUMBER;
+
+            for (int r = 0; r < ROWS; r++) {
+                dataRows.append("\n[");
+                for (int i = COLUMN_NUMBER * r; i < COLUMN_NUMBER * (r + 1); i++) {
+                    dataRows.append(resultArray.get(i)).append(", ");
+                }
+                dataRows.delete(dataRows.length() - 2, dataRows.length());
+                dataRows.append("]");
             }
-            dataRows.delete(dataRows.length() - 2, dataRows.length());
-            dataRows.append("]");
+        } else {
+            dataRows.append("\nenableEnchantedReport disabled: actual result was not requested.");
         }
 
         //  Create Log

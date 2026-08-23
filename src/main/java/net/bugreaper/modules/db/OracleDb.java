@@ -78,17 +78,20 @@ public final class OracleDb extends JdbcExecutor<OracleDb> {
      * Example:
      * <p>{@code OracleDb db = new OracleDb();}</p>
      * <pre>
-     * oracle:
-     *   url: 'jdbc:oracle:thin:@localhost:1521/xepdb1'
-     *   username: user
-     *   password: pass
-     *   await: 1000 (optional)
+     * modules:
+     *   db:
+     *     oracle:
+     *       url: 'jdbc:oracle:thin:@localhost:1521/xepdb1'
+     *       username: user
+     *       password: pass
+     *       await: 1000 (optional)
+     *       enchanted-report: true # (optional)
      * </pre>
      *
-     * @see JdbcExecutor#JdbcExecutor(DbTypes dbType, String getColumnsQuery) JdbcExecutor
+     * @see JdbcExecutor#JdbcExecutor(DbTypes dbType, String getColumnsQuery, String suffix) JdbcExecutor
      */
     public OracleDb() {
-        super(DbTypes.ORACLE_DB, GET_COLUMNS);
+        super(DbTypes.ORACLE_DB, GET_COLUMNS, "");
     }
 
     @Override

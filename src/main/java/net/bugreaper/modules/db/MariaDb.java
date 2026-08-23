@@ -71,16 +71,19 @@ public class MariaDb extends JdbcExecutor<MariaDb> {
      * Example:
      * <p>{@code MariaDb db = new MariaDb();}</p>
      * <pre>
-     * mariadb:
-     *   url: 'jdbc:mariadb://localhost:3308'
-     *   username: user
-     *   password: pass
-     *   await: 1000 (optional)
+     * modules:
+     *   db:
+     *     mariadb:
+     *       url: 'jdbc:mariadb://localhost:3308'
+     *       username: user
+     *       password: pass
+     *       await: 1000 (optional)
+     *       enchanted-report: true # (optional)
      * </pre>
      *
-     * @see JdbcExecutor#JdbcExecutor(DbTypes dbType, String getColumnsQuery) JdbcExecutor
+     * @see JdbcExecutor#JdbcExecutor(DbTypes dbType, String getColumnsQuery, String suffix) JdbcExecutor
      */
     public MariaDb() {
-        super(DbTypes.MARIA_DB, GET_COLUMNS);
+        super(DbTypes.MARIA_DB, GET_COLUMNS, "");
     }
 }

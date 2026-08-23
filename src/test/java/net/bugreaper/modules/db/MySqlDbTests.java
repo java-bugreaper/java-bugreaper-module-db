@@ -1,7 +1,6 @@
 package net.bugreaper.modules.db;
 
 import net.bugreaper.core.utils.AllureResultLoader;
-import net.bugreaper.modules.db.exceptions.QueryBuilderException;
 import net.bugreaper.modules.db.exceptions.SqlExecuteException;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.core.StringContains;
@@ -312,7 +311,7 @@ class MySqlDbTests extends MySqlDbSetup {
 
 
     @Test
-    void createRecordJsonCheckCountAndData() {
+    void createRecordJsonContainsTest() {
         var data = """
                 [{"id":1,"text":"test"}, {"id":2,"text":"test2"}]""";
 
@@ -333,24 +332,42 @@ class MySqlDbTests extends MySqlDbSetup {
     }
 
     @Test
-    void checkMariaNotSupportJsonEquals() {
-        var data = """
-                [{"id":1,"text":"test"}, {"id":2,"text":"test2"}]""";
+    void createRecordJsonCheckEqualTests() {
 
+        insertIntoUsers(new Object[][]{
+                {"ID", 1},
+                {"DATA", """
+                    {"id":1, "text":"test"}"""},
+        });
 
-        Throwable exception = assertThrows(QueryBuilderException.class, () ->
-                db.seeRecordExistsInTable
-                        (TEST_TABLE,
-                                new Object[][]{
-                                        {"ID", "1"},
-                                        {"DATA", "JSON_EQUALS", data},
-                                        {"ROLES", "manager"},
-                                }));
+        db.seeRecordExistsInTable
+                (TEST_TABLE,
+                        new Object[][]{
+                                {"ID", 1},
+                                {"DATA", "JSON_EQUALS", """
+                                        {"text":"test", "id":1}"""}
+                        });
 
-        MatcherAssert.assertThat(
-                "Exception on JSON_EQUALS for mysql",
-                exception.getMessage(),
-                StringContains.containsString("ERROR, wrong 3 elements operator for mysql mapper: <JSON_EQUALS> supported: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE] or JSON_CONTAINS, REGEX_MATCH"));
+    }
+
+    @Test
+    void createRecordJsonCheckEqual2Tests() {
+
+        insertIntoUsers(new Object[][]{
+                {"ID", 1},
+                {"DATA", """
+                    [{"id":1,"text":"test"}, {"id":2,"text":"test2"}]"""},
+        });
+
+        db.seeRecordExistsInTable
+                (TEST_TABLE,
+                        new Object[][]{
+                                {"ID", 1},
+                                //array order matters
+                                {"DATA", "JSON_EQUALS", """
+                                        [{"text":"test", "id":1}, {"id":2,"text":"test2"}]"""},
+                        });
+
     }
 
     @Test
@@ -666,7 +683,9 @@ class MySqlDbTests extends MySqlDbSetup {
                             username=mysql_user
                             password=mysql_pass
                             awaitMs=2000
+                            awaitPollInterval=100
                             templatesPath=templates/mysql/
+                            enableEnchantedReport=true
                         """, CI_HOST),
                 dbConf2.getConfigSummary());
     }

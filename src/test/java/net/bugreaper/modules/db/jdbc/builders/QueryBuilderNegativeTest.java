@@ -2,8 +2,6 @@ package net.bugreaper.modules.db.jdbc.builders;
 
 import net.bugreaper.modules.db.enums.DbTypes;
 import net.bugreaper.modules.db.exceptions.QueryBuilderException;
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.core.StringContains;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -13,8 +11,8 @@ class QueryBuilderNegativeTest {
 
     private final DbTypes oracle =DbTypes.ORACLE_DB;
     private final DbTypes maria = DbTypes.MARIA_DB;
-    private final DbTypes mssql = DbTypes.MS_SQL;
     private final DbTypes mysql = DbTypes.MY_SQL;
+    private final DbTypes mssql = DbTypes.MS_SQL;
 
     private final QueryBuilder qbm = new QueryBuilder(maria);
 
@@ -77,7 +75,7 @@ class QueryBuilderNegativeTest {
                         {"DATA", "JSON_CONTAINS", "1", "[1]"},
                 }));
 
-        assertEquals("4 elements not supported for database: mariadb",
+        assertEquals("ERROR: 4 elements not supported for database: mariadb",
                 exception.getMessage(),
                 "Exception with wrong four elements mariaDB");
     }
@@ -91,7 +89,7 @@ class QueryBuilderNegativeTest {
                         {"COLUMN2", "=", "DUMMY", "2020-05-05"},
                 }));
 
-        assertEquals("ERROR, wrong 4 elements option for Oracle mapper: <DUMMY> supported: DATE or TIMESTAMP",
+        assertEquals("ERROR: wrong 4 elements option for Oracle mapper: 'DUMMY' supported: DATE or TIMESTAMP",
                 exception.getMessage(),
                 "Exception with invalid Oracle four elements enum");
     }
@@ -105,9 +103,35 @@ class QueryBuilderNegativeTest {
                         {"COLUMN2", "SOME", "2020-05-05"},
                 }));
 
-        assertEquals("ERROR, wrong 3 elements operator: <SOME> database <sqlserver> supported: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE]",
+        assertEquals("ERROR: wrong 3 elements operator 'SOME' for database 'sqlserver' supported basic [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE] or specific REGEX_MATCH",
                 exception.getMessage(),
                 "Exception with 3 elements not basic conditions for not supported DB");
+    }
+
+    @Test
+    void testBuildConditionMariaDbNo3SpecificConditionsSupport() {
+        QueryBuilder qb = new QueryBuilder(maria);
+
+        Throwable exception = assertThrows(QueryBuilderException.class, () ->
+                qb.sqlConditionBuilder(new Object[][]{
+                        {"COLUMN2", "SOME", "2020-05-05"},
+                }));
+
+        assertEquals("ERROR: wrong 3 elements operator 'SOME' for database 'mariadb' supported basic [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE] or specific JSON_EQUALS, JSON_CONTAINS, REGEX_MATCH",
+                exception.getMessage());
+    }
+
+    @Test
+    void testBuildConditionMySqlDbNo3SpecificConditionsSupport() {
+        QueryBuilder qb = new QueryBuilder(mysql);
+
+        Throwable exception = assertThrows(QueryBuilderException.class, () ->
+                qb.sqlConditionBuilder(new Object[][]{
+                        {"COLUMN2", "SOME", "2020-05-05"},
+                }));
+
+        assertEquals("ERROR: wrong 3 elements operator 'SOME' for database 'mysql' supported basic [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE] or specific JSON_EQUALS, JSON_CONTAINS, REGEX_MATCH",
+                exception.getMessage());
     }
 
     @Test
@@ -119,23 +143,11 @@ class QueryBuilderNegativeTest {
                         {"COLUMN2", "SOME", "2020-05-05"},
                 }));
 
-        assertEquals("ERROR, wrong 3 elements operator for mariadb mapper: <SOME> supported: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE] or [JSON_CONTAINS, JSON_EQUALS], REGEX_MATCH",
+        assertEquals("ERROR: wrong 3 elements operator 'SOME' for database 'mariadb' supported basic [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE] or specific JSON_EQUALS, JSON_CONTAINS, REGEX_MATCH",
                 exception.getMessage(),
                 "Exception with 3 elements, wrong condition for mariadb");
     }
 
-    @Test
-    void testBuildConditionMysqlWrong3SpecificConditionsSupport() {
-        QueryBuilder qb = new QueryBuilder(mysql);
-
-        Throwable exception = assertThrows(QueryBuilderException.class, () ->
-                qb.sqlConditionBuilder(new Object[][]{
-                        {"COLUMN2", "JSON_EQUALS", "{}"},
-                }));
-
-        assertEquals("ERROR, wrong 3 elements operator for mysql mapper: <JSON_EQUALS> supported: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE] or JSON_CONTAINS, REGEX_MATCH",
-                exception.getMessage());
-    }
 
     @Test
     void testBuildSqlInsertNonExistentColumn() {
@@ -259,22 +271,51 @@ class QueryBuilderNegativeTest {
                 exception.getMessage());
     }
 
-    @Test
-    void testBuildConditionsMariaJsonEquals() {
-        QueryBuilder qb = new QueryBuilder(mysql);
+    // JSON
 
+
+    @Test
+    void testBuildConditionsMssqlJsonEquals() {
+        QueryBuilder qb = new QueryBuilder(mssql);
 
         Throwable exception = assertThrows(QueryBuilderException.class, () ->
                 qb.sqlConditionBuilder(new Object[][]{
                         {"DATA", "JSON_EQUALS", """
-                                                {"id": 2}"""},
+                                                  {"id": 15}"""},
                 }));
 
+        assertEquals("ERROR: wrong 3 elements operator 'JSON_EQUALS' for database 'sqlserver' supported basic [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE] or specific REGEX_MATCH",
+                exception.getMessage());
 
-        MatcherAssert.assertThat(
-                "mysql not support JSON_EQUALS",
-                exception.getMessage(),
-                StringContains.containsString("ERROR, wrong 3 elements operator for mysql mapper: <JSON_EQUALS> supported: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE] or JSON_CONTAINS, REGEX_MATCH"));
+    }
+
+    @Test
+    void testBuildConditionsMssqlJsonContains() {
+        QueryBuilder qb = new QueryBuilder(mssql);
+
+        Throwable exception = assertThrows(QueryBuilderException.class, () ->
+                qb.sqlConditionBuilder(new Object[][]{
+                        {"DATA", "JSON_CONTAINS", """
+                                                  {"id": 15}"""},
+                }));
+
+        assertEquals("ERROR: wrong 3 elements operator 'JSON_CONTAINS' for database 'sqlserver' supported basic [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE] or specific REGEX_MATCH",
+                exception.getMessage());
+
+    }
+
+    @Test
+    void testBuildConditionsOracleJsonContains() {
+        QueryBuilder qb = new QueryBuilder(oracle);
+
+        Throwable exception = assertThrows(QueryBuilderException.class, () ->
+                qb.sqlConditionBuilder(new Object[][]{
+                        {"DATA", "JSON_CONTAINS", """
+                                                  {"id": 15}"""},
+                }));
+
+        assertEquals("ERROR: wrong 3 elements operator 'JSON_CONTAINS' for database 'oracle' supported basic [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE] or specific JSON_EQUALS, REGEX_MATCH",
+                exception.getMessage());
 
     }
 

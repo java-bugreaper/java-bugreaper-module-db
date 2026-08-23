@@ -51,6 +51,12 @@ public class QueryBuilder {
             case ORACLE_DB:
                 this.qcb = new QueryConditionsBuilderOracle(dbType);
                 break;
+            case POSTGRE_SQL:
+                this.qcb = new QueryConditionsBuilderPostgreSql(dbType);
+                break;
+            case MS_SQL:
+                this.qcb = new QueryConditionsBuilderMsSql(dbType);
+                break;
             //postgres, mssql, custom-db
             default:
                 this.qcb = new QueryConditionsBuilder(dbType);
