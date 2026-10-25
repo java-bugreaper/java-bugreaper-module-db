@@ -15,6 +15,7 @@
  */
 package net.bugreaper.modules.db.jdbc.connection;
 
+import net.bugreaper.core.config.ConfigMap;
 import net.bugreaper.modules.db.exceptions.SqlExecuteException;
 import net.bugreaper.modules.db.logger.Log;
 import net.bugreaper.modules.db.allurereporter.AllureReporter;
@@ -33,11 +34,32 @@ public class JdbcDirectivesHikari {
     public JdbcDirectivesHikari(String dbUrl,
                                 String username,
                                 String passwd,
-                                String dbType) {
+                                String dbType,
+                                ConfigMap hikariConfig,
+                                ConfigMap dataSourceProperties) {
 
-        dataSource = new DataSource(dbUrl, username, passwd, dbType);
+        dataSource = new DataSource(dbUrl, username, passwd, dbType, hikariConfig, dataSourceProperties);
 
     }
+
+    /**
+     * Returns the current data source properties.
+     *
+     * @see DataSource#getDataSourceProperties()
+     */
+    public String getDataSourceProperties(){
+        return dataSource.getDataSourceProperties();
+    }
+
+    /**
+     * Returns current HikariCP settings.
+     *
+     * @see DataSource#getHikariSettings()
+     */
+    public String getHikariSettings(){
+        return dataSource.getHikariSettings();
+    }
+
 
     public List<Object> getSqlResultList(String query, String... columnNames) {
 

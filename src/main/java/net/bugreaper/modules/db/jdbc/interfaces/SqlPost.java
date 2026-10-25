@@ -2,7 +2,6 @@ package net.bugreaper.modules.db.jdbc.interfaces;
 
 
 import net.bugreaper.modules.db.enums.DbTypes;
-import net.bugreaper.modules.db.jdbc.JdbcExecutor;
 
 
 /**
@@ -54,7 +53,7 @@ public interface SqlPost {
      * tableName: "schema.table1"<br>
      * (will search in resources file templates/{database_type}/schema.table1.json)<br>
      * database_types : {@link DbTypes}<br>
-     * default path can be changed by {@link JdbcExecutor#setTemplatesDirectory(String)}<br>
+     * default path can be changed by {@link SqlConfig#setTemplatesDirectory(String)}<br>
      * <pre>
      *{
      *     "id": 2,
@@ -88,7 +87,7 @@ public interface SqlPost {
      * tableName: "schema.table1"<br>
      * (will search in resources file templates/${database_type}/schema.table1.json)<br>
      * database_types : {@link DbTypes}<br>
-     * default path can be changed by {@link JdbcExecutor#setTemplatesDirectory(String)}
+     * default path can be changed by {@link SqlConfig#setTemplatesDirectory(String)}
      * <pre>
      *{
      *     "id": 2,

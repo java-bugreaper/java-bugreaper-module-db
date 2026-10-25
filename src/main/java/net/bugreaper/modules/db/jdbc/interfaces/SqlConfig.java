@@ -68,4 +68,19 @@ public interface SqlConfig<T extends SqlConfig<T>> {
      * @return a string containing a formatted summary of all configuration values
      */
     String getConfigSummary();
+
+    /**
+     * Returns and logs (at INFO level) the current data source properties.
+     *
+     * @return formatted string containing the data source properties
+     */
+    String getDataSourceProperties();
+
+    /**
+     * Returns and logs (at INFO level) the current HikariCP settings.
+     *
+     * @return formatted string containing the current HikariCP settings
+     */
+    String getHikariSettings();
+
 }

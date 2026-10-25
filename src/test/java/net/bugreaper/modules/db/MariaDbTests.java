@@ -805,7 +805,7 @@ class MariaDbTests extends MariaDbSetup {
         Assertions.assertEquals(String.format("""
                         MariaDb:
                             dbType=mariadb
-                            url=jdbc:mariadb://%s:3307
+                            url=jdbc:mariadb://%s:3307?connectTimeout=5001
                             username=test_user
                             password=secret_pass
                             awaitMs=510
@@ -816,8 +816,68 @@ class MariaDbTests extends MariaDbSetup {
                 dbConf2.getConfigSummary());
     }
 
-    // off enchanted report
+    @Test
+    void configDataSourcePropertiesTest() {
+        String dataSourceConfig = dbConf.getDataSourceProperties();
 
+        MatcherAssert.assertThat(
+                "provided properties",
+                dataSourceConfig,
+                StringContains.containsString("connectTimeout=3001"));
+
+        MatcherAssert.assertThat(
+                "provided properties",
+                dataSourceConfig,
+                StringContains.containsString("socketTimeout=3002"));
+    }
+
+    @Test
+    void configHikariSettingsTest() {
+        String hikariSettings = dbConf.getHikariSettings();
+
+        MatcherAssert.assertThat(
+                hikariSettings,
+                StringContains.containsString("poolName=mariadb-pool"));
+
+        MatcherAssert.assertThat(
+                hikariSettings,
+                StringContains.containsString("minimumIdle=2"));
+
+        MatcherAssert.assertThat(
+                hikariSettings,
+                StringContains.containsString("maximumPoolSize=4"));
+
+        MatcherAssert.assertThat(
+                hikariSettings,
+                StringContains.containsString("maxLifetime=600000"));
+
+        MatcherAssert.assertThat(
+                hikariSettings,
+                StringContains.containsString("keepaliveTime=110000"));
+
+        MatcherAssert.assertThat(
+                hikariSettings,
+                StringContains.containsString("connectionTimeout=10000"));
+
+        MatcherAssert.assertThat(
+                hikariSettings,
+                StringContains.containsString("validationTimeout=9000"));
+
+        MatcherAssert.assertThat(
+                hikariSettings,
+                StringContains.containsString("idleTimeout=10555"));
+
+        MatcherAssert.assertThat(
+                hikariSettings,
+                StringContains.containsString("leakDetectionThreshold=0"));
+
+        MatcherAssert.assertThat(
+                hikariSettings,
+                StringContains.containsString("readOnly=false"));
+    }
+
+
+    // off enchanted report
     @Test
     @Order(11)
     void checkConditionExceptionWithDisabledEnchantedReport() {
