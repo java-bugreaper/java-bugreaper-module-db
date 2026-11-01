@@ -3,17 +3,18 @@ package net.bugreaper.modules.db;
 
 import net.bugreaper.modules.db.exceptions.JdbcExecutorException;
 import net.bugreaper.modules.db.exceptions.QueryBuilderException;
-import org.hamcrest.MatcherAssert;
+import org.hamcrest.core.StringContains;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import testcontainers.ClickhouseDb;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static testcontainers.DockerSetup.CI_HOST;
+
 
 @SuppressWarnings({"squid:S2699"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS) //To call connection once!
@@ -112,7 +113,7 @@ class CustomDbTests extends ClickhouseDb {
                                         {"ID", 1},
                                 }));
 
-        MatcherAssert.assertThat(
+        assertThat(
                 exception.getMessage(),
                 is("""
                         Failed: no records found in table 'MYSCHEMA.TEMP' within 420 milliseconds
@@ -125,7 +126,7 @@ class CustomDbTests extends ClickhouseDb {
         Throwable exception2 = assertThrows(JdbcExecutorException.class, () ->
                 customDb.showDataFromTable(TEST_TABLE_FOR_TEMPLATE));
 
-        MatcherAssert.assertThat(
+        assertThat(
                 exception2.getMessage(),
                 containsString("Get all data for allure not supported for CustomDb"));
     }
@@ -140,7 +141,7 @@ class CustomDbTests extends ClickhouseDb {
                                         {"ID", "JSON_CONTAINS", 1},
                                 }));
 
-        MatcherAssert.assertThat(
+        assertThat(
                 exception.getMessage(),
                 is("ERROR: wrong 3 elements operator 'JSON_CONTAINS' for database 'custom-db' supported basic: [=, !=, <>, >, >=, <, <=, IS, IS NOT, LIKE]"));
     }
@@ -184,6 +185,7 @@ class CustomDbTests extends ClickhouseDb {
                 customDb2Same.getConfigSummary());
     }
 
+
     @Test
     void customDbMultiton3Test() {
 
@@ -192,15 +194,33 @@ class CustomDbTests extends ClickhouseDb {
         Assertions.assertEquals(String.format("""
                         CustomDb:
                             dbType=custom-db-3
-                            url=jdbc:clickhouse://%s:8123/MYSCHEMA
+                            url=jdbc:clickhouse://%s:8123/MYSCHEMA?connection_timeout=5500
                             username=default
                             password=password
                             awaitMs=400
                             awaitPollInterval=100
-                            templatesPath=templates/custom-db-3/
+                            templatesPath=templates/custom-db/
                             enableEnchantedReport=true
                         """, CI_HOST),
                 customDb3.getConfigSummary());
+
+        String hikariSettings = customDb3.getHikariSettings();
+
+        assertThat(
+                "provided properties",
+                hikariSettings,
+                StringContains.containsString("readOnly=true"));
+
+
+        assertThat(
+                "provided properties",
+                hikariSettings,
+                StringContains.containsString("leakDetectionThreshold=2000"));
+
+        String dataSourceConfig = customDb3.getDataSourceProperties();
+
+        //provided only by URL not seen in properties!
+        assertThat(dataSourceConfig, not(containsString("connection_timeout=5500")));
     }
 
 }

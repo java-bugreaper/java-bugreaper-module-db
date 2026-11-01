@@ -1,6 +1,8 @@
 package net.bugreaper.modules.db;
 
 import net.bugreaper.core.utils.AllureResultLoader;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.core.StringContains;
 import org.junit.jupiter.api.*;
 import testcontainers.OracleDbSetup;
 
@@ -198,7 +200,8 @@ class OracleDbTests extends OracleDbSetup {
 
     @Test
     void configAllFieldsTest() {
-
+        db.getDataSourceProperties();
+        db.getHikariSettings();
         dbConf.truncateTable(TEST_FOR_TEMPLATE);
 
         dbConf.insertIntoTable(TEST_FOR_TEMPLATE,
@@ -208,7 +211,7 @@ class OracleDbTests extends OracleDbSetup {
                           "CREATE_DATE:TIMESTAMP": "2020-02-02 12:00:00"
                         }""");
 
-        dbConf.seeRecordExistsInTable
+        dbConf.withAwaitMs(1000).seeRecordExistsInTable
                 (TEST_FOR_TEMPLATE,
                         new Object[][]{
                                 {"ID", 2},
@@ -324,6 +327,26 @@ class OracleDbTests extends OracleDbSetup {
                         [2, 2020-01-01 10:00:00.0]""",
                 exception.getMessage(),
                 "Exception on seeRecordExistsInTable");
+    }
+
+    @Test
+    void configDataSourcePropertiesTest() {
+        String dataSourceConfig = dbConf.getDataSourceProperties();
+
+        MatcherAssert.assertThat(
+                "provided properties",
+                dataSourceConfig,
+                StringContains.containsString("connectTimeout=3002"));
+
+        MatcherAssert.assertThat(
+                "default properties",
+                dataSourceConfig,
+                StringContains.containsString("oracle.jdbc.jsonDefaultGetObjectType=java.lang.String"));
+
+        MatcherAssert.assertThat(
+                "default properties",
+                dataSourceConfig,
+                StringContains.containsString("oracle.jdbc.timezoneAsRegion=false"));
     }
 
 }

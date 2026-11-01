@@ -134,7 +134,7 @@ abstract class AbstractExecutor {
 
 
     private void reportAllDataInTable(String tableName, boolean enable) {
-        if(enable) {
+        if (enable) {
             showDataFromTableNoExceptionMethod(tableName);
         }
     }
@@ -144,7 +144,7 @@ abstract class AbstractExecutor {
      *
      * @param tableName       table name in the format {@code schema_name.table_name}
      * @param conditionsArray conditions in Object[][] format {@code {{"ID", "1"}, {"NAME", "Alex"}} }
-     * @param actualEnable whether to include the actual result
+     * @param actualEnable    whether to include the actual result
      * @return string containing the exception details, including all table records ordered by the testing columns
      */
     private String extendedLogBuilder(String tableName, Object[][] conditionsArray, boolean actualEnable) {

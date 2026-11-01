@@ -19,9 +19,7 @@ public final class Log {
      */
     public static final Logger LOGGER = LoggerFactory.getLogger("bugreaper-module-db");
 
-    /**
-     * Private constructor to prevent instantiation.
-     */
-    private Log() {}
-
+    private Log() {
+        throw new IllegalStateException("Utility class");
+    }
 }

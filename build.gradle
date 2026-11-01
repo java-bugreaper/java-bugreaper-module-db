@@ -43,12 +43,12 @@ tasks.withType(Jar).configureEach {
 repositories {
 
     mavenCentral()
-    //mavenLocal()
+    mavenLocal()
 
 }
 
 dependencies {
-    api 'net.bugreaper:core:1.4.4'
+    api 'net.bugreaper:core:1.5.1'
 
     api 'com.zaxxer:HikariCP:7.1.0'
 

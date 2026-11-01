@@ -1,0 +1,11 @@
+modules:
+  db:
+
+    custom-db-n1:
+      url: 'jdbc:clickhouse://localhost:8123/MYSCHEMA?connection_timeout=5500'
+      username: default
+      password: password
+
+      hikari: # optional
+        readOnly: true
+        someKey: true

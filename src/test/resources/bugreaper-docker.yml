@@ -13,18 +13,43 @@ modules:
       await: 200 # optional
       enchanted-report: false # optional
     custom-db-3:
-      url: 'jdbc:clickhouse://docker:8123/MYSCHEMA'
+      url: 'jdbc:clickhouse://docker:8123/MYSCHEMA?connection_timeout=5500'
       username: default
       password: password
       await: 400 # optional
       enchanted-report: true # optional
+      template-dir: templates/custom-db/ # optional
+      hikari: # optional
+        readOnly: true
+        leakDetectionThreshold: 2000
+
     mariadb:
-      url: 'jdbc:mariadb://docker:3307'
+      url: 'jdbc:mariadb://docker:3307?connectTimeout=5001'
       username: test_user
       password: secret_pass
       await: 510 # optional
       await-poll-interval: 200 # optional
       enchanted-report: true # optional
+
+      # JDBC driver configuration
+      properties: # optional
+        connectTimeout: 3001
+        socketTimeout: 3002
+
+      # Hikari configuration
+      hikari: # optional
+        poolName: mariadb-pool
+        minimumIdle: 2
+        maximumPoolSize: 4
+        maxLifetime: 600000
+        keepAliveTime: 110000
+        connectionTimeout: 10000
+        validationTimeout: 9000
+        idleTimeout: 10555
+        leakDetectionThreshold: 0
+        readOnly: false
+
+
     mysql:
       url: 'jdbc:mysql://docker:3308'
       username: mysql_user
@@ -46,3 +71,6 @@ modules:
       username: ADMIN
       password: ADMIN
       await: 300 # optional
+      properties: # optional
+        connectTimeout: 3002
+

@@ -1,8 +1,10 @@
 package net.bugreaper.modules.db.jdbc;
 
+import net.bugreaper.core.config.ConfigMap;
 import net.bugreaper.core.config.YamlUtils;
 import net.bugreaper.modules.db.enums.DbTypes;
 import net.bugreaper.modules.db.jdbc.builders.QueryBuilder;
+import net.bugreaper.modules.db.jdbc.connection.DataSource;
 import net.bugreaper.modules.db.jdbc.connection.JdbcDirectivesHikari;
 import net.bugreaper.modules.db.jdbc.interfaces.SqlConfig;
 import net.bugreaper.modules.db.jdbc.interfaces.SqlGet;
@@ -66,7 +68,7 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
         this.password = password;
 
 
-        jdbc = new JdbcDirectivesHikari(this.url, this.username, this.password, this.dbTypeKey);
+        jdbc = new JdbcDirectivesHikari(this.url, this.username, this.password, this.dbTypeKey, null, null);
         this.getColumnsQuery = getColumnsQuery;
     }
 
@@ -100,16 +102,22 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
      *                        <p>Missing required keys will result in configuration errors.
      *                        Missing optional keys will fall back to predefined defaults.</p>
      * @param suffix          used only for Multiton;
+     * Also support client options details in: {@link DataSource}.
      */
     protected JdbcExecutor(DbTypes dbType, String getColumnsQuery, String suffix) {
+
+
 
         this.dbTypeKey = dbType.value() + suffix;
         this.getColumnsQuery = getColumnsQuery;
         this.templatesPath = String.format("templates/%s/", this.dbTypeKey);
 
         loadFromYaml(this.dbTypeKey);
+        // optional options map
+        ConfigMap hikariConfig = YamlUtils.getConfigMapValueByPath(YML_KEY + dbTypeKey + ".hikari", true);
+        ConfigMap dataSourceProperties = YamlUtils.getConfigMapValueByPath(YML_KEY + dbTypeKey + ".properties", true);
 
-        jdbc = new JdbcDirectivesHikari(this.url, this.username, this.password, this.dbTypeKey);
+        jdbc = new JdbcDirectivesHikari(this.url, this.username, this.password, this.dbTypeKey, hikariConfig, dataSourceProperties);
         this.qb = new QueryBuilder(dbType);
     }
 
@@ -133,6 +141,11 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
         Object enchantedReportVal = YamlUtils.getValueByPath(YML_KEY + dbTypeKey + ".enchanted-report", true);
         if (enchantedReportVal instanceof Boolean logging) {
             setEnchantedReport(logging);
+        }
+
+        Object tempDir = YamlUtils.getValueByPath(YML_KEY + dbTypeKey + ".template-dir", true);
+        if (tempDir instanceof String string) {
+            setTemplatesDirectory(string);
         }
     }
 
@@ -196,6 +209,19 @@ public abstract class JdbcExecutor<T extends JdbcExecutor<T>> extends AbstractEx
         return info;
     }
 
+    @Override
+    public String getDataSourceProperties() {
+        String dataSourceProperties = jdbc.getDataSourceProperties();
+        Log.LOGGER.info(dataSourceProperties);
+        return dataSourceProperties;
+    }
+
+    @Override
+    public String getHikariSettings() {
+        String hikariSettings = jdbc.getHikariSettings();
+        Log.LOGGER.info(hikariSettings);
+        return hikariSettings;
+    }
 
     @Override
     public void insertIntoTable(String tableName,
